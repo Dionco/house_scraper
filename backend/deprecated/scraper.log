@@ -1,0 +1,1480 @@
+[DEBUG] Starting Funda Scraper...
+[DEBUG] Entered __main__ block
+[DEBUG] Scrapy settings configured
+[DEBUG] Entered run_scheduler()
+🕷️  Funda Scraper Started!
+Monitoring 1 URL(s)
+Check interval: 15 minutes
+Database: listing_database.jsonl
+Notifications: OFF
+Auto-open links: ON
+--------------------------------------------------
+[DEBUG] Setting up periodic checks and scheduler thread...
+[DEBUG] Calling reactor.callWhenRunning(periodic_checker)
+[DEBUG] Scheduler thread started
+[DEBUG] Starting reactor...
+
+[2025-06-28 19:58:50] Checking for new listings...
+[DEBUG] URLs being searched: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+Loaded 0 existing listings from databas
+[2025-06-28 20:08:33] Checking for new listings...
+Loaded 0 existing listings from database
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python
+[2025-06-28 20:08:54] Checking for new listings...
+[DEBUG] URLs being searched: ['
+[202
+[2025-06-28 20:13:50] Checking for new listings...
+[DEBU
+[2025-06-28 20:19:41] Checking for new listings...
+[DEBUG] URLs being searched: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+Loaded 0 existing listings from database
+Unhandled error in Defer
+[2025-06-28 20:21:45] Checking for new listings...
+[DEBUG] URLs being s
+[2025-06-28 20:23:55] Checking for new listings...
+[DEBUG] URLs being searched: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+Loaded 0 existing listings fr
+[2025-06-28 20:28:50] Checking for new listings...
+[DEBUG] URLs being searched: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+Loaded 0 existing listings from database
+[DEBUG] periodic_checker: creating CrawlerRunner
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 259, in crawl
+    from scrapy.utils.project import get_project_settings
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 259, in crawl
+ 
+[2025-06-28 20:35:23] Checking for new listings..
+[2025-06-28 20:38:33] Checking for new lis
+[2025-06-28 20:50:24] Checking for new listings..
+[2025-06-28 21:31:26] Checking for new listings...
+Loaded 0 existing listings from database
+
+[2025-06-28 22:53:33] Checking for new listings...
+Loaded 0 existing listings from database
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    process = CrawlerRunner()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/DownloadsUnhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 221, in crawl
+    
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages
+[2025-06-28 23:52:49] Checking for new listings...
+[DEBUG] URLs being searched: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+Loaded 0 existing listings from database
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 238, in crawl
+    defer.returnValue(results)
+  File "/Users/DUnhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 246, in crawl
+    existing_urls = load_existing_listings(Config.DATABASE)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 246, in crawl
+    existing_urls = load_existing_listings(Config.DATABASE)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/tw
+[2025-06-29 00:55:46] Checking for new listings...
+Loaded 0 existing listings from database
+
+[2025-06-29 01:50:59] Checking for new listings...
+Loaded 0 existing listings from database
+Unhandled error in Deferred:
+
+Traceback (most recent call
+[2025-06-29 03:57:31] Checking for new listings...
+Loaded 0 existing listings from database
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    process = CrawlerRunner()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+buil
+[2025-06-29 03:57:31] Checking for new listings...
+[DEBUG] URLs being searched: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+Loaded 0 existing listings from database
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 228, in crawl
+    
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The ins
+[2025-06-29 04:17:41] Checking for new listings...
+[DEBUG] URLs being searched: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+Loaded 0 existing listings from database
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 238, in crawl
+    defer.returnValue(results)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-pUnhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 259, in crawl
+    from scrapy.utils.project import get_project_settings
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent c
+[2025-06-29 06:01:04] Checking for new listings...
+Loaded 0 existing listings from database
+
+[2025-06-29 08:01:34] Checking for new listings...
+Loaded 0 existing listings from database
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/si
+[2025-06-29 08:53:51] Checking for new listings...
+Loaded 0 existing listings from database
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    process = CrawlerRunner()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    process = CrawlerRunner()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+ Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 228, in crawl
+    
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 226, in crawl
+    print(f"[DEBUG] run_spider_async: item scraped: {item}", flush=True)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in ver
+[2025-06-29 10:03:46] Checking for new listings...
+[DEBUG] URLs being searched: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+Loaded 0 existing listings from database
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 238, in crawl
+    defer.returnValue(results)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-pack
+[2025-06-29 11:04:52] Checking for new listings...
+Loaded 0 existing listings from database
+
+[2025-06-29 11:32:40] Checking for new listings...
+Loaded 0 existing listings from database
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  F
+[2025-06-29 11:47:41] Checking for new listings...
+Loaded 0 existing listings from database
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    process = CrawlerRunner()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    process = CrawlerRunner()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 228, in crawl
+    
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twiste
+Traceback (most recent call last):
+  File "/Users/Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 228, in crawl
+    
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/U
+[2025-06-29 11:47:41] Checking for new listings...
+[DEBUG] URLs being searched: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+Loaded 0 existing listings from database
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scrape
+[2025-06-29 12:24:41] Checking for new listings...
+Loaded 0 existing listings from database
+
+[2025-06-29 12:39:42] Checking for new listings...
+Loaded 0 existing listings from database
+
+[2025-06-29 12:54:42] Checking for new listings...
+Loaded 0 existing listings from database
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages
+[2025-06-29 13:09:43] Checking for new listings...
+Loaded 0 existing listings from database
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    process = CrawlerRunner()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    process = CrawlerRunner()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/DocuUnhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 221, in crawl
+    
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/intern
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 228, in crawl
+    
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/HouseUnhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 221, in crawl
+    
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+
+[2025-06-29 13:09:43] Checking for new listings...
+Loaded 0 existing listings from database
+
+[2025-06-29 13:24:44] Checking for new listings...
+Loaded 0 existing listings from database
+
+[2025-06-29 13:39:44] Checking for new listings...
+Loaded 0 existing listings from database
+
+[2025-06-29 14:15:24] Checking for new listings...
+Loaded 0 existing listings from database
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.
+[2025-06-29 14:30:24] Checking for new listings...
+Loaded 0 existing listings from database
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    process = CrawlerRunner()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    process = CrawlerRunner()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    process = CrawlerRunner()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    process = CrawlerRunner()
+  File "/Users/Dion/Downloads/Documen
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py
+[2025-06-29 14:45:25] Checking for new listings...
+Loaded 0 existing listings from database
+
+[2025-06-29 15:49:42] Checking for new listings...
+Loaded 0 existing listings from database
+
+[2025-06-29 16:49:54] Checking for new listings...
+Loaded 0 existing listings from database
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backen
+[2025-06-29 17:42:14] Checking for new listings...
+Loaded 0 existing listings from database
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    process = CrawlerRunner()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    process = CrawlerRunner()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    process = CrawlerRunner()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/UseUnhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 221, in crawl
+    
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/sc
+[2025-06-29 18:52:12] Checking for new listings...
+Loaded 0 existing listings from database
+
+[2025-06-29 19:53:22] Checking for new listings...
+Loaded 0 existing listings from database
+
+[2025-06-29 20:43:50] Checking for new listings...
+Loaded 0 existing listings from database
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scr
+[2025-06-29 21:55:42] Checking for new listings...
+Loaded 0 existing listings from database
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    process = CrawlerRunner()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    process = CrawlerRunner()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    process = CrawlerRunner()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defUnhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 221, in crawl
+    
+  File "/Users/Dion/Downloa
+[2025-06-29 22:56:50] Checking for new listings...
+Loaded 0 existing listings from database
+
+[2025-06-29 23:27:31] Checking for new listings...
+Loaded 0 existing listings from database
+
+[2025-06-29 23:42:31] Checking for new listings...
+Loaded 0 existing listings from database
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+ 
+[2025-06-29 23:57:32] Checking for new listings...
+Loaded 0 existing listings from database
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    process = CrawlerRunner()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    process = CrawlerRunner()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    process = CrawlerRunner()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/ba
+[2025-06-29 23:57:33] Checking for new listings...
+[DEBUG] URLs being searched: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+Loaded 0 
+[2025-06-30 00:12:32] Checking for new listings...
+Loaded 0 existing listings from database
+
+[2025-06-30 00:27:33] Checking for new listings...
+Loaded 0 existing listings from database
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/Hou
+[2025-06-30 00:42:33] Checking for new listings...
+Loaded 0 existing listings from database
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    process = CrawlerRunner()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    process = CrawlerRunner()
+  File "/Users/Dion/Downloads/Documenten/
+[2025-06-30 00:57:34] Checking for new listings...
+Loaded 0 existing listings from database
+
+[2025-06-30 01:54:40] Checking for new listings...
+Loaded 0 existing listings from database
+
+[2025-06-30 03:01:02] Checking for new listings...
+Loaded 0 existing listings from database
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scra
+[2025-06-30 04:56:56] Checking for new listings...
+Loaded 0 existing listings from database
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    process = CrawlerRunner()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    process = CrawlerRunner()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in cr
+[2025-06-30 06:01:01] Checking for new listings...
+Loaded 0 existing listings from database
+
+[2025-06-30 07:04:50] Checking for new listings...
+Loaded 0 existing listings from database
+
+[2025-06-30 08:43:26] Checking for new listings...
+Loaded 0 existing listings from database
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/User
+[2025-06-30 09:44:28] Checking for new listings...
+Loaded 0 existing listings from database
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    process = CrawlerRunner()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    process = CrawlerRunner()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloa
+[2025-06-30 10:45:29] Checking for new listings...
+Loaded 0 existing listings from database
+
+[2025-06-30 12:47:13] Checking for new listings...
+Loaded 0 existing listings from database
+
+[2025-06-30 13:09:58] Checking for new listings...
+Loaded 0 existing listings from database
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.1
+[2025-06-30 13:48:20] Checking for new listings...
+Loaded 0 existing listings from database
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    process = CrawlerRunner()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 220, in crawl
+    process = CrawlerRunner()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    ret
+[2025-06-30 14:25:54] Checking for new listings...
+Loaded 0 existing listings from database
+
+[2025-06-30 14:49:28] Checking for new listings...
+Loaded 0 existing listings from database
+File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+
+[2025-06-30 14:25:54] Checking for new listings...
+Loaded 0 existing listings from database
+
+[2025-06-30 14:49:28] Checking for new listings...
+Loaded 0 existing listings from database
+eactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 228, in crawl
+    
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downl
+[2025-06-30 10:45:29] Checking for new listings...
+[DEBUG] URLs being searched: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+Loaded 0 existing listings from database
+[DEBUG] FundaSpider will search: https://www.funda.nl/zoeken/huur/?
+
+[2025-06-30 12:47:13] Checking for new listings...
+[DEBUG] URLs being searched: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+Loaded 0 existing listings from database
+[DEBUG] FundaSpider will search: https://www.funda.nl/zoeken/huur/?
+
+[2025-06-30 13:09:58] Checking for new listings...
+[DEBUG] URLs being searched: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+Loaded 0 existing listings from database
+[DEBUG] FundaSpider will search: https://www.funda.nl/zoeken/huur/?
+
+[2025-06-30 13:48:20] Checking for new listings...
+[DEBUG] URLs being searched: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+Loaded 0 existing listings from database
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 221, in crawl
+    
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/DocumenUnhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 228, in crawl
+    
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 228, in crawl
+    
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.Sele[DEBUG] FundaSpider will search: https://www.funda.nl/zoeken/huur/?
+
+[2025-06-30 14:25:54] Checking for new listings...
+[DEBUG] URLs being searched: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+Loaded 0 existing listings from database
+[DEBUG] FundaSpider will search: https://www.funda.nl/zoeken/huur/?
+
+[2025-06-30 14:49:28] Checking for new listings...
+[DEBUG] URLs being searched: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+Loaded 0 existing listings from database
+[DEBUG] FundaSpider will search: https://www.funda.nl/zoeken/huur/?
+b))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 228, in crawl
+    
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+[DEBUG] FundaSpider will search: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+
+[2025-06-30 14:25:54] Checking for new listings...
+[DEBUG] URLs being searched: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+Loaded 0 existing listings from database
+[DEBUG] FundaSpider will search: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+
+[2025-06-30 14:49:28] Checking for new listings...
+[DEBUG] URLs being searched: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+Loaded 0 existing listings from database
+[DEBUG] FundaSpider will search: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+main.py", line 226, in crawl
+    print(f"[DEBUG] run_spider_async: item scraped: {item}", flush=True)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 226, in crawl
+    print(f"[DEBUG] run_spider_async: item scraped: {item}", flush=True)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+[DEBUG] FundaSpider will search: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+
+[2025-06-30 14:25:54] Checking for new listings...
+[DEBUG] URLs being searched: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+Loaded 0 existing listings from database
+[DEBUG] FundaSpider will search: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+
+[2025-06-30 14:49:27] Checking for new listings...
+[DEBUG] URLs being searched: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+Loaded 0 existing listings from database
+[DEBUG] FundaSpider will search: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+Loaded 0 existing listings from database
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 238, in crawl
+    defer.returnValue(results)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 238, in crawl
+    defer.returnValue(results)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 238, in crawl
+    defer.returnValue(results)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply[DEBUG] About to crawl with start_urls: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+[DEBUG] FundaSpider will search: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+
+[2025-06-30 14:49:28] Checking for new listings...
+[DEBUG] URLs being searched: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+Loaded 0 existing listings from database
+[DEBUG] About to crawl with start_urls: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+[DEBUG] FundaSpider will search: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+to crawl with start_urls: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+[DEBUG] FundaSpider __init__ called
+[DEBUG] FundaSpider will search: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+
+[2025-06-30 14:49:28] Checking for new listings...
+[DEBUG] URLs being searched: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+Loaded 0 existing listings from database
+[DEBUG] About to crawl with start_urls: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+[DEBUG] FundaSpider __init__ called
+[DEBUG] FundaSpider will search: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 257, in crawl
+    'RANDOMIZE_DOWNLOAD_DELAY': 0.5,
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 257, in crawl
+    'RANDOMIZE_DOWNLOAD_DELAY': 0.5,
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+Unhandled error in Deferred:
+
+Traceback (most recent call last):
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1853, in _inlineCallbacks
+    result = context.run(
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/python/failure.py", line 467, in throwExceptionIntoGenerator
+    return g.throw(self.value.with_traceback(self.tb))
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/backend/main.py", line 257, in crawl
+    'RANDOMIZE_DOWNLOAD_DELAY': 0.5,
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/twisted/internet/defer.py", line 1857, in _inlineCallbacks
+    result = context.run(gen.send, result)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 154, in crawl
+    self._apply_settings()
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/crawler.py", line 124, in _apply_settings
+    verify_installed_reactor(reactor_class)
+  File "/Users/Dion/Downloads/Documenten/Code projects/House_scraper/.venv/lib/python3.12/site-packages/scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+[DEBUG] About to crawl with start_urls: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+[DEBUG] FundaSpider __init__ called
+[DEBUG] FundaSpider will search: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+
+[2025-06-30 14:49:28] Checking for new listings...
+[DEBUG] URLs being searched: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+Loaded 0 existing listings from database
+[DEBUG] periodic_checker: creating CrawlerRunner
+[DEBUG] periodic_checker.crawl: called
+[DEBUG] About to crawl with start_urls: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+[DEBUG] FundaSpider __init__ called
+[DEBUG] FundaSpider will search: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+scrapy/utils/reactor.py", line 171, in verify_installed_reactor
+    raise RuntimeError(
+builtins.RuntimeError: The installed reactor (twisted.internet.selectreactor.SelectReactor) does not match the requested one (twisted.internet.asyncioreactor.AsyncioSelectorReactor)
+
+[DEBUG] About to crawl with start_urls: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+[DEBUG] FundaSpider __init__ called
+[DEBUG] FundaSpider will search: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+
+[2025-06-30 14:49:28] Checking for new listings...
+[DEBUG] URLs being searched: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+Loaded 0 existing listings from database
+[DEBUG] periodic_checker: creating CrawlerRunner
+[DEBUG] periodic_checker.crawl: called
+[DEBUG] About to crawl with start_urls: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+[DEBUG] FundaSpider __init__ called
+[DEBUG] FundaSpider will search: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']
+DEBUG] FundaSpider will search: ['https://www.funda.nl/huur/utrecht/1000-2000/sorteer-datum-af/']

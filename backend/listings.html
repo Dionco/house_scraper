@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Funda Finder | Advanced Search</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'primary': {
+                            'DEFAULT': '#F97316', // Funda Orange
+                            '600': '#EA580C',
+                        },
+                        'secondary': '#1E293B',
+                        'light': '#F8FAFC',
+                        'gray': {
+                            '100': '#F1F5F9',
+                            '200': '#E2E8F0',
+                            '300': '#CBD5E1',
+                            '400': '#94A3B8',
+                            '500': '#64748B',
+                            '700': '#334155',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .spinner { animation: spin 1s linear infinite; }
+        .sticky-sidebar { position: sticky; top: 2rem; max-height: calc(100vh - 4rem); overflow-y: auto; }
+        /* Custom scrollbar for the sidebar */
+        .sticky-sidebar::-webkit-scrollbar { width: 6px; }
+        .sticky-sidebar::-webkit-scrollbar-track { background: transparent; }
+        .sticky-sidebar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 3px; }
+        .sticky-sidebar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+        /* Custom styles for details/summary accordion */
+        details > summary { list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
+        details > summary .chevron { transition: transform 0.2s ease-in-out; }
+        details[open] > summary .chevron { transform: rotate(90deg); }
+        /* Custom checkbox styles */
+        .form-checkbox { appearance: none; -webkit-appearance: none; height: 1.25rem; width: 1.25rem; border: 1px solid #cbd5e1; border-radius: 0.25rem; background-color: #fff; transition: all 0.2s; cursor: pointer; }
+        .form-checkbox:checked { background-color: #F97316; border-color: #F97316; background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e"); background-size: 100% 100%; background-position: center; background-repeat: no-repeat; }
+    </style>
+</head>
+<body class="font-sans bg-light">
+
+    <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 py-8">
+
+            <aside class="lg:col-span-3">
+                <div class="sticky-sidebar pr-4">
+                    <div class="mb-6">
+                        <h1 class="text-3xl font-bold text-secondary flex items-center gap-2">
+                           <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                            </svg>
+                            Funda Finder
+                        </h1>
+                        <p class="text-gray-500 mt-1">Refine or start a new search.</p>
+                    </div>
+
+                    <form id="scrape-filter-form" class="space-y-1">
+                        <div class="p-3">
+                             <label for="keyword" class="text-sm font-medium text-gray-700">Keyword Search</label>
+                             <input type="text" id="keyword" name="keyword" class="mt-1 w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition" placeholder="e.g. warmtepomp, airco">
+                        </div>
+                        <div class="p-3 pt-0">
+                            <label for="city" class="text-sm font-medium text-gray-700">City</label>
+                            <input type="text" id="city" name="city" class="mt-1 w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition" placeholder="e.g. Amsterdam, Rotterdam">
+                        </div>
+
+                        <details class="group py-2" open>
+                            <summary class="flex justify-between items-center cursor-pointer text-lg font-semibold text-secondary">
+                                Price & Type
+                                <svg class="chevron h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                            </summary>
+                            <div class="pt-4 space-y-4">
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700">Price Range (€)</label>
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <input type="number" name="min_price" class="w-full px-3 py-2 border border-gray-200 rounded-lg" placeholder="From" value="3000">
+                                        <span class="text-gray-400">-</span>
+                                        <input type="number" name="max_price" class="w-full px-3 py-2 border border-gray-200 rounded-lg" placeholder="To" value="5000">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700">Property Type</label>
+                                    <div class="mt-2 space-y-2">
+                                        <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="property_type" value="woonhuis" class="form-checkbox"> Woonhuis</label>
+                                        <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="property_type" value="appartement" class="form-checkbox"> Appartement</label>
+                                        <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="property_type" value="parkeergelegenheid" class="form-checkbox"> Parkeergelegenheid</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </details>
+
+                        <details class="group py-2">
+                            <summary class="flex justify-between items-center cursor-pointer text-lg font-semibold text-secondary">
+                                Area & Layout
+                                <svg class="chevron h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                            </summary>
+                            <div class="pt-4 space-y-4">
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700">Living Area (m²)</label>
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <input type="number" name="min_area" class="w-full px-3 py-2 border border-gray-200 rounded-lg" placeholder="From">
+                                        <span class="text-gray-400">-</span>
+                                        <input type="number" name="max_area" class="w-full px-3 py-2 border border-gray-200 rounded-lg" placeholder="To">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700">Rooms</label>
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <input type="number" name="min_rooms" class="w-full px-3 py-2 border border-gray-200 rounded-lg" placeholder="From">
+                                        <span class="text-gray-400">-</span>
+                                        <input type="number" name="max_rooms" class="w-full px-3 py-2 border border-gray-200 rounded-lg" placeholder="To">
+                                    </div>
+                                </div>
+                                 <div>
+                                    <label class="text-sm font-medium text-gray-700">Bedrooms</label>
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <input type="number" name="min_bedrooms" class="w-full px-3 py-2 border border-gray-200 rounded-lg" placeholder="From">
+                                        <span class="text-gray-400">-</span>
+                                        <input type="number" name="max_bedrooms" class="w-full px-3 py-2 border border-gray-200 rounded-lg" placeholder="To">
+                                    </div>
+                                </div>
+                            </div>
+                        </details>
+                        
+                        <details class="group py-2">
+                            <summary class="flex justify-between items-center cursor-pointer text-lg font-semibold text-secondary">
+                                Availability & Conditions
+                                <svg class="chevron h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                            </summary>
+                            <div class="pt-4 space-y-4">
+                                <div>
+                                    <label for="listed_since" class="text-sm font-medium text-gray-700">Listed Since</label>
+                                    <select id="listed_since" name="listed_since" class="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg">
+                                        <option value="">Any</option>
+                                        <option value="1">Today</option>
+                                        <option value="3">Last 3 days</option>
+                                        <option value="5">Last 5 days</option>
+                                        <option value="10">Last 10 days</option>
+                                        <option value="30">Last 30 days</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700">Rental Conditions</label>
+                                    <div class="mt-2 space-y-2">
+                                        <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="rental_condition" value="furnished" class="form-checkbox"> Furnished</label>
+                                        <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="rental_condition" value="partially_furnished" class="form-checkbox"> Partially Furnished</label>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700">Rental Agreement</label>
+                                    <div class="mt-2 space-y-2">
+                                        <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="rental_agreement" value="indefinite" class="form-checkbox"> Indefinite</label>
+                                        <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="rental_agreement" value="temporary" class="form-checkbox"> Temporary</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </details>
+
+                        <details class="group py-2">
+                            <summary class="flex justify-between items-center cursor-pointer text-lg font-semibold text-secondary">
+                                Features
+                                <svg class="chevron h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                            </summary>
+                             <div class="pt-4 space-y-4">
+                                <div>
+                                    <label for="energy_label" class="text-sm font-medium text-gray-700">Min. Energy Label</label>
+                                    <select id="energy_label" name="energy_label" class="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg">
+                                         <option value="">Any</option>
+                                         <option value="A_PLUS_PLUS_PLUS_PLUS_PLUS">A+++++</option>
+                                         <option value="A_PLUS_PLUS_PLUS_PLUS">A++++</option>
+                                         <option value="A_PLUS_PLUS_PLUS">A+++</option>
+                                         <option value="A_PLUS_PLUS">A++</option>
+                                         <option value="A_PLUS">A+</option>
+                                         <option value="A">A</option>
+                                         <option value="B">B</option>
+                                         <option value="C">C</option>
+                                         <option value="D">D</option>
+                                         <option value="E">E</option>
+                                         <option value="F">F</option>
+                                         <option value="G">G</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700">Outdoor Space</label>
+                                    <div class="mt-2 space-y-2">
+                                        <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="outdoor_space" value="garden" class="form-checkbox"> Garden</label>
+                                        <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="outdoor_space" value="balcony" class="form-checkbox"> Balcony</label>
+                                        <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="outdoor_space" value="roof_terrace" class="form-checkbox"> Roof Terrace</label>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700">Parking</label>
+                                    <div class="mt-2 space-y-2">
+                                        <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="parking" value="private" class="form-checkbox"> Private Parking</label>
+                                        <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="parking" value="garage" class="form-checkbox"> Garage</label>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700">Accessibility</label>
+                                    <div class="mt-2 space-y-2">
+                                        <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="accessibility" value="elevator" class="form-checkbox"> Elevator</label>
+                                        <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="accessibility" value="single_floor" class="form-checkbox"> Single Floor</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </details>
+                        
+                        <div class="pt-4">
+                             <button type="submit" class="w-full flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transform hover:-translate-y-0.5">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
+                                Search
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </aside>
+
+            <main class="lg:col-span-9">
+                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+                    <div class="bg-white border border-gray-200 rounded-xl p-4 text-center">
+                        <span class="text-2xl font-bold block text-secondary" id="total-listings">-</span>
+                        <span class="text-sm text-gray-500">Total Listings</span>
+                    </div>
+                    <div class="bg-white border border-gray-200 rounded-xl p-4 text-center">
+                        <span class="text-2xl font-bold block text-secondary" id="avg-price">-</span>
+                        <span class="text-sm text-gray-500">Avg Price</span>
+                    </div>
+                    <div class="bg-white border border-gray-200 rounded-xl p-4 text-center">
+                        <span class="text-2xl font-bold block text-secondary" id="new-today">-</span>
+                        <span class="text-sm text-gray-500">New Today</span>
+                    </div>
+                </div>
+                <div class="text-center py-24" id="loading-live" style="display: block;">
+                    <div class="w-10 h-10 border-4 border-gray-200 border-t-primary rounded-full spinner mx-auto"></div>
+                    <p class="mt-4 text-gray-500">Loading initial listings...</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6" id="listings-live" style="display: none;"></div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM ELEMENTS ---
+        const form = document.getElementById('scrape-filter-form');
+        const loadingSpinner = document.getElementById('loading-live');
+        const listingsContainer = document.getElementById('listings-live');
+
+        // --- MAPPING & RENDERING (No changes from previous version) ---
+        function mapLegacyListing(listing) {
+            if ('address' in listing) {
+                let street_name = listing.address;
+                let house_number = '';
+                const match = listing.address.match(/^(.*?)(\s+\d.*)$/);
+                if (match) {
+                    street_name = match[1].trim();
+                    house_number = match[2].trim();
+                }
+                // Ensure city is correctly mapped from the legacy format
+                const city = listing.city || ''; // Add this line if 'city' might be missing
+                return { street_name, house_number, postal_code: listing.area_code, city: city, rent_price: listing.price, rent_price_type: 'per month', floor_area: ' '+ listing.area, number_of_bedrooms: ' '+listing.bedrooms, energy_label: listing.energy_label, publish_date: listing.listed_since, funda_url: listing.funda_url, image_url: listing.image_url, status: null };
+            }
+            return listing;
+        }
+
+        function renderListingCard(listing) {
+            const price = listing.rent_price ? `€${listing.rent_price.toLocaleString('nl-NL')}` : 'Price on request';
+            const placeholderImage = `https://via.placeholder.com/400x300.png?text=No+Image+Available`;
+            return `
+                <div class="bg-white rounded-xl border border-gray-200 overflow-hidden group hover:shadow-xl hover:border-primary/50 transition-all duration-300 flex flex-col">
+                    <div class="relative">
+                        <img src="${listing.image_url || placeholderImage}" alt="Photo of ${listing.street_name || 'property'}" class="w-full h-48 object-cover" onerror="this.onerror=null;this.src='${placeholderImage}';">
+                        ${listing.energy_label ? `<div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-secondary px-2 py-1 rounded-full text-xs font-bold shadow-md">⚡ ${listing.energy_label}</div>` : ''}
+                    </div>
+                    <div class="p-5 flex flex-col flex-grow">
+                         <h3 class="font-bold text-lg text-secondary group-hover:text-primary transition-colors pr-4">${listing.street_name || 'Unknown Address'} ${listing.house_number || ''}</h3>
+                        <p class="text-sm text-gray-500 mt-1">${listing.postal_code || ''} ${listing.city || ''}</p>
+                        <div class="my-5">
+                            <span class="text-2xl font-extrabold text-secondary block leading-none">${price}</span>
+                            <span class="text-sm text-gray-500">${listing.rent_price_type || 'per month'}</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 text-sm mb-6">
+                            <div><span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Area</span><span class="font-semibold text-secondary">${listing.floor_area || '-'} m²</span></div>
+                            <div><span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Bedrooms</span><span class="font-semibold text-secondary">${listing.number_of_bedrooms || '-'}</span></div>
+                        </div>
+                        <div class="flex gap-2 flex-col sm:flex-row mt-auto pt-4 border-t border-gray-100">
+                            <a href="${listing.funda_url || '#'}" target="_blank" class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white font-semibold text-sm rounded-lg hover:bg-primary-600">View on Funda</a>
+                            <button class="inline-flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-700 font-semibold text-sm rounded-lg hover:bg-gray-200" onclick="saveListing('${listing.funda_url || ''}')">❤️</button>
+                        </div>
+                    </div>
+                </div>`;
+        }
+        
+        function renderListings(listings, emptyMessage) {
+            listingsContainer.innerHTML = listings.length === 0 ? emptyMessage : listings.map(renderListingCard).join('');
+        }
+        
+        function getEmptyStateMessage(isFilter) {
+            const icon = isFilter 
+                ? `<svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>`
+                : `<svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>`;
+            const title = isFilter ? "No Listings Found" : "No Initial Listings";
+            const text = isFilter ? "Try adjusting your filters for a wider search." : "Your local listings file seems to be empty. Use the filters to start a search.";
+            return `<div class="md:col-span-2 xl:col-span-3 text-center py-24 bg-white rounded-xl border border-gray-200">${icon}<h3 class="mt-4 text-lg font-medium text-secondary">${title}</h3><p class="mt-1 text-sm text-gray-500">${text}</p></div>`;
+        }
+
+        function updateStats(listings) {
+            document.getElementById('total-listings').textContent = listings.length;
+            const pricedListings = listings.filter(l => typeof l.rent_price === 'number');
+            document.getElementById('avg-price').textContent = pricedListings.length > 0 ? `€${Math.round(pricedListings.reduce((sum, l) => sum + l.rent_price, 0) / pricedListings.length).toLocaleString('nl-NL')}` : 'N/A';
+            document.getElementById('new-today').textContent = listings.filter(l => l.publish_date && new Date(l.publish_date).toDateString() === new Date().toDateString()).length;
+        }
+
+        // --- API & DATA FETCHING ---
+        async function fetchListings(url, isFilter) {
+            try {
+                listingsContainer.style.display = 'none';
+                loadingSpinner.style.display = 'block';
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`Server error: ${response.status}`);
+                const data = await response.json();
+                const listings = Array.isArray(data.listings) ? data.listings.map(mapLegacyListing) : [];
+                renderListings(listings, getEmptyStateMessage(isFilter));
+                updateStats(listings);
+            } catch (error) {
+                console.error('Error fetching listings:', error);
+                listingsContainer.innerHTML = `<div class="md:col-span-2 xl:col-span-3 text-center py-24 bg-white rounded-xl border border-red-200 text-red-700"><h3 class="text-lg font-medium">Request Failed</h3><p class="mt-1 text-sm">${error.message}. Is the server running?</p></div>`;
+            } finally {
+                loadingSpinner.style.display = 'none';
+                listingsContainer.style.display = 'grid';
+            }
+        }
+
+        // --- EVENT LISTENERS ---
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(form);
+            // ## MODIFIED: Use URLSearchParams to handle multiple checkbox values correctly ##
+            const params = new URLSearchParams();
+            for (const [key, value] of formData.entries()) {
+                if (value) { // Don't append empty values from inputs
+                    params.append(key, value);
+                }
+            }
+            loadingSpinner.querySelector('p').textContent = 'Searching for listings...';
+            fetchListings(`http://localhost:8000/scrape_listings?${params.toString()}`, true);
+        });
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            loadingSpinner.querySelector('p').textContent = 'Loading initial listings...';
+            fetchListings('http://localhost:8000/listings', false);
+        });
+
+    </script>
+</body>
+</html>
