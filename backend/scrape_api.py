@@ -1,8 +1,8 @@
 
 from fastapi import APIRouter, Query
-from funda_url_builder import build_rental_url
-from scrape_funda import scrape_funda_html
-from extract_funda_listings import extract_simple_listings_from_html
+from .funda_url_builder import build_rental_url
+from .scrape_funda import scrape_funda_html
+from .extract_funda_listings import extract_simple_listings_from_html
 
 router = APIRouter()
 

@@ -2,8 +2,8 @@
 main.py: Orchestrates the workflow—calls the scraper, passes HTML to the extractor, writes output.
 """
 
-from scrape_funda import scrape_funda_html
-from extract_funda_listings import extract_simple_listings_from_html
+from .scrape_funda import scrape_funda_html
+from .extract_funda_listings import extract_simple_listings_from_html
 import json
 
 FUNDALIST_URL = "https://www.funda.nl/huur/utrecht/3000-5000/sorteer-datum-af/"

@@ -5,7 +5,7 @@ import json
 import os
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from scrape_api import router as scrape_router
+from .scrape_api import router as scrape_router
 app = FastAPI()
 
 # Enable CORS for all origins (for development)
