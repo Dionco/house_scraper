@@ -90,106 +90,48 @@ async def health_check():
     """Health check endpoint for Railway deployment"""
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
-# Root endpoint - Serve frontend HTML
+# Root endpoint - Serve the main UI
 @app.get("/", response_class=HTMLResponse)
 async def root():
-    """Root endpoint - Serve the frontend HTML"""
-    frontend_html_path = os.path.join(os.path.dirname(__file__), "../frontend/index.html")
-    if os.path.exists(frontend_html_path):
-        with open(frontend_html_path, 'r', encoding='utf-8') as f:
+    """Root endpoint - Serve the main listings UI"""
+    listings_html_path = os.path.join(os.path.dirname(__file__), "listings.html")
+    if os.path.exists(listings_html_path):
+        with open(listings_html_path, 'r', encoding='utf-8') as f:
             return f.read()
     else:
-        # Fallback to API landing page if frontend not found
-        html_content = """
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>House Scraper API</title>
-            <style>
-                body {
-                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                    max-width: 800px;
-                    margin: 0 auto;
-                    padding: 40px 20px;
-                    background-color: #f5f5f5;
-                }
-                .container {
-                    background: white;
-                    padding: 40px;
-                    border-radius: 10px;
-                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                }
-                h1 {
-                    color: #333;
-                    text-align: center;
-                    margin-bottom: 30px;
-                }
-                .feature {
-                    margin: 20px 0;
-                    padding: 15px;
-                    background: #f8f9fa;
-                    border-radius: 5px;
-                    border-left: 4px solid #007bff;
-                }
-                .api-link {
-                    display: inline-block;
-                    margin: 10px 10px 10px 0;
-                    padding: 10px 20px;
-                    background: #007bff;
-                    color: white;
-                    text-decoration: none;
-                    border-radius: 5px;
-                    transition: background-color 0.3s;
-                }
-                .api-link:hover {
-                    background: #0056b3;
-                }
-                .status {
-                    text-align: center;
-                    margin: 30px 0;
-                    padding: 15px;
-                    background: #d4edda;
-                    border: 1px solid #c3e6cb;
-                    border-radius: 5px;
-                    color: #155724;
-                }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <h1>🏠 House Scraper API</h1>
-                
-                <div class="status">
-                    <strong>✅ API is running successfully!</strong>
+        # Fallback to frontend if listings.html not found
+        frontend_html_path = os.path.join(os.path.dirname(__file__), "../frontend/index.html")
+        if os.path.exists(frontend_html_path):
+            with open(frontend_html_path, 'r', encoding='utf-8') as f:
+                return f.read()
+        else:
+            # Final fallback to API landing page
+            return """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>House Scraper</title>
+                <style>
+                    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 2em; background-color: #f5f5f5; }
+                    .container { max-width: 800px; margin: 0 auto; background: white; padding: 2em; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                    h1 { color: #2c3e50; text-align: center; }
+                    .feature { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 5px; border-left: 4px solid #007bff; }
+                    .api-link { display: inline-block; margin: 10px 10px 10px 0; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; }
+                    .api-link:hover { background: #0056b3; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h1>🏠 House Scraper</h1>
+                    <div class="feature">
+                        <h3>UI Not Found</h3>
+                        <p>The main UI file is missing. Please check the deployment.</p>
+                        <a href="/api" class="api-link">API Documentation</a>
+                    </div>
                 </div>
-                
-                <div class="feature">
-                    <h3>📊 Features</h3>
-                    <ul>
-                        <li>Automated house listing scraping from Funda</li>
-                        <li>User authentication and profile management</li>
-                        <li>Customizable search profiles</li>
-                        <li>Periodic scraping with email notifications</li>
-                        <li>RESTful API endpoints</li>
-                    </ul>
-                </div>
-                
-                <div class="feature">
-                    <h3>🔗 API Endpoints</h3>
-                    <a href="/docs" class="api-link">📚 API Documentation</a>
-                    <a href="/health" class="api-link">🏥 Health Check</a>
-                    <a href="/api/data" class="api-link">📋 View Data</a>
-                </div>
-                
-                <div class="feature">
-                    <h3>🚀 Quick Start</h3>
-                    <p>Visit the <strong>API Documentation</strong> above to explore all available endpoints and try them out interactively.</p>
-                </div>
-            </div>
-        </body>
-        </html>
-        """
-        return html_content
+            </body>
+            </html>
+            """
 
 # API landing page endpoint
 @app.get("/api", response_class=HTMLResponse)
