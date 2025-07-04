@@ -10,3 +10,6 @@ python-jose[cryptography]
 passlib[bcrypt]
 python-multipart
 email_validator
+undetected-chromedriver
+selenium
+fake-useragent
