@@ -33,4 +33,4 @@ ENV PYTHONPATH=/app/backend
 ENV DATABASE_FILE=/app/database.json
 
 # Start the application
-CMD ["uvicorn", "backend.api:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uvicorn backend.api:app --host 0.0.0.0 --port ${PORT:-8000}"]
