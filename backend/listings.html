@@ -72,7 +72,120 @@
                         <p class="text-gray-500 mt-1">Refine or start a new search.</p>
                     </div>
 
+                    <div class="mb-6 p-4 bg-white rounded-lg border shadow-sm">
+                        <div class="flex items-center justify-between mb-3">
+                            <h2 class="text-lg font-bold text-secondary">Search Profiles</h2>
+                            <button id="toggle-profile-actions" class="p-1 rounded-md hover:bg-gray-100 transition-colors hidden">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zM12 13a1 1 0 110-2 1 1 0 010 2zM12 20a1 1 0 110-2 1 1 0 010 2z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <!-- Profile Selection -->
+                        <div class="mb-3">
+                            <div class="relative">
+                                <select id="profile-select" class="block appearance-none w-full bg-gray-50 border border-gray-200 text-gray-700 py-2.5 px-3 pr-8 rounded-lg text-sm focus:outline-none focus:bg-white focus:border-primary transition duration-200">
+                                    <option value="">Select a saved profile...</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 6.757 7.586 5.343 9z"/></svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Active Profile Info -->
+                        <div id="active-profile-info" class="hidden mb-3 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-sm font-medium text-primary" id="active-profile-name">Profile Name</div>
+                                    <div class="text-xs text-gray-500" id="active-profile-emails">No emails set</div>
+                                </div>
+                                <div class="flex gap-1">
+                                    <button id="edit-profile-btn" class="p-1.5 rounded-md hover:bg-primary/10 transition-colors" title="Edit profile">
+                                        <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
+                                    </button>
+                                    <button id="delete-profile-btn" class="p-1.5 rounded-md hover:bg-red-50 transition-colors" title="Delete profile">
+                                        <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Profile Actions (Collapsible) -->
+                        <div id="profile-actions-section" class="hidden space-y-3">
+                            <!-- Periodic Scraping Status -->
+                            <div class="p-3 bg-blue-50 rounded-lg">
+                                <div class="flex items-center justify-between mb-2">
+                                    <label class="text-sm font-medium text-gray-700">Periodic Scraping</label>
+                                    <span id="scraper-status" class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800">Active</span>
+                                </div>
+                                <div class="space-y-2">
+                                    <div class="flex items-center gap-2">
+                                        <label class="text-sm text-gray-600">Interval (hours):</label>
+                                        <input type="number" id="scrape-interval" class="w-20 px-2 py-1 text-sm border border-gray-200 rounded" value="4" min="1" max="168">
+                                        <button id="update-interval-btn" class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-200" disabled>Update</button>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <button id="trigger-scrape-btn" class="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600 transition duration-200" disabled>Scrape Now</button>
+                                        <div class="text-xs text-gray-500">
+                                            <span id="last-scraped">Last scraped: Never</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Email Management -->
+                            <div class="p-3 bg-gray-50 rounded-lg">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Email Notifications</label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="profile-emails" class="flex-1 px-2 py-1.5 border border-gray-200 rounded text-sm" placeholder="Enter emails, comma separated">
+                                    <button id="update-emails-btn" class="px-3 py-1.5 bg-primary text-white text-sm font-medium rounded hover:bg-primary-600 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                        Update
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Profile Management -->
+                            <div class="p-3 bg-gray-50 rounded-lg">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Save Profile</label>
+                                <div class="space-y-2">
+                                    <input type="text" id="save-profile-name" class="w-full px-2 py-1.5 border border-gray-200 rounded text-sm" placeholder="Profile name">
+                                    <div class="flex gap-2">
+                                        <button id="save-profile-btn" class="flex-1 px-3 py-1.5 bg-secondary text-white text-sm font-medium rounded hover:bg-secondary/90 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                                            Save New
+                                        </button>
+                                        <button id="overwrite-profile-btn" class="flex-1 px-3 py-1.5 bg-primary text-white text-sm font-medium rounded hover:bg-primary-600 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                            Update
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Save new profile action -->
+                        <div class="mt-3 pt-3 border-t border-gray-100">
+                            <button id="save-new-profile-btn" class="w-full flex items-center justify-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition duration-200">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                Save Current Search Profile
+                            </button>
+                        </div>
+                    </div>
+
                     <form id="scrape-filter-form" class="space-y-1">
+                        <!-- Scrape for Updates Button (moved to top, cleaner style) -->
+                        <div class="mb-4">
+                            <button type="submit" id="scrape-updates-btn" class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white font-semibold rounded-lg shadow hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all duration-200">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
+                                <span>Scrape for Updates</span>
+                            </button>
+                        </div>
                         <div class="p-3">
                              <label for="keyword" class="text-sm font-medium text-gray-700">Keyword Search</label>
                              <input type="text" id="keyword" name="keyword" class="mt-1 w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition" placeholder="e.g. warmtepomp, airco">
@@ -139,7 +252,7 @@
                                 </div>
                             </div>
                         </details>
-                        
+                         
                         <details class="group py-2">
                             <summary class="flex justify-between items-center cursor-pointer text-lg font-semibold text-secondary">
                                 Availability & Conditions
@@ -222,13 +335,6 @@
                                 </div>
                             </div>
                         </details>
-                        
-                        <div class="pt-4">
-                             <button type="submit" class="w-full flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all duration-200 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transform hover:-translate-y-0.5">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
-                                Search
-                            </button>
-                        </div>
                     </form>
                 </div>
             </aside>
@@ -262,22 +368,82 @@
         const form = document.getElementById('scrape-filter-form');
         const loadingSpinner = document.getElementById('loading-live');
         const listingsContainer = document.getElementById('listings-live');
+        const profileSelect = document.getElementById('profile-select');
+        const activeProfileInfo = document.getElementById('active-profile-info');
+        const activeProfileNameSpan = document.getElementById('active-profile-name');
+        const activeProfileEmails = document.getElementById('active-profile-emails');
+        const profileEmailsInput = document.getElementById('profile-emails');
+        const updateEmailsBtn = document.getElementById('update-emails-btn');
+        const saveProfileNameInput = document.getElementById('save-profile-name');
+        const saveProfileBtn = document.getElementById('save-profile-btn');
+        const overwriteProfileBtn = document.getElementById('overwrite-profile-btn');
+        const scrapeUpdatesBtn = document.getElementById('scrape-updates-btn');
+        const editProfileBtn = document.getElementById('edit-profile-btn');
+        const deleteProfileBtn = document.getElementById('delete-profile-btn');
+        const saveNewProfileBtn = document.getElementById('save-new-profile-btn');
+        const profileActionsSection = document.getElementById('profile-actions-section');
+        
+        // Periodic scraping elements
+        const scraperStatus = document.getElementById('scraper-status');
+        const scrapeIntervalInput = document.getElementById('scrape-interval');
+        const updateIntervalBtn = document.getElementById('update-interval-btn');
+        const triggerScrapeBtn = document.getElementById('trigger-scrape-btn');
+        const lastScrapedSpan = document.getElementById('last-scraped');
+
+        let currentProfileId = null;
+        let profiles = {}; // Store profiles fetched from API
+        let isProfileActionsExpanded = false;
 
         // --- MAPPING & RENDERING (No changes from previous version) ---
         function mapLegacyListing(listing) {
-            if ('address' in listing) {
-                let street_name = listing.address;
-                let house_number = '';
-                const match = listing.address.match(/^(.*?)(\s+\d.*)$/);
+            // Prefer address.street_name, and split house number if needed
+            let full_street = listing['address.street_name'] || listing.street_name || listing.address || '';
+            let street_name = full_street;
+            let house_number = listing['address.house_number'] || listing.house_number || '';
+            // If house_number is missing/null/empty, try to extract from street_name
+            if (full_street && (!house_number || house_number === null)) {
+                const match = full_street.match(/^(.*?)(\s+\d.*)$/);
                 if (match) {
                     street_name = match[1].trim();
                     house_number = match[2].trim();
+                } else {
+                    // If no match, just use the full street as street_name, blank house_number
+                    street_name = full_street;
+                    house_number = '';
                 }
-                // Ensure city is correctly mapped from the legacy format
-                const city = listing.city || ''; // Add this line if 'city' might be missing
-                return { street_name, house_number, postal_code: listing.area_code, city: city, rent_price: listing.price, rent_price_type: 'per month', floor_area: ' '+ listing.area, number_of_bedrooms: ' '+listing.bedrooms, energy_label: listing.energy_label, publish_date: listing.listed_since, funda_url: listing.funda_url, image_url: listing.image_url, status: null };
             }
-            return listing;
+            // If house_number is still empty, just show the full street as street_name
+            if (!house_number) {
+                street_name = full_street;
+            }
+            const postal_code = listing['address.postal_code'] || listing.postal_code || listing.area_code || '';
+            const city = listing['address.city'] || listing.city || '';
+            const rent_price = listing['price.rent_price'] || listing.rent_price || listing.price;
+            const rent_price_type = listing['price.rent_price_type'] || listing.rent_price_type || 'per month';
+            const floor_area = listing.floor_area || listing['floor_area'] || listing.area;
+            const number_of_bedrooms = listing.number_of_bedrooms || listing['number_of_bedrooms'] || listing.bedrooms;
+            const energy_label = listing.energy_label || listing['energy_label'];
+            const publish_date = listing.publish_date || listing['publish_date'] || listing.listed_since;
+            const funda_url = listing.funda_url || listing['object_detail_page_relative_url'];
+            const image_url = listing.image_url;
+            const status = listing.status || null;
+            // If we have at least a street_name, show it, else fallback to Unknown Address
+            return {
+                ...listing,
+                street_name: street_name || 'Unknown Address',
+                house_number,
+                postal_code,
+                city,
+                rent_price,
+                rent_price_type,
+                floor_area,
+                number_of_bedrooms,
+                energy_label,
+                publish_date,
+                funda_url,
+                image_url,
+                status
+            };
         }
 
         function renderListingCard(listing) {
@@ -287,7 +453,8 @@
                 <div class="bg-white rounded-xl border border-gray-200 overflow-hidden group hover:shadow-xl hover:border-primary/50 transition-all duration-300 flex flex-col">
                     <div class="relative">
                         <img src="${listing.image_url || placeholderImage}" alt="Photo of ${listing.street_name || 'property'}" class="w-full h-48 object-cover" onerror="this.onerror=null;this.src='${placeholderImage}';">
-                        ${listing.energy_label ? `<div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-secondary px-2 py-1 rounded-full text-xs font-bold shadow-md">⚡ ${listing.energy_label}</div>` : ''}
+                        ${listing.is_new ? `<div class=\"absolute top-3 left-3 bg-accent text-white px-2.5 py-1 rounded-full text-xs font-bold shadow-lg\" style=\"background-color: #10b981;\">✨ NEW</div>` : ''}
+                        ${listing.energy_label ? `<div class=\"absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-secondary px-2 py-1 rounded-full text-xs font-bold shadow-md\">⚡ ${listing.energy_label}</div>` : ''}
                     </div>
                     <div class="p-5 flex flex-col flex-grow">
                          <h3 class="font-bold text-lg text-secondary group-hover:text-primary transition-colors pr-4">${listing.street_name || 'Unknown Address'} ${listing.house_number || ''}</h3>
@@ -296,9 +463,9 @@
                             <span class="text-2xl font-extrabold text-secondary block leading-none">${price}</span>
                             <span class="text-sm text-gray-500">${listing.rent_price_type || 'per month'}</span>
                         </div>
-                        <div class="grid grid-cols-2 gap-4 text-sm mb-6">
-                            <div><span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Area</span><span class="font-semibold text-secondary">${listing.floor_area || '-'} m²</span></div>
-                            <div><span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Bedrooms</span><span class="font-semibold text-secondary">${listing.number_of_bedrooms || '-'}</span></div>
+                            <div class="grid grid-cols-2 gap-4 text-sm mb-6">
+                            <div><span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Area </span><span class="font-semibold text-secondary">${listing.floor_area || '-'} m²</span></div>
+                            <div><span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Bedrooms </span><span class="font-semibold text-secondary">${listing.number_of_bedrooms || '-'}</span></div>
                         </div>
                         <div class="flex gap-2 flex-col sm:flex-row mt-auto pt-4 border-t border-gray-100">
                             <a href="${listing.funda_url || '#'}" target="_blank" class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white font-semibold text-sm rounded-lg hover:bg-primary-600">View on Funda</a>
@@ -307,11 +474,33 @@
                     </div>
                 </div>`;
         }
-        
+         
         function renderListings(listings, emptyMessage) {
-            listingsContainer.innerHTML = listings.length === 0 ? emptyMessage : listings.map(renderListingCard).join('');
+            // Always map listings to ensure correct structure
+            const mappedListings = listings.map(mapLegacyListing);
+            if (typeof debugListingKeys === 'function') {
+                debugListingKeys(mappedListings);
+            }
+            if (mappedListings.length === 0) {
+                listingsContainer.innerHTML = emptyMessage;
+                // Update stats for empty state
+                updateStats([]);
+                return;
+            }
+            // Check if any listing is new
+            const hasNew = mappedListings.some(l => l.is_new);
+            let banner = '';
+            if (hasNew) {
+                banner = `<div id="new-listings-banner" class="col-span-full mb-4 p-4 rounded-lg bg-green-100 text-green-900 flex items-center justify-between shadow">
+                    <span>✨ <b>New listings have been added!</b> Check out the latest properties below.</span>
+                    <button onclick="this.parentElement.style.display='none'" class="ml-4 px-3 py-1 rounded bg-green-200 hover:bg-green-300 text-green-900 font-semibold text-xs">Dismiss</button>
+                </div>`;
+            }
+            listingsContainer.innerHTML = banner + mappedListings.map(renderListingCard).join('');
+            // Update stats for this profile
+            updateStats(mappedListings);
         }
-        
+         
         function getEmptyStateMessage(isFilter) {
             const icon = isFilter 
                 ? `<svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>`
@@ -329,45 +518,682 @@
         }
 
         // --- API & DATA FETCHING ---
-        async function fetchListings(url, isFilter) {
+        async function fetchListings(profileId, isFilter) {
             try {
                 listingsContainer.style.display = 'none';
                 loadingSpinner.style.display = 'block';
+                let url = '/api/listings';
+                if (profileId) {
+                    url += `?profile_id=${encodeURIComponent(profileId)}`;
+                }
                 const response = await fetch(url);
-                if (!response.ok) throw new Error(`Server error: ${response.status}`);
+                if (!response.ok) throw new Error(`Server error: ${response.statusText}`);
                 const data = await response.json();
-                const listings = Array.isArray(data.listings) ? data.listings.map(mapLegacyListing) : [];
-                renderListings(listings, getEmptyStateMessage(isFilter));
-                updateStats(listings);
+                renderListings(data.listings, getEmptyStateMessage(isFilter));
             } catch (error) {
                 console.error('Error fetching listings:', error);
-                listingsContainer.innerHTML = `<div class="md:col-span-2 xl:col-span-3 text-center py-24 bg-white rounded-xl border border-red-200 text-red-700"><h3 class="text-lg font-medium">Request Failed</h3><p class="mt-1 text-sm">${error.message}. Is the server running?</p></div>`;
+                listingsContainer.innerHTML = `<div class="md:col-span-2 xl:col-span-3 text-center py-24 bg-red-50 rounded-xl border border-red-200 text-red-700">
+                    <p class="font-semibold">Error loading listings.</p>
+                    <p class="text-sm">Please try again later. Details: ${error.message}</p>
+                </div>`;
+                updateStats([]);
             } finally {
                 loadingSpinner.style.display = 'none';
                 listingsContainer.style.display = 'grid';
             }
         }
+        
+        // --- PROFILE MANAGEMENT FUNCTIONS ---
 
-        // --- EVENT LISTENERS ---
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(form);
-            // ## MODIFIED: Use URLSearchParams to handle multiple checkbox values correctly ##
-            const params = new URLSearchParams();
-            for (const [key, value] of formData.entries()) {
-                if (value) { // Don't append empty values from inputs
-                    params.append(key, value);
+        /**
+         * Centralized function to update the UI based on the current profile selection.
+         * @param {string|null} profileId - The ID of the currently selected profile, or null if none.
+         */
+        function updateProfileViewState(profileId) {
+            const profile = profileId ? profiles[profileId] : null;
+
+            if (profile) {
+                // Show active profile info
+                activeProfileInfo.classList.remove('hidden');
+                activeProfileNameSpan.textContent = profile.name;
+                activeProfileEmails.textContent = profile.emails && profile.emails.length > 0 
+                    ? `${profile.emails.length} email${profile.emails.length > 1 ? 's' : ''} configured`
+                    : 'No emails set';
+                
+                // Fill form fields
+                profileEmailsInput.value = profile.emails ? profile.emails.join(', ') : '';
+                saveProfileNameInput.value = profile.name;
+                
+                // Fill periodic scraping fields
+                if (scrapeIntervalInput) {
+                    scrapeIntervalInput.value = profile.scrape_interval_hours || 4;
+                }
+                
+                // Update last scraped display
+                if (lastScrapedSpan) {
+                    if (profile.last_scraped) {
+                        const lastScraped = new Date(profile.last_scraped);
+                        lastScrapedSpan.textContent = `Last scraped: ${lastScraped.toLocaleDateString()} ${lastScraped.toLocaleTimeString()}`;
+                    } else {
+                        lastScrapedSpan.textContent = 'Last scraped: Never';
+                    }
+                }
+                
+                // Enable buttons
+                updateEmailsBtn.disabled = false;
+                overwriteProfileBtn.disabled = false;
+                deleteProfileBtn.disabled = false;
+                if (updateIntervalBtn) updateIntervalBtn.disabled = false;
+                if (triggerScrapeBtn) triggerScrapeBtn.disabled = false;
+
+            } else {
+                // Hide active profile info
+                activeProfileInfo.classList.add('hidden');
+                
+                // Clear form fields
+                profileEmailsInput.value = '';
+                saveProfileNameInput.value = '';
+                if (scrapeIntervalInput) scrapeIntervalInput.value = '4';
+                if (lastScrapedSpan) lastScrapedSpan.textContent = 'Last scraped: Never';
+                
+                // Disable buttons
+                updateEmailsBtn.disabled = true;
+                overwriteProfileBtn.disabled = true;
+                deleteProfileBtn.disabled = true;
+                if (updateIntervalBtn) updateIntervalBtn.disabled = true;
+                if (triggerScrapeBtn) triggerScrapeBtn.disabled = true;
+
+                // Hide profile actions if expanded
+                profileActionsSection.classList.add('hidden');
+                isProfileActionsExpanded = false;
+            }
+        }
+
+        /**
+         * Fetches all saved profiles from the backend.
+         */
+        async function fetchProfiles() {
+            try {
+                const response = await fetch('/api/profiles'); // Adjust API endpoint as necessary
+                if (!response.ok) throw new Error(`Failed to fetch profiles: ${response.statusText}`);
+                const data = await response.json();
+                profiles = {}; // Clear existing profiles
+                data.forEach(profile => {
+                    profiles[profile.id] = profile; // Store by ID for easy lookup
+                });
+                renderProfileSelect();
+            } catch (error) {
+                console.error('Error fetching profiles:', error);
+                alert('Could not load search profiles. Please try refreshing the page.');
+            }
+        }
+
+        /**
+         * Renders the profiles into the dropdown select element.
+         */
+        function renderProfileSelect() {
+            profileSelect.innerHTML = '<option value="">Select a saved profile...</option>';
+            const sortedProfileNames = Object.values(profiles).sort((a, b) => a.name.localeCompare(b.name));
+            sortedProfileNames.forEach(profile => {
+                const option = document.createElement('option');
+                option.value = profile.id;
+                option.textContent = profile.name;
+                profileSelect.appendChild(option);
+            });
+
+            // Set the dropdown to the currently active profile and update the view
+            profileSelect.value = currentProfileId;
+            updateProfileViewState(currentProfileId);
+        }
+
+        /**
+         * Loads the filters of a selected profile into the form.
+         * @param {string} profileId - The ID of the profile to load.
+         */
+        function loadProfile(profileId) {
+            const profile = profiles[profileId];
+            if (!profile) {
+                console.warn('Profile not found:', profileId);
+                currentProfileId = null;
+                updateProfileViewState(null);
+                return;
+            }
+
+            // Reset form first to clear previous selections
+            form.reset(); 
+            // Also reset checkboxes
+            form.querySelectorAll('input[type="checkbox"]').forEach(checkbox => checkbox.checked = false);
+
+            // Populate form fields
+            const filters = profile.filters;
+            for (const key in filters) {
+                const value = filters[key];
+                const input = form.querySelector(`[name="${key}"]`);
+
+                if (input) {
+                    if (input.type === 'checkbox') {
+                        // For checkboxes, value is an array
+                        if (Array.isArray(value)) {
+                            form.querySelectorAll(`input[name="${key}"]`).forEach(checkbox => {
+                                if (value.includes(checkbox.value)) {
+                                    checkbox.checked = true;
+                                }
+                            });
+                        }
+                    } else if (input.tagName === 'SELECT') {
+                         input.value = value;
+                    } 
+                    else {
+                        input.value = value;
+                    }
+                } else {
+                    // Handle range inputs like min_price, max_price
+                    if (key.startsWith('min_') || key.startsWith('max_')) {
+                        const baseName = key.substring(0, key.indexOf('_')); // e.g., 'min' or 'max'
+                        const fieldName = key.substring(key.indexOf('_') + 1); // e.g., 'price', 'area'
+                        const rangeInput = form.querySelector(`input[name="${key}"]`);
+                        if (rangeInput) {
+                            rangeInput.value = value;
+                        }
+                    }
                 }
             }
-            loadingSpinner.querySelector('p').textContent = 'Searching for listings...';
-            fetchListings(`http://localhost:8000/scrape_listings?${params.toString()}`, true);
-        });
-        
+
+            currentProfileId = profileId;
+            saveProfileNameInput.value = profile.name; // Pre-fill save as new with current profile name
+
+            // Update all UI elements related to the profile state
+            updateProfileViewState(profileId);
+
+            // Optionally, trigger a scrape for the loaded profile immediately
+            // form.dispatchEvent(new Event('submit')); 
+        }
+
+        /**
+         * Collects all current filter values from the form.
+         * @returns {object} An object containing the current filter settings.
+         */
+        function getCurrentFilters() {
+            const filters = {};
+            new FormData(form).forEach((value, key) => {
+                const input = form.querySelector(`[name="${key}"]`);
+                if (input && input.type === 'checkbox') {
+                    if (!filters[key]) {
+                        filters[key] = [];
+                    }
+                    if (input.checked) {
+                        filters[key].push(value);
+                    }
+                } else if (value) {
+                    filters[key] = value;
+                }
+            });
+            // Handle number inputs that might be empty and should be null/undefined
+            ['min_price', 'max_price', 'min_area', 'max_area', 'min_rooms', 'max_rooms', 'min_bedrooms', 'max_bedrooms'].forEach(key => {
+                if (filters[key] === '') {
+                    delete filters[key];
+                }
+            });
+            return filters;
+        }
+
+        /**
+         * Saves a new search profile.
+         */
+        async function saveNewProfile() {
+            const profileName = saveProfileNameInput.value.trim();
+            if (!profileName) {
+                alert('Please enter a name for the new search profile.');
+                return;
+            }
+
+            // Check if a profile with the same name already exists
+            const existingProfile = Object.values(profiles).find(p => p.name === profileName);
+            if (existingProfile) {
+                alert('A profile with this name already exists. Please choose a different name or use "Overwrite Selected Profile".');
+                return;
+            }
+
+            const profileEmails = profileEmailsInput.value.split(',').map(email => email.trim()).filter(email => email);
+            const filters = getCurrentFilters();
+            const scrapeInterval = scrapeIntervalInput ? parseInt(scrapeIntervalInput.value) || 4 : 4;
+
+            try {
+                const response = await fetch('/api/profiles', { // Adjust API endpoint
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        name: profileName, 
+                        filters, 
+                        emails: profileEmails,
+                        scrape_interval_hours: scrapeInterval
+                    })
+                });
+                if (!response.ok) throw new Error(`Failed to save profile: ${response.statusText}`);
+                const result = await response.json();
+                const newProfileId = result.profileId;
+                
+                // Create the profile object in the expected format
+                const newProfile = {
+                    id: newProfileId,
+                    name: result.name,
+                    filters: result.filters,
+                    emails: result.emails || [],
+                    listings: result.listings || []
+                };
+                
+                profiles[newProfileId] = newProfile;
+                currentProfileId = newProfileId;
+                renderProfileSelect();
+                alert(`Profile "${newProfile.name}" saved successfully!`);
+                saveProfileNameInput.value = newProfile.name; // Update input with saved name
+            } catch (error) {
+                console.error('Error saving new profile:', error);
+                alert('Could not save new profile. Please try again.');
+            }
+        }
+
+        /**
+         * Overwrites the currently selected profile with the current filter settings.
+         */
+        async function overwriteSelectedProfile() {
+            if (!currentProfileId) {
+                alert('Please select a profile to overwrite.');
+                return;
+            }
+
+            const profileName = saveProfileNameInput.value.trim(); // Use the name from the input field
+            const profileEmails = profileEmailsInput.value.split(',').map(email => email.trim()).filter(email => email);
+            const filters = getCurrentFilters();
+
+            try {
+                const response = await fetch(`/api/profiles/${currentProfileId}`, { // Adjust API endpoint
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: profileName, filters, emails: profileEmails }) // Ensure name is also updated if changed
+                });
+                if (!response.ok) throw new Error(`Failed to update profile: ${response.statusText}`);
+                const result = await response.json();
+                
+                // Update the local profile with the response data
+                profiles[currentProfileId] = {
+                    id: currentProfileId,
+                    name: result.name,
+                    filters: result.filters,
+                    emails: result.emails || [],
+                    listings: result.listings || []
+                };
+                
+                // Refresh the UI
+                renderProfileSelect();
+                updateProfileViewState(currentProfileId);
+                alert(`Profile "${result.name}" updated successfully!`);
+            } catch (error) {
+                console.error('Error updating profile:', error);
+                alert('Could not update profile. Please try again.');
+            }
+        }
+
+        /**
+         * Updates the email addresses for the currently selected profile.
+         */
+        async function updateProfileEmails() {
+            if (!currentProfileId) {
+                alert('Please select a profile to update emails for.');
+                return;
+            }
+            const emails = profileEmailsInput.value.split(',').map(email => email.trim()).filter(email => email);
+
+            try {
+                // Use the correct backend endpoint
+                const response = await fetch(`/api/profiles/${currentProfileId}/email`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ emails: emails })
+                });
+                if (!response.ok) throw new Error(`Failed to update emails: ${response.statusText}`);
+                const result = await response.json();
+                
+                // Update local profile data
+                if (profiles[currentProfileId]) {
+                    profiles[currentProfileId].emails = emails;
+                    updateProfileViewState(currentProfileId); // Refresh UI
+                }
+                
+                alert('Notification emails updated successfully!');
+            } catch (error) {
+                console.error('Error updating emails:', error);
+                alert('Could not update notification emails. Please try again.');
+            }
+        }
+
+        // --- PERIODIC SCRAPING FUNCTIONS ---
+
+        /**
+         * Updates the scraping interval for the current profile.
+         */
+        async function updateScrapeInterval() {
+            if (!currentProfileId) {
+                alert('Please select a profile to update the scraping interval for.');
+                return;
+            }
+            
+            const intervalHours = parseInt(scrapeIntervalInput.value);
+            if (!intervalHours || intervalHours < 1 || intervalHours > 168) {
+                alert('Please enter a valid interval between 1 and 168 hours.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/profiles/${currentProfileId}/interval`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ interval_hours: intervalHours })
+                });
+                if (!response.ok) throw new Error(`Failed to update interval: ${response.statusText}`);
+                
+                // Update local profile data
+                if (profiles[currentProfileId]) {
+                    profiles[currentProfileId].scrape_interval_hours = intervalHours;
+                    updateProfileViewState(currentProfileId); // Refresh UI
+                }
+                
+                alert(`Scraping interval updated to ${intervalHours} hours.`);
+            } catch (error) {
+                console.error('Error updating scraping interval:', error);
+                alert('Could not update scraping interval. Please try again.');
+            }
+        }
+
+        /**
+         * Manually triggers a scrape for the current profile.
+         */
+        async function triggerProfileScrape() {
+            if (!currentProfileId) {
+                alert('Please select a profile to scrape.');
+                return;
+            }
+
+            try {
+                // Show loading state
+                triggerScrapeBtn.disabled = true;
+                triggerScrapeBtn.textContent = 'Scraping...';
+                
+                const response = await fetch(`/api/profiles/${currentProfileId}/scrape`, {
+                    method: 'POST'
+                });
+                if (!response.ok) throw new Error(`Failed to trigger scrape: ${response.statusText}`);
+                
+                const result = await response.json();
+                alert(result.message || 'Scrape completed successfully!');
+                
+                // Refresh the listings
+                await fetchListings(currentProfileId, false);
+                
+                // Update the last scraped time
+                if (profiles[currentProfileId]) {
+                    profiles[currentProfileId].last_scraped = new Date().toISOString();
+                    updateProfileViewState(currentProfileId);
+                }
+                
+            } catch (error) {
+                console.error('Error triggering scrape:', error);
+                alert('Could not trigger scrape. Please try again.');
+            } finally {
+                triggerScrapeBtn.disabled = false;
+                triggerScrapeBtn.textContent = 'Scrape Now';
+            }
+        }
+
+        /**
+         * Fetches the current scraper status.
+         */
+        async function fetchScraperStatus() {
+            try {
+                const response = await fetch('/api/scraper/status');
+                if (!response.ok) throw new Error(`Failed to fetch scraper status: ${response.statusText}`);
+                const status = await response.json();
+                
+                // Update scraper status display
+                if (scraperStatus) {
+                    scraperStatus.textContent = status.is_running ? 'Active' : 'Stopped';
+                    scraperStatus.className = status.is_running 
+                        ? 'text-xs px-2 py-1 rounded-full bg-green-100 text-green-800'
+                        : 'text-xs px-2 py-1 rounded-full bg-red-100 text-red-800';
+                }
+                
+                return status;
+            } catch (error) {
+                console.error('Error fetching scraper status:', error);
+                return { is_running: false, total_jobs: 0, jobs: [] };
+            }
+        }
+
+        // --- EVENT LISTENERS ---
+
         document.addEventListener('DOMContentLoaded', () => {
-            loadingSpinner.querySelector('p').textContent = 'Loading initial listings...';
-            fetchListings('http://localhost:8000/listings', false);
+            fetchProfiles(); // Load profiles on page load
+            fetchListings(null, false); // Fetch initial listings (none selected)
+
+            // Quick save button - opens custom modal for name input
+            saveNewProfileBtn.addEventListener('click', () => {
+                document.getElementById('quick-save-modal').classList.remove('hidden');
+                document.getElementById('quick-save-profile-name').focus();
+            });
+
+            // Modal close logic
+            document.getElementById('quick-save-cancel').addEventListener('click', () => {
+                document.getElementById('quick-save-modal').classList.add('hidden');
+                document.getElementById('quick-save-profile-name').value = '';
+            });
+
+            // Modal save logic
+            document.getElementById('quick-save-confirm').addEventListener('click', () => {
+                const profileName = document.getElementById('quick-save-profile-name').value.trim();
+                if (profileName) {
+                    saveProfileNameInput.value = profileName;
+                    document.getElementById('quick-save-modal').classList.add('hidden');
+                    document.getElementById('quick-save-profile-name').value = '';
+                    saveNewProfile();
+                } else {
+                    document.getElementById('quick-save-profile-name').focus();
+                }
+            });
+
+            // Allow Enter key to confirm in modal
+            document.getElementById('quick-save-profile-name').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    document.getElementById('quick-save-confirm').click();
+                }
+            });
+
+            // Attach event listeners for update emails and overwrite profile
+            updateEmailsBtn.addEventListener('click', updateProfileEmails);
+            overwriteProfileBtn.addEventListener('click', overwriteSelectedProfile);
+
+            // Periodic scraping event listeners
+            if (updateIntervalBtn) {
+                updateIntervalBtn.addEventListener('click', updateScrapeInterval);
+            }
+            if (triggerScrapeBtn) {
+                triggerScrapeBtn.addEventListener('click', triggerProfileScrape);
+            }
+            if (scrapeIntervalInput) {
+                scrapeIntervalInput.addEventListener('input', () => {
+                    if (currentProfileId && updateIntervalBtn) {
+                        const currentInterval = profiles[currentProfileId]?.scrape_interval_hours || 4;
+                        const newInterval = parseInt(scrapeIntervalInput.value);
+                        updateIntervalBtn.disabled = !newInterval || newInterval === currentInterval;
+                    }
+                });
+            }
+
+            // Fetch initial scraper status
+            fetchScraperStatus();
+
+            // Update scraper status every 30 seconds
+            setInterval(fetchScraperStatus, 30000);
+
+            // Refresh listings every 5 minutes if a profile is selected
+            setInterval(() => {
+                if (currentProfileId) {
+                    fetchListings(currentProfileId, false);
+                }
+            }, 300000); // 5 minutes
+
+            // Profile selection change
+            profileSelect.addEventListener('change', (event) => {
+                const selectedProfileId = event.target.value;
+                currentProfileId = selectedProfileId || null;
+
+                if (currentProfileId) {
+                    loadProfile(currentProfileId);
+                    fetchListings(currentProfileId, false); // Fetch listings for selected profile
+                } else {
+                    // If "Select a saved profile..." is chosen, reset everything
+                    form.reset(); // Clear all form filters
+                    saveProfileNameInput.value = '';
+                    updateProfileViewState(null); // Hide profile-specific sections
+                    fetchListings(null, false); // Show initial/empty state
+                }
+            });
+
+            // Edit profile button - toggles profile actions section
+            editProfileBtn.addEventListener('click', () => {
+                isProfileActionsExpanded = !isProfileActionsExpanded;
+                if (isProfileActionsExpanded) {
+                    profileActionsSection.classList.remove('hidden');
+                } else {
+                    profileActionsSection.classList.add('hidden');
+                }
+            });
+
+            // Delete profile button
+            deleteProfileBtn.addEventListener('click', async () => {
+                if (!currentProfileId) return;
+                if (!confirm('Are you sure you want to delete this profile? This cannot be undone.')) return;
+                try {
+                    const response = await fetch(`/api/profiles/${encodeURIComponent(currentProfileId)}`, { method: 'DELETE' });
+                    if (!response.ok && response.status !== 204) throw new Error('Failed to delete profile');
+                    // Remove from local profiles object
+                    delete profiles[currentProfileId];
+                    // Reset UI
+                    currentProfileId = null;
+                    profileSelect.value = '';
+                    form.reset();
+                    updateProfileViewState(null); // <-- Ensure UI disables buttons and hides info
+                    await fetchProfiles(); // This will re-render the select and update the view
+                    fetchListings(null, false);
+                    alert('Profile deleted successfully.');
+                } catch (error) {
+                    alert('Failed to delete profile.');
+                }
+            });
+
+            // Enable/disable buttons based on input changes
+            profileEmailsInput.addEventListener('input', () => {
+                if (currentProfileId) {
+                    const currentEmails = profiles[currentProfileId].emails ? profiles[currentProfileId].emails.join(', ') : '';
+                    updateEmailsBtn.disabled = profileEmailsInput.value.trim() === currentEmails;
+                }
+            });
+
+            // Enable/disable the "Save New Profile" button
+            saveProfileNameInput.addEventListener('input', () => {
+                saveProfileBtn.disabled = saveProfileNameInput.value.trim() === '';
+            });
+
+            // Handle form submission for scraping updates
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                if (!currentProfileId) {
+                    alert('Please select a profile to scrape for updates.');
+                    return;
+                }
+                const filters = getCurrentFilters();
+                try {
+                    // Show loading state
+                    scrapeUpdatesBtn.disabled = true;
+                    scrapeUpdatesBtn.innerHTML = `
+                        <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Scraping...
+                    `;
+                    
+                    // POST filters to /api/scrape/{profile_id}
+                    const response = await fetch(`/api/scrape/${encodeURIComponent(currentProfileId)}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ filters })
+                    });
+                    if (!response.ok) throw new Error(`Scrape failed: ${response.statusText}`);
+                    
+                    // Show success message
+                    scrapeUpdatesBtn.innerHTML = `
+                        <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        Scrape Complete!
+                    `;
+                    
+                    // Refresh listings for this profile
+                    await fetchListings(currentProfileId, true);
+                    
+                    // Reset button after delay
+                    setTimeout(() => {
+                        scrapeUpdatesBtn.innerHTML = `
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                            </svg>
+                            Scrape for Updates for this Profile
+                        `;
+                        scrapeUpdatesBtn.disabled = false;
+                    }, 2000);
+                } catch (error) {
+                    console.error('Error scraping for updates:', error);
+                    alert('Could not scrape for updates. Please try again.');
+                    // Reset button
+                    scrapeUpdatesBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                        </svg>
+                        Scrape for Updates for this Profile
+                    `;
+                    scrapeUpdatesBtn.disabled = false;
+                }
+            });
+
+            // Example of how to call saveListing (assuming it sends to a backend to save favorited listings)
+            function saveListing(fundaUrl) {
+                console.log(`Saving listing: ${fundaUrl}`);
+                // In a real application, you'd send this to your backend
+                // fetch('/api/save-listing', {
+                //     method: 'POST',
+                //     headers: { 'Content-Type': 'application/json' },
+                //     body: JSON.stringify({ url: fundaUrl, profileId: currentProfileId }) // Optionally associate with profile
+                // }).then(response => {
+                //     if (response.ok) alert('Listing saved!');
+                //     else alert('Failed to save listing.');
+                // }).catch(error => console.error('Error saving listing:', error));
+                alert('Listing save functionality (backend) not implemented in this example.');
+            }
         });
 
     </script>
+    <!-- Quick Save Modal -->
+    <div id="quick-save-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 hidden">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm">
+            <h2 class="text-lg font-bold mb-3 text-secondary">Quick Save Search Profile</h2>
+            <label for="quick-save-profile-name" class="block text-sm font-medium text-gray-700 mb-2">Profile Name</label>
+            <input type="text" id="quick-save-profile-name" class="w-full px-3 py-2 border border-gray-200 rounded mb-4" placeholder="Enter profile name...">
+            <div class="flex justify-end gap-2">
+                <button type="button" id="quick-save-cancel" class="px-4 py-2 rounded bg-gray-100 text-gray-700 hover:bg-gray-200">Cancel</button>
+                <button type="button" id="quick-save-confirm" class="px-4 py-2 rounded bg-primary text-white hover:bg-primary-600">Save</button>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>

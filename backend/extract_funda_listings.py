@@ -292,22 +292,26 @@ def main_simple():
 from bs4 import BeautifulSoup
 import json
 
-# Load the HTML file
-with open("funda_uc_debug.html", "r", encoding="utf-8") as f:
-    html = f.read()
 
-# Parse HTML
-soup = BeautifulSoup(html, "html.parser")
-
-# Find the script tag with the listing data
-script = soup.find("script", {"id": "__NUXT_DATA__"})
-if not script:
-    print("No __NUXT_DATA__ script tag found.")
-    exit(1)
-
-data = json.loads(script.string)
-
-# --- Extraction logic ---first test if it works
+# The following code is for manual testing only. It should not run on import.
+if __name__ == "__main__":
+    # Load the HTML file
+    try:
+        with open("funda_uc_debug.html", "r", encoding="utf-8") as f:
+            html = f.read()
+    except FileNotFoundError:
+        print("funda_uc_debug.html not found. Skipping manual test.")
+        html = None
+    if html:
+        # Parse HTML
+        soup = BeautifulSoup(html, "html.parser")
+        # Find the script tag with the listing data
+        script = soup.find("script", {"id": "__NUXT_DATA__"})
+        if not script:
+            print("No __NUXT_DATA__ script tag found.")
+            exit(1)
+        data = json.loads(script.string)
+        # --- Extraction logic ---first test if it works
 
 
 def resolve_listing(ref, data):

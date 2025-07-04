@@ -1,0 +1,35 @@
+{
+  // Exclude common virtualenv, node_modules, and cache folders from file watching and search
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/**": true,
+    "**/.venv/**": true,
+    "**/venv/**": true,
+    "**/__pycache__/**": true,
+    "**/.mypy_cache/**": true,
+    "**/.pytest_cache/**": true,
+    "**/.DS_Store": true
+  },
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/.venv": true,
+    "**/venv": true,
+    "**/__pycache__": true,
+    "**/.mypy_cache": true,
+    "**/.pytest_cache": true,
+    "**/backend/__pycache__": true,
+  },
+  // Reduce Python analysis memory usage
+  "python.analysis.memory.keepLibraryAst": false,
+  // Disable workspace symbol indexing for large folders
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.venv": true,
+    "**/venv": true,
+    "**/__pycache__": true
+  },
+  // Optionally, reduce Python language server resource usage
+  "python.analysis.indexing": false,
+  "git.enabled": true
+}

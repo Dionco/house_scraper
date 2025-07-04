@@ -1,8 +1,9 @@
 
 from fastapi import APIRouter, Query
-from .funda_url_builder import build_rental_url
-from .scrape_funda import scrape_funda_html
-from .extract_funda_listings import extract_simple_listings_from_html
+from funda_url_builder import build_rental_url
+from scrape_funda import scrape_funda_html
+from extract_funda_listings import extract_simple_listings_from_html
+from listing_mapping import map_listing_for_frontend
 
 router = APIRouter()
 
@@ -125,6 +126,9 @@ def scrape_listings(
     listings = extract_simple_listings_from_html(html)
     print(f"[DEBUG] Extracted {len(listings)} listings from HTML")
 
+    # Map all listings to frontend-compatible format before saving/returning
+    mapped_listings = [map_listing_for_frontend(l) for l in listings]
+
     # Deduplicate and append to funda_simple_listings.json
     json_path = os.path.join(os.path.dirname(__file__), "funda_simple_listings.json")
     try:
@@ -135,11 +139,11 @@ def scrape_listings(
         print(f"[DEBUG] Could not load existing JSON: {e}")
         existing = []
     # Use funda_url as unique key
-    existing_urls = {l.get("funda_url") for l in existing if l.get("funda_url")}
-    new_unique = [l for l in listings if l.get("funda_url") and l["funda_url"] not in existing_urls]
+    existing_urls = {l.get("object_detail_page_relative_url") or l.get("funda_url") for l in existing if l.get("object_detail_page_relative_url") or l.get("funda_url")}
+    new_unique = [l for l in mapped_listings if (l.get("object_detail_page_relative_url") or l.get("funda_url")) and (l.get("object_detail_page_relative_url") or l.get("funda_url")) not in existing_urls]
     print(f"[DEBUG] {len(new_unique)} new unique listings to add")
     if new_unique:
         with open(json_path, "w", encoding="utf-8") as f:
             json.dump(existing + new_unique, f, ensure_ascii=False, indent=2)
         print(f"[DEBUG] Wrote {len(existing) + len(new_unique)} total listings to JSON")
-    return {"url": url, "count": len(listings), "added": len(new_unique), "listings": listings}
+    return {"url": url, "count": len(mapped_listings), "added": len(new_unique), "listings": mapped_listings}

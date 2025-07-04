@@ -1,0 +1,13 @@
+[
+  {
+    "city": "Utrecht",
+    "min_price": "3000",
+    "max_price": "5000",
+    "property_type": "appartement"
+  },
+  {
+    "city": "Utrecht",
+    "min_price": "3000",
+    "max_price": "5000"
+  }
+]
