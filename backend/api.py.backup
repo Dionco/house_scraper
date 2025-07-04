@@ -3,7 +3,6 @@ import os
 import json
 import time
 import requests
-from datetime import datetime
 from fastapi import FastAPI, HTTPException, Query, Request, Body, status, Response, Depends
 from fastapi.responses import JSONResponse, HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -193,7 +192,7 @@ async def update_profile_email(
         emails=profile["emails"],
         scrape_interval_hours=profile["scrape_interval_hours"],
         created_at=profile["created_at"],
-        last_scraped=profile.get("last_scraped") if not isinstance(profile.get("last_scraped"), str) else (datetime.fromisoformat(profile["last_scraped"].replace("Z", "+00:00")).timestamp() if profile["last_scraped"] else None),
+        last_scraped=profile["last_scraped"],
         last_new_listings_count=profile["last_new_listings_count"],
         listings_count=len(profile["listings"])
     )
@@ -242,7 +241,7 @@ async def update_profile(
         emails=profile["emails"],
         scrape_interval_hours=profile["scrape_interval_hours"],
         created_at=profile["created_at"],
-        last_scraped=profile.get("last_scraped") if not isinstance(profile.get("last_scraped"), str) else (datetime.fromisoformat(profile["last_scraped"].replace("Z", "+00:00")).timestamp() if profile["last_scraped"] else None),
+        last_scraped=profile["last_scraped"],
         last_new_listings_count=profile["last_new_listings_count"],
         listings_count=len(profile["listings"])
     )
@@ -565,7 +564,7 @@ async def get_user_profiles(current_user: Dict[str, Any] = Depends(get_current_u
             last_scraped = profile.get("last_scraped")
             if last_scraped and isinstance(last_scraped, str):
                 try:
-
+                    from datetime import datetime
                     dt = datetime.fromisoformat(last_scraped.replace('Z', '+00:00'))
                     last_scraped = dt.timestamp()
                 except:
@@ -640,7 +639,7 @@ async def create_user_profile(
         emails=profile["emails"],
         scrape_interval_hours=profile["scrape_interval_hours"],
         created_at=profile["created_at"],
-        last_scraped=profile.get("last_scraped") if not isinstance(profile.get("last_scraped"), str) else (datetime.fromisoformat(profile["last_scraped"].replace("Z", "+00:00")).timestamp() if profile["last_scraped"] else None),
+        last_scraped=profile["last_scraped"],
         last_new_listings_count=profile["last_new_listings_count"],
         listings_count=len(profile["listings"])
     )
@@ -652,7 +651,7 @@ def create_profile_response(profile_id: str, profile: dict) -> ProfileResponse:
     last_scraped = profile.get("last_scraped")
     if last_scraped and isinstance(last_scraped, str):
         try:
-
+            from datetime import datetime
             dt = datetime.fromisoformat(last_scraped.replace('Z', '+00:00'))
             last_scraped = dt.timestamp()
         except:
@@ -750,7 +749,7 @@ async def update_profile_email(
         emails=profile["emails"],
         scrape_interval_hours=profile["scrape_interval_hours"],
         created_at=profile["created_at"],
-        last_scraped=profile.get("last_scraped") if not isinstance(profile.get("last_scraped"), str) else (datetime.fromisoformat(profile["last_scraped"].replace("Z", "+00:00")).timestamp() if profile["last_scraped"] else None),
+        last_scraped=profile["last_scraped"],
         last_new_listings_count=profile["last_new_listings_count"],
         listings_count=len(profile["listings"])
     )
@@ -799,7 +798,7 @@ async def update_profile(
         emails=profile["emails"],
         scrape_interval_hours=profile["scrape_interval_hours"],
         created_at=profile["created_at"],
-        last_scraped=profile.get("last_scraped") if not isinstance(profile.get("last_scraped"), str) else (datetime.fromisoformat(profile["last_scraped"].replace("Z", "+00:00")).timestamp() if profile["last_scraped"] else None),
+        last_scraped=profile["last_scraped"],
         last_new_listings_count=profile["last_new_listings_count"],
         listings_count=len(profile["listings"])
     )
@@ -1122,7 +1121,7 @@ async def get_user_profiles(current_user: Dict[str, Any] = Depends(get_current_u
             last_scraped = profile.get("last_scraped")
             if last_scraped and isinstance(last_scraped, str):
                 try:
-
+                    from datetime import datetime
                     dt = datetime.fromisoformat(last_scraped.replace('Z', '+00:00'))
                     last_scraped = dt.timestamp()
                 except:
@@ -1197,7 +1196,7 @@ async def create_user_profile(
         emails=profile["emails"],
         scrape_interval_hours=profile["scrape_interval_hours"],
         created_at=profile["created_at"],
-        last_scraped=profile.get("last_scraped") if not isinstance(profile.get("last_scraped"), str) else (datetime.fromisoformat(profile["last_scraped"].replace("Z", "+00:00")).timestamp() if profile["last_scraped"] else None),
+        last_scraped=profile["last_scraped"],
         last_new_listings_count=profile["last_new_listings_count"],
         listings_count=len(profile["listings"])
     )
@@ -1209,7 +1208,7 @@ def create_profile_response(profile_id: str, profile: dict) -> ProfileResponse:
     last_scraped = profile.get("last_scraped")
     if last_scraped and isinstance(last_scraped, str):
         try:
-
+            from datetime import datetime
             dt = datetime.fromisoformat(last_scraped.replace('Z', '+00:00'))
             last_scraped = dt.timestamp()
         except:
@@ -1307,7 +1306,7 @@ async def update_profile_email(
         emails=profile["emails"],
         scrape_interval_hours=profile["scrape_interval_hours"],
         created_at=profile["created_at"],
-        last_scraped=profile.get("last_scraped") if not isinstance(profile.get("last_scraped"), str) else (datetime.fromisoformat(profile["last_scraped"].replace("Z", "+00:00")).timestamp() if profile["last_scraped"] else None),
+        last_scraped=profile["last_scraped"],
         last_new_listings_count=profile["last_new_listings_count"],
         listings_count=len(profile["listings"])
     )
@@ -1356,7 +1355,7 @@ async def update_profile(
         emails=profile["emails"],
         scrape_interval_hours=profile["scrape_interval_hours"],
         created_at=profile["created_at"],
-        last_scraped=profile.get("last_scraped") if not isinstance(profile.get("last_scraped"), str) else (datetime.fromisoformat(profile["last_scraped"].replace("Z", "+00:00")).timestamp() if profile["last_scraped"] else None),
+        last_scraped=profile["last_scraped"],
         last_new_listings_count=profile["last_new_listings_count"],
         listings_count=len(profile["listings"])
     )
@@ -1679,7 +1678,7 @@ async def get_user_profiles(current_user: Dict[str, Any] = Depends(get_current_u
             last_scraped = profile.get("last_scraped")
             if last_scraped and isinstance(last_scraped, str):
                 try:
-
+                    from datetime import datetime
                     dt = datetime.fromisoformat(last_scraped.replace('Z', '+00:00'))
                     last_scraped = dt.timestamp()
                 except:
@@ -1754,7 +1753,7 @@ async def create_user_profile(
         emails=profile["emails"],
         scrape_interval_hours=profile["scrape_interval_hours"],
         created_at=profile["created_at"],
-        last_scraped=profile.get("last_scraped") if not isinstance(profile.get("last_scraped"), str) else (datetime.fromisoformat(profile["last_scraped"].replace("Z", "+00:00")).timestamp() if profile["last_scraped"] else None),
+        last_scraped=profile["last_scraped"],
         last_new_listings_count=profile["last_new_listings_count"],
         listings_count=len(profile["listings"])
     )
@@ -1766,7 +1765,7 @@ def create_profile_response(profile_id: str, profile: dict) -> ProfileResponse:
     last_scraped = profile.get("last_scraped")
     if last_scraped and isinstance(last_scraped, str):
         try:
-
+            from datetime import datetime
             dt = datetime.fromisoformat(last_scraped.replace('Z', '+00:00'))
             last_scraped = dt.timestamp()
         except:

@@ -48,6 +48,42 @@
         /* Custom styles for details/summary accordion */
         details > summary { list-style: none; }
         details > summary::-webkit-details-marker { display: none; }
+        
+        /* Custom styles for wizard form elements */
+        .form-checkbox {
+            width: 1rem;
+            height: 1rem;
+            color: #F97316;
+            border: 1px solid #D1D5DB;
+            border-radius: 0.25rem;
+        }
+        .form-checkbox:focus {
+            outline: 2px solid #F97316;
+            outline-offset: 2px;
+        }
+        .wizard-step {
+            min-height: 400px;
+            opacity: 0;
+            transform: translateX(20px);
+            transition: all 0.3s ease-in-out;
+        }
+        .wizard-step:not(.hidden) {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .location-option {
+            transition: all 0.2s ease-in-out;
+        }
+        .location-option:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .location-radio {
+            transition: all 0.2s ease-in-out;
+        }
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
         details > summary .chevron { transition: transform 0.2s ease-in-out; }
         details[open] > summary .chevron { transform: rotate(90deg); }
         /* Custom checkbox styles */
@@ -56,20 +92,70 @@
     </style>
 </head>
 <body class="font-sans bg-light">
+    <!-- User Authentication Header -->
+    <div class="bg-white border-b border-gray-200 shadow-sm">
+        <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    <h1 class="text-xl font-bold text-secondary">Funda Finder</h1>
+                </div>
+                
+                <!-- Authentication Status -->
+                <div class="flex items-center gap-4">
+                    <!-- Not authenticated -->
+                    <div id="auth-not-logged-in" class="flex items-center gap-2">
+                        <button id="login-btn" class="text-sm font-medium text-gray-700 hover:text-primary transition-colors">
+                            Login
+                        </button>
+                        <span class="text-gray-300">|</span>
+                        <button id="register-btn" class="text-sm font-medium text-primary hover:text-primary-600 transition-colors">
+                            Register
+                        </button>
+                    </div>
+                    
+                    <!-- Authenticated -->
+                    <div id="auth-logged-in" class="flex items-center gap-3 hidden">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                                <span class="text-white font-medium text-sm" id="user-initial">U</span>
+                            </div>
+                            <span class="text-sm font-medium text-gray-700" id="user-name">User</span>
+                        </div>
+                        <div class="relative">
+                            <button id="user-menu-btn" class="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                            <div id="user-menu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10 hidden">
+                                <div class="py-1">
+                                    <a href="#" id="user-profile-link" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile Settings</a>
+                                    <a href="#" id="logout-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 py-8">
 
             <aside class="lg:col-span-3">
                 <div class="sticky-sidebar pr-4">
-                    <div class="mb-6">
-                        <h1 class="text-3xl font-bold text-secondary flex items-center gap-2">
-                           <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                              <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    <!-- Authentication Notice -->
+                    <div id="auth-notice" class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg hidden">
+                        <div class="flex items-center gap-2 text-blue-800">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
-                            Funda Finder
-                        </h1>
-                        <p class="text-gray-500 mt-1">Refine or start a new search.</p>
+                            <span class="text-sm font-medium">Login to save and manage your search profiles</span>
+                        </div>
                     </div>
 
                     <div class="mb-6 p-4 bg-white rounded-lg border shadow-sm">
@@ -169,11 +255,11 @@
 
                         <!-- Save new profile action -->
                         <div class="mt-3 pt-3 border-t border-gray-100">
-                            <button id="save-new-profile-btn" class="w-full flex items-center justify-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition duration-200">
+                            <button id="create-new-profile-btn" class="w-full flex items-center justify-center gap-2 px-3 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-600 transition duration-200">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                                 </svg>
-                                Save Current Search Profile
+                                Create New Search Profile
                             </button>
                         </div>
                     </div>
@@ -364,35 +450,106 @@
     </div>
 
     <script>
-        // --- DOM ELEMENTS ---
-        const form = document.getElementById('scrape-filter-form');
-        const loadingSpinner = document.getElementById('loading-live');
-        const listingsContainer = document.getElementById('listings-live');
-        const profileSelect = document.getElementById('profile-select');
-        const activeProfileInfo = document.getElementById('active-profile-info');
-        const activeProfileNameSpan = document.getElementById('active-profile-name');
-        const activeProfileEmails = document.getElementById('active-profile-emails');
-        const profileEmailsInput = document.getElementById('profile-emails');
-        const updateEmailsBtn = document.getElementById('update-emails-btn');
-        const saveProfileNameInput = document.getElementById('save-profile-name');
-        const saveProfileBtn = document.getElementById('save-profile-btn');
-        const overwriteProfileBtn = document.getElementById('overwrite-profile-btn');
-        const scrapeUpdatesBtn = document.getElementById('scrape-updates-btn');
-        const editProfileBtn = document.getElementById('edit-profile-btn');
-        const deleteProfileBtn = document.getElementById('delete-profile-btn');
-        const saveNewProfileBtn = document.getElementById('save-new-profile-btn');
-        const profileActionsSection = document.getElementById('profile-actions-section');
+        // --- NOTIFICATION SYSTEM ---
+        function showNotification(message, type = 'info', duration = 5000) {
+            const notificationContainer = document.getElementById('notification-container');
+            const notification = document.createElement('div');
+            
+            const iconMap = {
+                'success': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>',
+                'error': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>',
+                'warning': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path></svg>',
+                'info': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
+            };
+            
+            const colorMap = {
+                'success': 'bg-green-50 border-green-200 text-green-800',
+                'error': 'bg-red-50 border-red-200 text-red-800',
+                'warning': 'bg-yellow-50 border-yellow-200 text-yellow-800',
+                'info': 'bg-blue-50 border-blue-200 text-blue-800'
+            };
+            
+            notification.className = `flex items-center gap-3 p-4 rounded-lg border shadow-lg ${colorMap[type]} transform transition-all duration-300 translate-x-full opacity-0`;
+            notification.innerHTML = `
+                <div class="flex-shrink-0">${iconMap[type]}</div>
+                <div class="flex-1 text-sm font-medium">${message}</div>
+                <button onclick="this.parentElement.remove()" class="flex-shrink-0 p-1 rounded-full hover:bg-black/10 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            `;
+            
+            notificationContainer.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full', 'opacity-0');
+            }, 10);
+            
+            // Auto remove
+            if (duration > 0) {
+                setTimeout(() => {
+                    if (notification.parentElement) {
+                        notification.classList.add('translate-x-full', 'opacity-0');
+                        setTimeout(() => notification.remove(), 300);
+                    }
+                }, duration);
+            }
+        }
         
-        // Periodic scraping elements
-        const scraperStatus = document.getElementById('scraper-status');
-        const scrapeIntervalInput = document.getElementById('scrape-interval');
-        const updateIntervalBtn = document.getElementById('update-interval-btn');
-        const triggerScrapeBtn = document.getElementById('trigger-scrape-btn');
-        const lastScrapedSpan = document.getElementById('last-scraped');
+        function showConfirmation(title, message, onConfirm, confirmButtonText = 'Confirm', confirmButtonClass = 'bg-red-500 hover:bg-red-600') {
+            const modal = document.getElementById('confirmation-modal');
+            const titleEl = document.getElementById('confirmation-title');
+            const messageEl = document.getElementById('confirmation-message');
+            const confirmBtn = document.getElementById('confirmation-confirm');
+            const cancelBtn = document.getElementById('confirmation-cancel');
+            
+            titleEl.textContent = title;
+            messageEl.textContent = message;
+            confirmBtn.textContent = confirmButtonText;
+            confirmBtn.className = `px-4 py-2 rounded text-white ${confirmButtonClass}`;
+            
+            modal.classList.remove('hidden');
+            
+            const handleConfirm = () => {
+                modal.classList.add('hidden');
+                onConfirm();
+                confirmBtn.removeEventListener('click', handleConfirm);
+                cancelBtn.removeEventListener('click', handleCancel);
+            };
+            
+            const handleCancel = () => {
+                modal.classList.add('hidden');
+                confirmBtn.removeEventListener('click', handleConfirm);
+                cancelBtn.removeEventListener('click', handleCancel);
+            };
+            
+            confirmBtn.addEventListener('click', handleConfirm);
+            cancelBtn.addEventListener('click', handleCancel);
+        }
 
+        // --- GLOBAL VARIABLES ---
         let currentProfileId = null;
         let profiles = {}; // Store profiles fetched from API
         let isProfileActionsExpanded = false;
+
+        // --- GLOBAL FUNCTIONS ---
+        
+        // Example of how to call saveListing (assuming it sends to a backend to save favorited listings)
+        function saveListing(fundaUrl) {
+            console.log(`Saving listing: ${fundaUrl}`);
+            // In a real application, you'd send this to your backend
+            // fetch('/api/save-listing', {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify({ url: fundaUrl, profileId: currentProfileId }) // Optionally associate with profile
+            // }).then(response => {
+            //     if (response.ok) showNotification('Listing saved!', 'success');
+            //     else showNotification('Failed to save listing.', 'error');
+            // }).catch(error => console.error('Error saving listing:', error));
+            showNotification('Listing save functionality (backend) not implemented in this example.', 'info');
+        }
 
         // --- MAPPING & RENDERING (No changes from previous version) ---
         function mapLegacyListing(listing) {
@@ -474,541 +631,601 @@
                     </div>
                 </div>`;
         }
-         
-        function renderListings(listings, emptyMessage) {
-            // Always map listings to ensure correct structure
-            const mappedListings = listings.map(mapLegacyListing);
-            if (typeof debugListingKeys === 'function') {
-                debugListingKeys(mappedListings);
-            }
-            if (mappedListings.length === 0) {
-                listingsContainer.innerHTML = emptyMessage;
-                // Update stats for empty state
-                updateStats([]);
-                return;
-            }
-            // Check if any listing is new
-            const hasNew = mappedListings.some(l => l.is_new);
-            let banner = '';
-            if (hasNew) {
-                banner = `<div id="new-listings-banner" class="col-span-full mb-4 p-4 rounded-lg bg-green-100 text-green-900 flex items-center justify-between shadow">
-                    <span>✨ <b>New listings have been added!</b> Check out the latest properties below.</span>
-                    <button onclick="this.parentElement.style.display='none'" class="ml-4 px-3 py-1 rounded bg-green-200 hover:bg-green-300 text-green-900 font-semibold text-xs">Dismiss</button>
-                </div>`;
-            }
-            listingsContainer.innerHTML = banner + mappedListings.map(renderListingCard).join('');
-            // Update stats for this profile
-            updateStats(mappedListings);
-        }
-         
-        function getEmptyStateMessage(isFilter) {
-            const icon = isFilter 
-                ? `<svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>`
-                : `<svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>`;
-            const title = isFilter ? "No Listings Found" : "No Initial Listings";
-            const text = isFilter ? "Try adjusting your filters for a wider search." : "Your local listings file seems to be empty. Use the filters to start a search.";
-            return `<div class="md:col-span-2 xl:col-span-3 text-center py-24 bg-white rounded-xl border border-gray-200">${icon}<h3 class="mt-4 text-lg font-medium text-secondary">${title}</h3><p class="mt-1 text-sm text-gray-500">${text}</p></div>`;
-        }
-
-        function updateStats(listings) {
-            document.getElementById('total-listings').textContent = listings.length;
-            const pricedListings = listings.filter(l => typeof l.rent_price === 'number');
-            document.getElementById('avg-price').textContent = pricedListings.length > 0 ? `€${Math.round(pricedListings.reduce((sum, l) => sum + l.rent_price, 0) / pricedListings.length).toLocaleString('nl-NL')}` : 'N/A';
-            document.getElementById('new-today').textContent = listings.filter(l => l.publish_date && new Date(l.publish_date).toDateString() === new Date().toDateString()).length;
-        }
-
-        // --- API & DATA FETCHING ---
-        async function fetchListings(profileId, isFilter) {
-            try {
-                listingsContainer.style.display = 'none';
-                loadingSpinner.style.display = 'block';
-                let url = '/api/listings';
-                if (profileId) {
-                    url += `?profile_id=${encodeURIComponent(profileId)}`;
-                }
-                const response = await fetch(url);
-                if (!response.ok) throw new Error(`Server error: ${response.statusText}`);
-                const data = await response.json();
-                renderListings(data.listings, getEmptyStateMessage(isFilter));
-            } catch (error) {
-                console.error('Error fetching listings:', error);
-                listingsContainer.innerHTML = `<div class="md:col-span-2 xl:col-span-3 text-center py-24 bg-red-50 rounded-xl border border-red-200 text-red-700">
-                    <p class="font-semibold">Error loading listings.</p>
-                    <p class="text-sm">Please try again later. Details: ${error.message}</p>
-                </div>`;
-                updateStats([]);
-            } finally {
-                loadingSpinner.style.display = 'none';
-                listingsContainer.style.display = 'grid';
-            }
-        }
-        
-        // --- PROFILE MANAGEMENT FUNCTIONS ---
-
-        /**
-         * Centralized function to update the UI based on the current profile selection.
-         * @param {string|null} profileId - The ID of the currently selected profile, or null if none.
-         */
-        function updateProfileViewState(profileId) {
-            const profile = profileId ? profiles[profileId] : null;
-
-            if (profile) {
-                // Show active profile info
-                activeProfileInfo.classList.remove('hidden');
-                activeProfileNameSpan.textContent = profile.name;
-                activeProfileEmails.textContent = profile.emails && profile.emails.length > 0 
-                    ? `${profile.emails.length} email${profile.emails.length > 1 ? 's' : ''} configured`
-                    : 'No emails set';
-                
-                // Fill form fields
-                profileEmailsInput.value = profile.emails ? profile.emails.join(', ') : '';
-                saveProfileNameInput.value = profile.name;
-                
-                // Fill periodic scraping fields
-                if (scrapeIntervalInput) {
-                    scrapeIntervalInput.value = profile.scrape_interval_hours || 4;
-                }
-                
-                // Update last scraped display
-                if (lastScrapedSpan) {
-                    if (profile.last_scraped) {
-                        const lastScraped = new Date(profile.last_scraped);
-                        lastScrapedSpan.textContent = `Last scraped: ${lastScraped.toLocaleDateString()} ${lastScraped.toLocaleTimeString()}`;
-                    } else {
-                        lastScrapedSpan.textContent = 'Last scraped: Never';
-                    }
-                }
-                
-                // Enable buttons
-                updateEmailsBtn.disabled = false;
-                overwriteProfileBtn.disabled = false;
-                deleteProfileBtn.disabled = false;
-                if (updateIntervalBtn) updateIntervalBtn.disabled = false;
-                if (triggerScrapeBtn) triggerScrapeBtn.disabled = false;
-
-            } else {
-                // Hide active profile info
-                activeProfileInfo.classList.add('hidden');
-                
-                // Clear form fields
-                profileEmailsInput.value = '';
-                saveProfileNameInput.value = '';
-                if (scrapeIntervalInput) scrapeIntervalInput.value = '4';
-                if (lastScrapedSpan) lastScrapedSpan.textContent = 'Last scraped: Never';
-                
-                // Disable buttons
-                updateEmailsBtn.disabled = true;
-                overwriteProfileBtn.disabled = true;
-                deleteProfileBtn.disabled = true;
-                if (updateIntervalBtn) updateIntervalBtn.disabled = true;
-                if (triggerScrapeBtn) triggerScrapeBtn.disabled = true;
-
-                // Hide profile actions if expanded
-                profileActionsSection.classList.add('hidden');
-                isProfileActionsExpanded = false;
-            }
-        }
-
-        /**
-         * Fetches all saved profiles from the backend.
-         */
-        async function fetchProfiles() {
-            try {
-                const response = await fetch('/api/profiles'); // Adjust API endpoint as necessary
-                if (!response.ok) throw new Error(`Failed to fetch profiles: ${response.statusText}`);
-                const data = await response.json();
-                profiles = {}; // Clear existing profiles
-                data.forEach(profile => {
-                    profiles[profile.id] = profile; // Store by ID for easy lookup
-                });
-                renderProfileSelect();
-            } catch (error) {
-                console.error('Error fetching profiles:', error);
-                alert('Could not load search profiles. Please try refreshing the page.');
-            }
-        }
-
-        /**
-         * Renders the profiles into the dropdown select element.
-         */
-        function renderProfileSelect() {
-            profileSelect.innerHTML = '<option value="">Select a saved profile...</option>';
-            const sortedProfileNames = Object.values(profiles).sort((a, b) => a.name.localeCompare(b.name));
-            sortedProfileNames.forEach(profile => {
-                const option = document.createElement('option');
-                option.value = profile.id;
-                option.textContent = profile.name;
-                profileSelect.appendChild(option);
-            });
-
-            // Set the dropdown to the currently active profile and update the view
-            profileSelect.value = currentProfileId;
-            updateProfileViewState(currentProfileId);
-        }
-
-        /**
-         * Loads the filters of a selected profile into the form.
-         * @param {string} profileId - The ID of the profile to load.
-         */
-        function loadProfile(profileId) {
-            const profile = profiles[profileId];
-            if (!profile) {
-                console.warn('Profile not found:', profileId);
-                currentProfileId = null;
-                updateProfileViewState(null);
-                return;
-            }
-
-            // Reset form first to clear previous selections
-            form.reset(); 
-            // Also reset checkboxes
-            form.querySelectorAll('input[type="checkbox"]').forEach(checkbox => checkbox.checked = false);
-
-            // Populate form fields
-            const filters = profile.filters;
-            for (const key in filters) {
-                const value = filters[key];
-                const input = form.querySelector(`[name="${key}"]`);
-
-                if (input) {
-                    if (input.type === 'checkbox') {
-                        // For checkboxes, value is an array
-                        if (Array.isArray(value)) {
-                            form.querySelectorAll(`input[name="${key}"]`).forEach(checkbox => {
-                                if (value.includes(checkbox.value)) {
-                                    checkbox.checked = true;
-                                }
-                            });
-                        }
-                    } else if (input.tagName === 'SELECT') {
-                         input.value = value;
-                    } 
-                    else {
-                        input.value = value;
-                    }
-                } else {
-                    // Handle range inputs like min_price, max_price
-                    if (key.startsWith('min_') || key.startsWith('max_')) {
-                        const baseName = key.substring(0, key.indexOf('_')); // e.g., 'min' or 'max'
-                        const fieldName = key.substring(key.indexOf('_') + 1); // e.g., 'price', 'area'
-                        const rangeInput = form.querySelector(`input[name="${key}"]`);
-                        if (rangeInput) {
-                            rangeInput.value = value;
-                        }
-                    }
-                }
-            }
-
-            currentProfileId = profileId;
-            saveProfileNameInput.value = profile.name; // Pre-fill save as new with current profile name
-
-            // Update all UI elements related to the profile state
-            updateProfileViewState(profileId);
-
-            // Optionally, trigger a scrape for the loaded profile immediately
-            // form.dispatchEvent(new Event('submit')); 
-        }
-
-        /**
-         * Collects all current filter values from the form.
-         * @returns {object} An object containing the current filter settings.
-         */
-        function getCurrentFilters() {
-            const filters = {};
-            new FormData(form).forEach((value, key) => {
-                const input = form.querySelector(`[name="${key}"]`);
-                if (input && input.type === 'checkbox') {
-                    if (!filters[key]) {
-                        filters[key] = [];
-                    }
-                    if (input.checked) {
-                        filters[key].push(value);
-                    }
-                } else if (value) {
-                    filters[key] = value;
-                }
-            });
-            // Handle number inputs that might be empty and should be null/undefined
-            ['min_price', 'max_price', 'min_area', 'max_area', 'min_rooms', 'max_rooms', 'min_bedrooms', 'max_bedrooms'].forEach(key => {
-                if (filters[key] === '') {
-                    delete filters[key];
-                }
-            });
-            return filters;
-        }
-
-        /**
-         * Saves a new search profile.
-         */
-        async function saveNewProfile() {
-            const profileName = saveProfileNameInput.value.trim();
-            if (!profileName) {
-                alert('Please enter a name for the new search profile.');
-                return;
-            }
-
-            // Check if a profile with the same name already exists
-            const existingProfile = Object.values(profiles).find(p => p.name === profileName);
-            if (existingProfile) {
-                alert('A profile with this name already exists. Please choose a different name or use "Overwrite Selected Profile".');
-                return;
-            }
-
-            const profileEmails = profileEmailsInput.value.split(',').map(email => email.trim()).filter(email => email);
-            const filters = getCurrentFilters();
-            const scrapeInterval = scrapeIntervalInput ? parseInt(scrapeIntervalInput.value) || 4 : 4;
-
-            try {
-                const response = await fetch('/api/profiles', { // Adjust API endpoint
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        name: profileName, 
-                        filters, 
-                        emails: profileEmails,
-                        scrape_interval_hours: scrapeInterval
-                    })
-                });
-                if (!response.ok) throw new Error(`Failed to save profile: ${response.statusText}`);
-                const result = await response.json();
-                const newProfileId = result.profileId;
-                
-                // Create the profile object in the expected format
-                const newProfile = {
-                    id: newProfileId,
-                    name: result.name,
-                    filters: result.filters,
-                    emails: result.emails || [],
-                    listings: result.listings || []
-                };
-                
-                profiles[newProfileId] = newProfile;
-                currentProfileId = newProfileId;
-                renderProfileSelect();
-                alert(`Profile "${newProfile.name}" saved successfully!`);
-                saveProfileNameInput.value = newProfile.name; // Update input with saved name
-            } catch (error) {
-                console.error('Error saving new profile:', error);
-                alert('Could not save new profile. Please try again.');
-            }
-        }
-
-        /**
-         * Overwrites the currently selected profile with the current filter settings.
-         */
-        async function overwriteSelectedProfile() {
-            if (!currentProfileId) {
-                alert('Please select a profile to overwrite.');
-                return;
-            }
-
-            const profileName = saveProfileNameInput.value.trim(); // Use the name from the input field
-            const profileEmails = profileEmailsInput.value.split(',').map(email => email.trim()).filter(email => email);
-            const filters = getCurrentFilters();
-
-            try {
-                const response = await fetch(`/api/profiles/${currentProfileId}`, { // Adjust API endpoint
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: profileName, filters, emails: profileEmails }) // Ensure name is also updated if changed
-                });
-                if (!response.ok) throw new Error(`Failed to update profile: ${response.statusText}`);
-                const result = await response.json();
-                
-                // Update the local profile with the response data
-                profiles[currentProfileId] = {
-                    id: currentProfileId,
-                    name: result.name,
-                    filters: result.filters,
-                    emails: result.emails || [],
-                    listings: result.listings || []
-                };
-                
-                // Refresh the UI
-                renderProfileSelect();
-                updateProfileViewState(currentProfileId);
-                alert(`Profile "${result.name}" updated successfully!`);
-            } catch (error) {
-                console.error('Error updating profile:', error);
-                alert('Could not update profile. Please try again.');
-            }
-        }
-
-        /**
-         * Updates the email addresses for the currently selected profile.
-         */
-        async function updateProfileEmails() {
-            if (!currentProfileId) {
-                alert('Please select a profile to update emails for.');
-                return;
-            }
-            const emails = profileEmailsInput.value.split(',').map(email => email.trim()).filter(email => email);
-
-            try {
-                // Use the correct backend endpoint
-                const response = await fetch(`/api/profiles/${currentProfileId}/email`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ emails: emails })
-                });
-                if (!response.ok) throw new Error(`Failed to update emails: ${response.statusText}`);
-                const result = await response.json();
-                
-                // Update local profile data
-                if (profiles[currentProfileId]) {
-                    profiles[currentProfileId].emails = emails;
-                    updateProfileViewState(currentProfileId); // Refresh UI
-                }
-                
-                alert('Notification emails updated successfully!');
-            } catch (error) {
-                console.error('Error updating emails:', error);
-                alert('Could not update notification emails. Please try again.');
-            }
-        }
-
-        // --- PERIODIC SCRAPING FUNCTIONS ---
-
-        /**
-         * Updates the scraping interval for the current profile.
-         */
-        async function updateScrapeInterval() {
-            if (!currentProfileId) {
-                alert('Please select a profile to update the scraping interval for.');
-                return;
-            }
-            
-            const intervalHours = parseInt(scrapeIntervalInput.value);
-            if (!intervalHours || intervalHours < 1 || intervalHours > 168) {
-                alert('Please enter a valid interval between 1 and 168 hours.');
-                return;
-            }
-
-            try {
-                const response = await fetch(`/api/profiles/${currentProfileId}/interval`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ interval_hours: intervalHours })
-                });
-                if (!response.ok) throw new Error(`Failed to update interval: ${response.statusText}`);
-                
-                // Update local profile data
-                if (profiles[currentProfileId]) {
-                    profiles[currentProfileId].scrape_interval_hours = intervalHours;
-                    updateProfileViewState(currentProfileId); // Refresh UI
-                }
-                
-                alert(`Scraping interval updated to ${intervalHours} hours.`);
-            } catch (error) {
-                console.error('Error updating scraping interval:', error);
-                alert('Could not update scraping interval. Please try again.');
-            }
-        }
-
-        /**
-         * Manually triggers a scrape for the current profile.
-         */
-        async function triggerProfileScrape() {
-            if (!currentProfileId) {
-                alert('Please select a profile to scrape.');
-                return;
-            }
-
-            try {
-                // Show loading state
-                triggerScrapeBtn.disabled = true;
-                triggerScrapeBtn.textContent = 'Scraping...';
-                
-                const response = await fetch(`/api/profiles/${currentProfileId}/scrape`, {
-                    method: 'POST'
-                });
-                if (!response.ok) throw new Error(`Failed to trigger scrape: ${response.statusText}`);
-                
-                const result = await response.json();
-                alert(result.message || 'Scrape completed successfully!');
-                
-                // Refresh the listings
-                await fetchListings(currentProfileId, false);
-                
-                // Update the last scraped time
-                if (profiles[currentProfileId]) {
-                    profiles[currentProfileId].last_scraped = new Date().toISOString();
-                    updateProfileViewState(currentProfileId);
-                }
-                
-            } catch (error) {
-                console.error('Error triggering scrape:', error);
-                alert('Could not trigger scrape. Please try again.');
-            } finally {
-                triggerScrapeBtn.disabled = false;
-                triggerScrapeBtn.textContent = 'Scrape Now';
-            }
-        }
-
-        /**
-         * Fetches the current scraper status.
-         */
-        async function fetchScraperStatus() {
-            try {
-                const response = await fetch('/api/scraper/status');
-                if (!response.ok) throw new Error(`Failed to fetch scraper status: ${response.statusText}`);
-                const status = await response.json();
-                
-                // Update scraper status display
-                if (scraperStatus) {
-                    scraperStatus.textContent = status.is_running ? 'Active' : 'Stopped';
-                    scraperStatus.className = status.is_running 
-                        ? 'text-xs px-2 py-1 rounded-full bg-green-100 text-green-800'
-                        : 'text-xs px-2 py-1 rounded-full bg-red-100 text-red-800';
-                }
-                
-                return status;
-            } catch (error) {
-                console.error('Error fetching scraper status:', error);
-                return { is_running: false, total_jobs: 0, jobs: [] };
-            }
-        }
-
         // --- EVENT LISTENERS ---
 
         document.addEventListener('DOMContentLoaded', () => {
+            console.log('=== DOM Content Loaded ===');
+            
+            // --- DOM ELEMENT REFERENCES ---
+            console.log('Initializing DOM elements...');
+            
+            // Main form and layout elements
+            const form = document.getElementById('scrape-filter-form');
+            const loadingSpinner = document.getElementById('loading-live');
+            const listingsContainer = document.getElementById('listings-live');
+            const profileSelect = document.getElementById('profile-select');
+            
+            console.log('DOM elements initialized:', {
+                form: !!form,
+                loadingSpinner: !!loadingSpinner,
+                listingsContainer: !!listingsContainer,
+                profileSelect: !!profileSelect
+            });
+            
+            // Active profile info elements
+            const activeProfileInfo = document.getElementById('active-profile-info');
+            const activeProfileNameSpan = document.getElementById('active-profile-name');
+            const activeProfileEmails = document.getElementById('active-profile-emails');
+            
+            // Profile emails and update button
+            const profileEmailsInput = document.getElementById('profile-emails');
+            const updateEmailsBtn = document.getElementById('update-emails-btn');
+            
+            // Save profile elements
+            const saveProfileNameInput = document.getElementById('save-profile-name');
+            const saveProfileBtn = document.getElementById('save-profile-btn');
+            const overwriteProfileBtn = document.getElementById('overwrite-profile-btn');
+            
+            // Scrape updates button
+            const scrapeUpdatesBtn = document.getElementById('scrape-updates-btn');
+            
+            // Profile management buttons
+            const editProfileBtn = document.getElementById('edit-profile-btn');
+            const deleteProfileBtn = document.getElementById('delete-profile-btn');
+            
+            // Profile actions section
+            const profileActionsSection = document.getElementById('profile-actions-section');
+            
+            // Periodic scraping elements
+            const scraperStatus = document.getElementById('scraper-status');
+            const scrapeIntervalInput = document.getElementById('scrape-interval');
+            const updateIntervalBtn = document.getElementById('update-interval-btn');
+            const triggerScrapeBtn = document.getElementById('trigger-scrape-btn');
+            const lastScrapedSpan = document.getElementById('last-scraped');
+            
+            // Profile wizard elements
+            const profileWizardModal = document.getElementById('profile-wizard-modal');
+            const createNewProfileBtn = document.getElementById('create-new-profile-btn');
+            const wizardCloseBtn = document.getElementById('wizard-close');
+            const wizardPrevBtn = document.getElementById('wizard-prev');
+            const wizardNextBtn = document.getElementById('wizard-next');
+            const wizardSkipBtn = document.getElementById('wizard-skip');
+            const wizardCreateBtn = document.getElementById('wizard-create');
+            const wizardCurrentStepSpan = document.getElementById('wizard-current-step');
+            const wizardProgress = document.getElementById('wizard-progress');
+            
+            // --- UTILITY FUNCTIONS (moved inside DOMContentLoaded) ---
+            function renderListings(listings, emptyMessage) {
+                console.log('=== renderListings() called ===');
+                console.log('Listings count:', listings.length);
+                
+                // Always map listings to ensure correct structure
+                const mappedListings = listings.map(mapLegacyListing);
+                if (typeof debugListingKeys === 'function') {
+                    debugListingKeys(mappedListings);
+                }
+                if (mappedListings.length === 0) {
+                    listingsContainer.innerHTML = emptyMessage;
+                    // Update stats for empty state
+                    updateStats([]);
+                    return;
+                }
+                // Check if any listing is new
+                const hasNew = mappedListings.some(l => l.is_new);
+                let banner = '';
+                if (hasNew) {
+                    banner = `<div id="new-listings-banner" class="col-span-full mb-4 p-4 rounded-lg bg-green-100 text-green-900 flex items-center justify-between shadow">
+                        <span>✨ <b>New listings have been added!</b> Check out the latest properties below.</span>
+                        <button onclick="this.parentElement.style.display='none'" class="ml-4 px-3 py-1 rounded bg-green-200 hover:bg-green-300 text-green-900 font-semibold text-xs">Dismiss</button>
+                    </div>`;
+                }
+                console.log('Setting innerHTML with', mappedListings.length, 'listings');
+                listingsContainer.innerHTML = banner + mappedListings.map(renderListingCard).join('');
+                // Update stats for this profile
+                updateStats(mappedListings);
+                console.log('renderListings completed');
+            }
+            
+            function getEmptyStateMessage(isFilter) {
+                const icon = isFilter 
+                    ? `<svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>`
+                    : `<svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>`;
+                const title = isFilter ? "No Listings Found" : "No Initial Listings";
+                const text = isFilter ? "Try adjusting your filters for a wider search." : "Your local listings file seems to be empty. Use the filters to start a search.";
+                return `<div class="md:col-span-2 xl:col-span-3 text-center py-24 bg-white rounded-xl border border-gray-200">${icon}<h3 class="mt-4 text-lg font-medium text-secondary">${title}</h3><p class="mt-1 text-sm text-gray-500">${text}</p></div>`;
+            }
+
+            function updateStats(listings) {
+                document.getElementById('total-listings').textContent = listings.length;
+                const pricedListings = listings.filter(l => typeof l.rent_price === 'number');
+                document.getElementById('avg-price').textContent = pricedListings.length > 0 ? `€${Math.round(pricedListings.reduce((sum, l) => sum + l.rent_price, 0) / pricedListings.length).toLocaleString('nl-NL')}` : 'N/A';
+                document.getElementById('new-today').textContent = listings.filter(l => l.publish_date && new Date(l.publish_date).toDateString() === new Date().toDateString()).length;
+            }
+            
+            // --- API & DATA FETCHING FUNCTIONS ---
+            async function fetchListings(profileId, isFilter) {
+                try {
+                    console.log('=== fetchListings() called ===');
+                    console.log('Profile ID:', profileId, 'isFilter:', isFilter);
+                    console.log('listingsContainer:', !!listingsContainer);
+                    console.log('loadingSpinner:', !!loadingSpinner);
+                    
+                    listingsContainer.style.display = 'none';
+                    loadingSpinner.style.display = 'block';
+                    let url = '/api/listings';
+                    if (profileId) {
+                        url += `?profile_id=${encodeURIComponent(profileId)}`;
+                    }
+                    console.log('Fetching from URL:', url);
+                    
+                    // Use authenticated request if authManager is available and user is logged in
+                    const response = (typeof authManager !== 'undefined' && authManager.isAuthenticated()) 
+                        ? await authManager.apiRequest(url)
+                        : await fetch(url);
+                    
+                    console.log('Response status:', response.status);
+                    if (!response.ok) throw new Error(`Server error: ${response.statusText}`);
+                    const data = await response.json();
+                    console.log('Data received:', data);
+                    console.log('Listings count:', data.listings ? data.listings.length : 'undefined');
+                    renderListings(data.listings, getEmptyStateMessage(isFilter));
+                } catch (error) {
+                    console.error('Error fetching listings:', error);
+                    listingsContainer.innerHTML = `<div class="md:col-span-2 xl:col-span-3 text-center py-24 bg-red-50 rounded-xl border border-red-200 text-red-700">
+                        <p class="font-semibold">Error loading listings.</p>
+                        <p class="text-sm">Please try again later. Details: ${error.message}</p>
+                    </div>`;
+                    updateStats([]);
+                } finally {
+                    loadingSpinner.style.display = 'none';
+                    listingsContainer.style.display = 'grid';
+                }
+            }
+            
+            /**
+             * Fetches all saved profiles from the backend.
+             */
+            async function fetchProfiles() {
+                try {
+                    console.log('=== fetchProfiles() called ===');
+                    
+                    // Check if authManager is available and user is authenticated
+                    if (typeof authManager !== 'undefined' && authManager.isAuthenticated()) {
+                        console.log('User authenticated, fetching user profiles');
+                        const response = await authManager.apiRequest('/api/profiles');
+                        console.log('fetchProfiles response status:', response.status);
+                        if (!response.ok) throw new Error(`Failed to fetch profiles: ${response.statusText}`);
+                        const data = await response.json();
+                        console.log('fetchProfiles data received:', data.length, 'profiles');
+                        profiles = {}; // Clear existing profiles
+                        data.forEach(profile => {
+                            profiles[profile.id] = profile; // Store by ID for easy lookup
+                        });
+                    } else {
+                        console.log('User not authenticated or authManager not available, clearing profiles');
+                        profiles = {};
+                    }
+                    
+                    console.log('Calling renderProfileSelect()...');
+                    renderProfileSelect();
+                    console.log('fetchProfiles completed successfully');
+                } catch (error) {
+                    console.error('Error fetching profiles:', error);
+                    if (error.message.includes('401')) {
+                        // Authentication error - clear profiles
+                        profiles = {};
+                        renderProfileSelect();
+                        showNotification('Please log in to access your search profiles.', 'warning');
+                    } else {
+                        showNotification('Could not load search profiles. Please try refreshing the page.', 'error');
+                    }
+                }
+            }
+
+            /**
+             * Renders the profiles into the dropdown select element.
+             */
+            function renderProfileSelect() {
+                console.log('=== renderProfileSelect() called ===');
+                profileSelect.innerHTML = '<option value="">Select a saved profile...</option>';
+                const sortedProfileNames = Object.values(profiles).sort((a, b) => a.name.localeCompare(b.name));
+                console.log('Rendering profiles:', sortedProfileNames.length);
+                sortedProfileNames.forEach(profile => {
+                    const option = document.createElement('option');
+                    option.value = profile.id;
+                    option.textContent = profile.name;
+                    profileSelect.appendChild(option);
+                });
+
+                // Set the dropdown to the currently active profile and update the view
+                profileSelect.value = currentProfileId;
+                updateProfileViewState(currentProfileId);
+                console.log('renderProfileSelect completed');
+            }
+
+            /**
+             * Loads the filters of a selected profile into the form.
+             * @param {string} profileId - The ID of the profile to load.
+             */
+            function loadProfile(profileId) {
+                const profile = profiles[profileId];
+                if (!profile) {
+                    console.warn('Profile not found:', profileId);
+                    currentProfileId = null;
+                    updateProfileViewState(null);
+                    return;
+                }
+
+                // Reset form first to clear previous selections
+                form.reset(); 
+                // Also reset checkboxes
+                form.querySelectorAll('input[type="checkbox"]').forEach(checkbox => checkbox.checked = false);
+
+                // Populate form fields
+                const filters = profile.filters;
+                for (const key in filters) {
+                    const value = filters[key];
+                    const input = form.querySelector(`[name="${key}"]`);
+
+                    if (input) {
+                        if (input.type === 'checkbox') {
+                            // For checkboxes, value is an array
+                            if (Array.isArray(value)) {
+                                form.querySelectorAll(`input[name="${key}"]`).forEach(checkbox => {
+                                    if (value.includes(checkbox.value)) {
+                                        checkbox.checked = true;
+                                    }
+                                });
+                            }
+                        } else if (input.tagName === 'SELECT') {
+                             input.value = value;
+                        } 
+                        else {
+                            input.value = value;
+                        }
+                    } else {
+                        // Handle range inputs like min_price, max_price
+                        if (key.startsWith('min_') || key.startsWith('max_')) {
+                            const baseName = key.substring(0, key.indexOf('_')); // e.g., 'min' or 'max'
+                            const fieldName = key.substring(key.indexOf('_') + 1); // e.g., 'price', 'area'
+                            const rangeInput = form.querySelector(`input[name="${key}"]`);
+                            if (rangeInput) {
+                                rangeInput.value = value;
+                            }
+                        }
+                    }
+                }
+
+                currentProfileId = profileId;
+                saveProfileNameInput.value = profile.name; // Pre-fill save as new with current profile name
+
+                // Update all UI elements related to the profile state
+                updateProfileViewState(profileId);
+
+                // Optionally, trigger a scrape for the loaded profile immediately
+                // form.dispatchEvent(new Event('submit')); 
+            }
+
+            /**
+             * Centralized function to update the UI based on the current profile selection.
+             * @param {string|null} profileId - The ID of the currently selected profile, or null if none.
+             */
+            function updateProfileViewState(profileId) {
+                const profile = profileId ? profiles[profileId] : null;
+
+                if (profile) {
+                    // Show active profile info
+                    activeProfileInfo.classList.remove('hidden');
+                    activeProfileNameSpan.textContent = profile.name;
+                    activeProfileEmails.textContent = profile.emails && profile.emails.length > 0 
+                        ? `${profile.emails.length} email${profile.emails.length > 1 ? 's' : ''} configured`
+                        : 'No emails set';
+                    
+                    // Fill form fields
+                    profileEmailsInput.value = profile.emails ? profile.emails.join(', ') : '';
+                    saveProfileNameInput.value = profile.name;
+                    
+                    // Fill periodic scraping fields
+                    if (scrapeIntervalInput) {
+                        scrapeIntervalInput.value = profile.scrape_interval_hours || 4;
+                    }
+                    
+                    // Update last scraped display
+                    if (lastScrapedSpan) {
+                        if (profile.last_scraped) {
+                            const lastScraped = new Date(profile.last_scraped);
+                            lastScrapedSpan.textContent = `Last scraped: ${lastScraped.toLocaleDateString()} ${lastScraped.toLocaleTimeString()}`;
+                        } else {
+                            lastScrapedSpan.textContent = 'Last scraped: Never';
+                        }
+                    }
+                    
+                    // Enable buttons
+                    updateEmailsBtn.disabled = false;
+                    overwriteProfileBtn.disabled = false;
+                    deleteProfileBtn.disabled = false;
+                    if (updateIntervalBtn) updateIntervalBtn.disabled = false;
+                    if (triggerScrapeBtn) triggerScrapeBtn.disabled = false;
+
+                } else {
+                    // Hide active profile info
+                    activeProfileInfo.classList.add('hidden');
+                    
+                    // Clear form fields
+                    profileEmailsInput.value = '';
+                    saveProfileNameInput.value = '';
+                    if (scrapeIntervalInput) scrapeIntervalInput.value = '4';
+                    if (lastScrapedSpan) lastScrapedSpan.textContent = 'Last scraped: Never';
+                    
+                    // Disable buttons
+                    updateEmailsBtn.disabled = true;
+                    overwriteProfileBtn.disabled = true;
+                    deleteProfileBtn.disabled = true;
+                    if (updateIntervalBtn) updateIntervalBtn.disabled = true;
+                    if (triggerScrapeBtn) triggerScrapeBtn.disabled = true;
+
+                    // Hide profile actions if expanded
+                    profileActionsSection.classList.add('hidden');
+                    isProfileActionsExpanded = false;
+                }
+            }
+
+            /**
+             * Collects all current filter values from the form.
+             * @returns {object} An object containing the current filter settings.
+             */
+            function getCurrentFilters() {
+                const filters = {};
+                new FormData(form).forEach((value, key) => {
+                    const input = form.querySelector(`[name="${key}"]`);
+                    if (input && input.type === 'checkbox') {
+                        if (!filters[key]) {
+                            filters[key] = [];
+                        }
+                        if (input.checked) {
+                            filters[key].push(value);
+                        }
+                    } else if (value) {
+                        filters[key] = value;
+                    }
+                });
+                // Handle number inputs that might be empty and should be null/undefined
+                ['min_price', 'max_price', 'min_area', 'max_area', 'min_rooms', 'max_rooms', 'min_bedrooms', 'max_bedrooms'].forEach(key => {
+                    if (filters[key] === '') {
+                        delete filters[key];
+                    }
+                });
+                return filters;
+            }
+
+            /**
+             * Saves a new search profile.
+             */
+            async function saveNewProfile() {
+                if (typeof authManager === 'undefined' || !authManager.isAuthenticated()) {
+                    showNotification('Please log in to save search profiles.', 'warning');
+                    if (typeof authUI !== 'undefined') {
+                        authUI.showLogin();
+                    }
+                    return;
+                }
+                
+                const profileName = saveProfileNameInput.value.trim();
+                if (!profileName) {
+                    showNotification('Please enter a name for the new search profile.', 'warning');
+                    return;
+                }
+
+                // Check if a profile with the same name already exists
+                const existingProfile = Object.values(profiles).find(p => p.name === profileName);
+                if (existingProfile) {
+                    showNotification('A profile with this name already exists. Please choose a different name or use "Update Profile".', 'warning');
+                    return;
+                }
+
+                const profileEmails = profileEmailsInput.value.split(',').map(email => email.trim()).filter(email => email);
+                const filters = getCurrentFilters();
+                const scrapeInterval = scrapeIntervalInput ? parseInt(scrapeIntervalInput.value) || 4 : 4;
+
+                try {
+                    const response = await authManager.apiRequest('/api/profiles', {
+                        method: 'POST',
+                        body: JSON.stringify({ 
+                            name: profileName, 
+                            filters, 
+                            emails: profileEmails,
+                            scrape_interval_hours: scrapeInterval
+                        })
+                    });
+                    if (!response.ok) throw new Error(`Failed to save profile: ${response.statusText}`);
+                    const result = await response.json();
+                    
+                    // Add to local profiles store
+                    profiles[result.id] = result;
+                    currentProfileId = result.id;
+                    renderProfileSelect();
+                    profileSelect.value = result.id;
+                    updateProfileViewState(result.id);
+                    
+                    showNotification(`Profile "${result.name}" saved successfully!`, 'success');
+                } catch (error) {
+                    console.error('Error saving new profile:', error);
+                    showNotification('Could not save new profile. Please try again.', 'error');
+                }
+            }
+
+            /**
+             * Overwrites the currently selected profile with the current filter settings.
+             */
+            async function overwriteSelectedProfile() {
+                if (!currentProfileId) {
+                    showNotification('Please select a profile to overwrite.', 'warning');
+                    return;
+                }
+
+                const profileName = saveProfileNameInput.value.trim(); // Use the name from the input field
+                const profileEmails = profileEmailsInput.value.split(',').map(email => email.trim()).filter(email => email);
+                const filters = getCurrentFilters();
+
+                try {
+                    const response = await authManager.apiRequest(`/api/profiles/${currentProfileId}`, {
+                        method: 'PUT',
+                        body: JSON.stringify({ name: profileName, filters, emails: profileEmails })
+                    });
+                    if (!response.ok) throw new Error(`Failed to update profile: ${response.statusText}`);
+                    const result = await response.json();
+                    // Update the local profile with the response data
+                    profiles[currentProfileId] = {
+                        id: currentProfileId,
+                        name: result.name,
+                        filters: result.filters,
+                        emails: result.emails || [],
+                        listings: result.listings || []
+                    };
+                    // Refresh the UI
+                    renderProfileSelect();
+                    updateProfileViewState(currentProfileId);
+                    showNotification(`Profile "${result.name}" updated successfully!`, 'success');
+                } catch (error) {
+                    console.error('Error updating profile:', error);
+                    showNotification('Could not update profile. Please try again.', 'error');
+                }
+            }
+
+            /**
+             * Updates the email addresses for the currently selected profile.
+             */
+            async function updateProfileEmails() {
+                if (!currentProfileId) {
+                    showNotification('Please select a profile to update emails for.', 'warning');
+                    return;
+                }
+                const emails = profileEmailsInput.value.split(',').map(email => email.trim()).filter(email => email);
+
+                try {
+                    const response = await authManager.apiRequest(`/api/profiles/${currentProfileId}/email`, {
+                        method: 'PUT',
+                        body: JSON.stringify({ emails: emails })
+                    });
+                    if (!response.ok) throw new Error(`Failed to update emails: ${response.statusText}`);
+                    const result = await response.json();
+                    // Update local profile data
+                    if (profiles[currentProfileId]) {
+                        profiles[currentProfileId].emails = emails;
+                        updateProfileViewState(currentProfileId); // Refresh UI
+                    }
+                    showNotification('Notification emails updated successfully!', 'success');
+                } catch (error) {
+                    console.error('Error updating emails:', error);
+                    showNotification('Could not update notification emails. Please try again.', 'error');
+                }
+            }
+
+            // --- PERIODIC SCRAPING FUNCTIONS ---
+
+            /**
+             * Updates the scraping interval for the current profile.
+             */
+            async function updateScrapeInterval() {
+                if (!currentProfileId) {
+                    showNotification('Please select a profile to update the scraping interval for.', 'warning');
+                    return;
+                }
+                
+                const intervalHours = parseInt(scrapeIntervalInput.value);
+                if (!intervalHours || intervalHours < 1 || intervalHours > 168) {
+                    showNotification('Please enter a valid interval between 1 and 168 hours.', 'warning');
+                    return;
+                }
+
+                try {
+                    const response = await authManager.apiRequest(`/api/profiles/${currentProfileId}/scrape-interval`, {
+                        method: 'PUT',
+                        body: JSON.stringify({ scrape_interval_hours: intervalHours })
+                    });
+                    if (!response.ok) throw new Error(`Failed to update interval: ${response.statusText}`);
+                    // Update local profile data
+                    if (profiles[currentProfileId]) {
+                        profiles[currentProfileId].scrape_interval_hours = intervalHours;
+                        updateProfileViewState(currentProfileId); // Refresh UI
+                    }
+                    showNotification(`Scraping interval updated to ${intervalHours} hours.`, 'success');
+                } catch (error) {
+                    console.error('Error updating scraping interval:', error);
+                    showNotification('Could not update scraping interval. Please try again.', 'error');
+                }
+            }
+
+            /**
+             * Manually triggers a scrape for the current profile.
+             */
+            async function triggerProfileScrape() {
+                if (!currentProfileId) {
+                    showNotification('Please select a profile to scrape.', 'warning');
+                    return;
+                }
+
+                try {
+                    // Show loading state
+                    triggerScrapeBtn.disabled = true;
+                    triggerScrapeBtn.textContent = 'Scraping...';
+                    const response = await authManager.apiRequest(`/api/profiles/${currentProfileId}/scrape`, {
+                        method: 'POST'
+                    });
+                    if (!response.ok) throw new Error(`Failed to trigger scrape: ${response.statusText}`);
+                    const result = await response.json();
+                    showNotification(result.message || 'Scrape completed successfully!', 'success');
+                    // Refresh the listings
+                    await fetchListings(currentProfileId, false);
+                    // Update the last scraped time
+                    if (profiles[currentProfileId]) {
+                        profiles[currentProfileId].last_scraped = new Date().toISOString();
+                        updateProfileViewState(currentProfileId);
+                    }
+                } catch (error) {
+                    console.error('Error triggering scrape:', error);
+                    showNotification('Could not trigger scrape. Please try again.', 'error');
+                } finally {
+                    triggerScrapeBtn.disabled = false;
+                    triggerScrapeBtn.textContent = 'Scrape Now';
+                }
+            }
+
+            /**
+             * Fetches the current scraper status.
+             */
+            async function fetchScraperStatus() {
+                try {
+                    const response = await fetch('/api/scraper/status');
+                    if (!response.ok) throw new Error(`Failed to fetch scraper status: ${response.statusText}`);
+                    const status = await response.json();
+                    
+                    // Update scraper status display
+                    if (scraperStatus) {
+                        scraperStatus.textContent = status.is_running ? 'Active' : 'Stopped';
+                        scraperStatus.className = status.is_running 
+                            ? 'text-xs px-2 py-1 rounded-full bg-green-100 text-green-800'
+                            : 'text-xs px-2 py-1 rounded-full bg-red-100 text-red-800';
+                    }
+                    
+                    return status;
+                } catch (error) {
+                    console.error('Error fetching scraper status:', error);
+                    return { is_running: false, total_jobs: 0, jobs: [] };
+                }
+            }
+            
             fetchProfiles(); // Load profiles on page load
             fetchListings(null, false); // Fetch initial listings (none selected)
 
-            // Quick save button - opens custom modal for name input
-            saveNewProfileBtn.addEventListener('click', () => {
-                document.getElementById('quick-save-modal').classList.remove('hidden');
-                document.getElementById('quick-save-profile-name').focus();
-            });
-
-            // Modal close logic
-            document.getElementById('quick-save-cancel').addEventListener('click', () => {
-                document.getElementById('quick-save-modal').classList.add('hidden');
-                document.getElementById('quick-save-profile-name').value = '';
-            });
-
-            // Modal save logic
-            document.getElementById('quick-save-confirm').addEventListener('click', () => {
-                const profileName = document.getElementById('quick-save-profile-name').value.trim();
-                if (profileName) {
-                    saveProfileNameInput.value = profileName;
-                    document.getElementById('quick-save-modal').classList.add('hidden');
-                    document.getElementById('quick-save-profile-name').value = '';
-                    saveNewProfile();
-                } else {
-                    document.getElementById('quick-save-profile-name').focus();
-                }
-            });
-
-            // Allow Enter key to confirm in modal
-            document.getElementById('quick-save-profile-name').addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    document.getElementById('quick-save-confirm').click();
-                }
+            // Create New Search Profile Wizard Button
+            createNewProfileBtn.addEventListener('click', () => {
+                openWizard();
             });
 
             // Attach event listeners for update emails and overwrite profile
             updateEmailsBtn.addEventListener('click', updateProfileEmails);
+            saveProfileBtn.addEventListener('click', saveNewProfile);
             overwriteProfileBtn.addEventListener('click', overwriteSelectedProfile);
 
             // Periodic scraping event listeners
@@ -1071,23 +1288,30 @@
             // Delete profile button
             deleteProfileBtn.addEventListener('click', async () => {
                 if (!currentProfileId) return;
-                if (!confirm('Are you sure you want to delete this profile? This cannot be undone.')) return;
-                try {
-                    const response = await fetch(`/api/profiles/${encodeURIComponent(currentProfileId)}`, { method: 'DELETE' });
-                    if (!response.ok && response.status !== 204) throw new Error('Failed to delete profile');
-                    // Remove from local profiles object
-                    delete profiles[currentProfileId];
-                    // Reset UI
-                    currentProfileId = null;
-                    profileSelect.value = '';
-                    form.reset();
-                    updateProfileViewState(null); // <-- Ensure UI disables buttons and hides info
-                    await fetchProfiles(); // This will re-render the select and update the view
-                    fetchListings(null, false);
-                    alert('Profile deleted successfully.');
-                } catch (error) {
-                    alert('Failed to delete profile.');
-                }
+                
+                const profileName = profiles[currentProfileId]?.name || 'this profile';
+                showConfirmation(
+                    'Delete Profile',
+                    `Are you sure you want to delete "${profileName}"? This cannot be undone.`,
+                    async () => {
+                        try {
+                            const response = await authManager.apiRequest(`/api/profiles/${encodeURIComponent(currentProfileId)}`, { method: 'DELETE' });
+                            if (!response.ok && response.status !== 204) throw new Error('Failed to delete profile');
+                            // Remove from local profiles object
+                            delete profiles[currentProfileId];
+                            // Reset UI
+                            currentProfileId = null;
+                            profileSelect.value = '';
+                            form.reset();
+                            updateProfileViewState(null); // <-- Ensure UI disables buttons and hides info
+                            await fetchProfiles(); // This will re-render the select and update the view
+                            fetchListings(null, false);
+                            showNotification('Profile deleted successfully.', 'success');
+                        } catch (error) {
+                            showNotification('Failed to delete profile.', 'error');
+                        }
+                    }
+                );
             });
 
             // Enable/disable buttons based on input changes
@@ -1107,7 +1331,7 @@
             form.addEventListener('submit', async (event) => {
                 event.preventDefault();
                 if (!currentProfileId) {
-                    alert('Please select a profile to scrape for updates.');
+                    showNotification('Please select a profile to scrape for updates.', 'warning');
                     return;
                 }
                 const filters = getCurrentFilters();
@@ -1122,10 +1346,9 @@
                         Scraping...
                     `;
                     
-                    // POST filters to /api/scrape/{profile_id}
-                    const response = await fetch(`/api/scrape/${encodeURIComponent(currentProfileId)}`, {
+                    // POST filters to /api/profiles/{profile_id}/scrape
+                    const response = await authManager.apiRequest(`/api/profiles/${encodeURIComponent(currentProfileId)}/scrape`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ filters })
                     });
                     if (!response.ok) throw new Error(`Scrape failed: ${response.statusText}`);
@@ -1138,6 +1361,8 @@
                         Scrape Complete!
                     `;
                     
+                    showNotification('Scraping completed successfully!', 'success');
+                    
                     // Refresh listings for this profile
                     await fetchListings(currentProfileId, true);
                     
@@ -1147,53 +1372,1029 @@
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
                             </svg>
-                            Scrape for Updates for this Profile
+                            Scrape for Updates
                         `;
                         scrapeUpdatesBtn.disabled = false;
                     }, 2000);
                 } catch (error) {
                     console.error('Error scraping for updates:', error);
-                    alert('Could not scrape for updates. Please try again.');
+                    showNotification('Could not scrape for updates. Please try again.', 'error');
                     // Reset button
                     scrapeUpdatesBtn.innerHTML = `
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
                         </svg>
-                        Scrape for Updates for this Profile
+                        Scrape for Updates
                     `;
                     scrapeUpdatesBtn.disabled = false;
                 }
             });
 
-            // Example of how to call saveListing (assuming it sends to a backend to save favorited listings)
-            function saveListing(fundaUrl) {
-                console.log(`Saving listing: ${fundaUrl}`);
-                // In a real application, you'd send this to your backend
-                // fetch('/api/save-listing', {
-                //     method: 'POST',
-                //     headers: { 'Content-Type': 'application/json' },
-                //     body: JSON.stringify({ url: fundaUrl, profileId: currentProfileId }) // Optionally associate with profile
-                // }).then(response => {
-                //     if (response.ok) alert('Listing saved!');
-                //     else alert('Failed to save listing.');
-                // }).catch(error => console.error('Error saving listing:', error));
-                alert('Listing save functionality (backend) not implemented in this example.');
+            // --- PROFILE WIZARD FUNCTIONALITY ---
+            
+            let currentWizardStep = 1;
+            let wizardData = {};
+            
+            // Initialize wizard event listeners
+            createNewProfileBtn.addEventListener('click', () => {
+                openWizard();
+            });
+            
+            wizardCloseBtn.addEventListener('click', () => {
+                closeWizard();
+            });
+            
+            wizardPrevBtn.addEventListener('click', () => {
+                goToPreviousStep();
+            });
+            
+            wizardNextBtn.addEventListener('click', () => {
+                goToNextStep();
+            });
+            
+            wizardSkipBtn.addEventListener('click', () => {
+                goToNextStep();
+            });
+            
+            wizardCreateBtn.addEventListener('click', () => {
+                createProfileFromWizard();
+            });
+            
+            // Location selection handlers
+            document.querySelectorAll('.location-option').forEach(option => {
+                option.addEventListener('click', () => {
+                    selectLocationOption(option);
+                });
+                
+                // Add keyboard navigation
+                option.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        selectLocationOption(option);
+                    }
+                });
+                
+                // Make options focusable
+                option.setAttribute('tabindex', '0');
+            });
+            
+            // Add keyboard navigation for wizard
+            profileWizardModal.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeWizard();
+                }
+            });
+            
+            // Wizard functions
+            function openWizard() {
+                currentWizardStep = 1;
+                wizardData = {};
+                updateWizardUI();
+                profileWizardModal.classList.remove('hidden');
             }
-        });
+            
+            function closeWizard() {
+                profileWizardModal.classList.add('hidden');
+                currentWizardStep = 1;
+                wizardData = {};
+                resetWizardForm();
+            }
+            
+            function updateWizardUI() {
+                // Update step indicator
+                wizardCurrentStepSpan.textContent = currentWizardStep;
+                
+                // Update progress bar
+                const progressPercentage = (currentWizardStep / 4) * 100;
+                wizardProgress.style.width = `${progressPercentage}%`;
+                
+                // Show/hide step content
+                document.querySelectorAll('.wizard-step').forEach((step, index) => {
+                    if (index + 1 === currentWizardStep) {
+                        step.classList.remove('hidden');
+                    } else {
+                        step.classList.add('hidden');
+                    }
+                });
+                
+                // Update navigation buttons
+                wizardPrevBtn.classList.toggle('hidden', currentWizardStep === 1);
+                wizardNextBtn.classList.toggle('hidden', currentWizardStep === 4);
+                wizardCreateBtn.classList.toggle('hidden', currentWizardStep !== 4);
+                wizardSkipBtn.classList.toggle('hidden', currentWizardStep === 4);
+            }
+            
+            function selectLocationOption(option) {
+                // Remove selection from all options
+                document.querySelectorAll('.location-option').forEach(opt => {
+                    opt.classList.remove('border-primary', 'bg-primary/10');
+                    opt.classList.add('border-gray-200');
+                    opt.querySelector('.location-radio').innerHTML = '';
+                });
+                
+                // Add selection to clicked option
+                option.classList.remove('border-gray-200');
+                option.classList.add('border-primary', 'bg-primary/10');
+                option.querySelector('.location-radio').innerHTML = `
+                    <div class="w-3 h-3 bg-primary rounded-full"></div>
+                `;
+                
+                // Show/hide relevant input fields
+                const locationType = option.dataset.locationType;
+                wizardData.locationType = locationType;
+                
+                document.querySelectorAll('.city-options, .radius-options, .travel-time-options').forEach(el => {
+                    el.style.display = 'none';
+                });
+                
+                if (locationType === 'city') {
+                    document.querySelector('.city-options').style.display = 'block';
+                } else if (locationType === 'radius') {
+                    document.querySelector('.radius-options').style.display = 'block';
+                } else if (locationType === 'travel-time') {
+                    document.querySelector('.travel-time-options').style.display = 'block';
+                }
+            }
+            
+            function goToNextStep() {
+                if (validateCurrentStep()) {
+                    collectCurrentStepData();
+                    currentWizardStep++;
+                    updateWizardUI();
+                }
+            }
+            
+            function goToPreviousStep() {
+                if (currentWizardStep > 1) {
+                    currentWizardStep--;
+                    updateWizardUI();
+                }
+            }
+            
+            function validateCurrentStep() {
+                if (currentWizardStep === 1) {
+                    if (!wizardData.locationType) {
+                        showNotification('Please select a location method.', 'warning');
+                        return false;
+                    }
+                    
+                    if (wizardData.locationType === 'city') {
+                        const cityInput = document.getElementById('city-input').value.trim();
+                        if (!cityInput) {
+                            showNotification('Please enter a city name.', 'warning');
+                            document.getElementById('city-input').focus();
+                            return false;
+                        }
+                    } else if (wizardData.locationType === 'radius') {
+                        const centerInput = document.getElementById('radius-center').value.trim();
+                        const distanceInput = document.getElementById('radius-distance').value;
+                        if (!centerInput) {
+                            showNotification('Please enter a center location.', 'warning');
+                            document.getElementById('radius-center').focus();
+                            return false;
+                        }
+                        if (!distanceInput) {
+                            showNotification('Please select a radius distance.', 'warning');
+                            document.getElementById('radius-distance').focus();
+                            return false;
+                        }
+                    } else if (wizardData.locationType === 'travel-time') {
+                        const centerInput = document.getElementById('travel-center').value.trim();
+                        const timeInput = document.getElementById('travel-time').value;
+                        const modeInput = document.getElementById('transport-mode').value;
+                        if (!centerInput) {
+                            showNotification('Please enter a starting location.', 'warning');
+                            document.getElementById('travel-center').focus();
+                            return false;
+                        }
+                        if (!timeInput) {
+                            showNotification('Please select a travel time.', 'warning');
+                            document.getElementById('travel-time').focus();
+                            return false;
+                        }
+                        if (!modeInput) {
+                            showNotification('Please select a transport mode.', 'warning');
+                            document.getElementById('transport-mode').focus();
+                            return false;
+                        }
+                    }
+                } else if (currentWizardStep === 4) {
+                    const profileName = document.getElementById('wizard-profile-name').value.trim();
+                    if (!profileName) {
+                        showNotification('Please enter a profile name.', 'warning');
+                        document.getElementById('wizard-profile-name').focus();
+                        return false;
+                    }
+                    
+                    // Validate email format if provided
+                    const emailsInput = document.getElementById('wizard-emails').value.trim();
+                    if (emailsInput) {
+                        const emails = emailsInput.split(',').map(e => e.trim());
+                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                        for (const email of emails) {
+                            if (email && !emailRegex.test(email)) {
+                                showNotification(`Invalid email format: ${email}`, 'warning');
+                                document.getElementById('wizard-emails').focus();
+                                return false;
+                            }
+                        }
+                    }
+                }
+                return true;
+            }
+            
+            function collectCurrentStepData() {
+                if (currentWizardStep === 1) {
+                    // Location data
+                    if (wizardData.locationType === 'city') {
+                        wizardData.city = document.getElementById('city-input').value.trim();
+                    } else if (wizardData.locationType === 'radius') {
+                        wizardData.radiusCenter = document.getElementById('radius-center').value.trim();
+                        wizardData.radiusDistance = document.getElementById('radius-distance').value;
+                    } else if (wizardData.locationType === 'travel-time') {
+                        wizardData.travelCenter = document.getElementById('travel-center').value.trim();
+                        wizardData.travelTime = document.getElementById('travel-time').value;
+                        wizardData.transportMode = document.getElementById('transport-mode').value;
+                    }
+                } else if (currentWizardStep === 2) {
+                    // Basic requirements
+                    wizardData.minPrice = document.getElementById('wizard-min-price').value;
+                    wizardData.maxPrice = document.getElementById('wizard-max-price').value;
+                    wizardData.minBedrooms = document.getElementById('wizard-min-bedrooms').value;
+                    wizardData.maxBedrooms = document.getElementById('wizard-max-bedrooms').value;
+                    wizardData.minArea = document.getElementById('wizard-min-area').value;
+                    wizardData.maxArea = document.getElementById('wizard-max-area').value;
+                } else if (currentWizardStep === 3) {
+                    // Detailed filters
+                    wizardData.propertyTypes = [];
+                    document.querySelectorAll('input[name="wizard-property-type"]:checked').forEach(cb => {
+                        wizardData.propertyTypes.push(cb.value);
+                    });
+                    wizardData.energyLabel = document.getElementById('wizard-energy-label').value;
+                    wizardData.hasBalcony = document.getElementById('wizard-balcony').checked;
+                    wizardData.hasGarden = document.getElementById('wizard-garden').checked;
+                    wizardData.hasRoofTerrace = document.getElementById('wizard-roof-terrace').checked;
+                    wizardData.furnished = document.getElementById('wizard-furnished').checked;
+                    wizardData.partlyFurnished = document.getElementById('wizard-partly-furnished').checked;
+                    wizardData.hasParking = document.getElementById('wizard-parking').checked;
+                    wizardData.hasGarage = document.getElementById('wizard-garage').checked;
+                    wizardData.hasLift = document.getElementById('wizard-lift').checked;
+                    wizardData.hasDisabledAccess = document.getElementById('wizard-disabled-access').checked;
+                } else if (currentWizardStep === 4) {
+                    // Profile setup
+                    wizardData.profileName = document.getElementById('wizard-profile-name').value.trim();
+                    wizardData.emails = document.getElementById('wizard-emails').value.trim();
+                    wizardData.scrapeInterval = document.getElementById('wizard-scrape-interval').value;
+                }
+            }
+            
+            function resetWizardForm() {
+                // Reset all form fields
+                document.getElementById('city-input').value = '';
+                document.getElementById('radius-center').value = '';
+                document.getElementById('radius-distance').value = '';
+                document.getElementById('travel-center').value = '';
+                document.getElementById('travel-time').value = '';
+                document.getElementById('transport-mode').value = '';
+                document.getElementById('wizard-min-price').value = '';
+                document.getElementById('wizard-max-price').value = '';
+                document.getElementById('wizard-min-bedrooms').value = '';
+                document.getElementById('wizard-max-bedrooms').value = '';
+                document.getElementById('wizard-min-area').value = '';
+                document.getElementById('wizard-max-area').value = '';
+                document.getElementById('wizard-energy-label').value = '';
+                document.getElementById('wizard-profile-name').value = '';
+                document.getElementById('wizard-emails').value = '';
+                document.getElementById('wizard-scrape-interval').value = '4';
+                
+                // Reset checkboxes
+                document.querySelectorAll('input[name="wizard-property-type"]').forEach(cb => cb.checked = false);
+                document.getElementById('wizard-balcony').checked = false;
+                document.getElementById('wizard-garden').checked = false;
+                document.getElementById('wizard-roof-terrace').checked = false;
+                document.getElementById('wizard-furnished').checked = false;
+                document.getElementById('wizard-partly-furnished').checked = false;
+                document.getElementById('wizard-parking').checked = false;
+                document.getElementById('wizard-garage').checked = false;
+                document.getElementById('wizard-lift').checked = false;
+                document.getElementById('wizard-disabled-access').checked = false;
+                
+                // Reset location selection
+                document.querySelectorAll('.location-option').forEach(opt => {
+                    opt.classList.remove('border-primary', 'bg-primary/10');
+                    opt.classList.add('border-gray-200');
+                    opt.querySelector('.location-radio').innerHTML = '';
+                });
+                
+                // Hide all input sections
+                document.querySelectorAll('.city-options, .radius-options, .travel-time-options').forEach(el => {
+                    el.style.display = 'none';
+                });
+            }
+            
+            async function createProfileFromWizard() {
+                if (!validateCurrentStep()) return;
+                
+                collectCurrentStepData();
+                
+                // Show loading state
+                wizardCreateBtn.disabled = true;
+                wizardCreateBtn.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Creating Profile...
+                    </div>
+                `;
+                
+                try {
+                    // Convert wizard data to profile format
+                    const profileData = convertWizardDataToProfile(wizardData);
+                    
+                    // Save the profile
+                    const response = await authManager.apiRequest('/api/profiles', {
+                        method: 'POST',
+                        body: JSON.stringify(profileData)
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(errorData.detail || 'Failed to create profile');
+                    }
+                    
+                    const result = await response.json();
+                    
+                    // Success
+                    showNotification(`Profile "${profileData.name}" created successfully!`, 'success');
+                    closeWizard();
+                    await fetchProfiles(); // Refresh profiles list
+                    
+                    // Optionally load the newly created profile
+                    if (result.profileId) {
+                        currentProfileId = result.profileId;
+                        profileSelect.value = result.profileId;
+                        loadProfile(result.profileId);
+                        fetchListings(result.profileId, false);
+                    }
+                    
+                } catch (error) {
+                    console.error('Error creating profile:', error);
+                    showNotification(`Failed to create profile: ${error.message}`, 'error');
+                } finally {
+                    // Reset button state
+                    wizardCreateBtn.disabled = false;
+                    wizardCreateBtn.innerHTML = `
+                        <span class="flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            Create Profile
+                        </span>
+                    `;
+                }
+            }
+            
+            function convertWizardDataToProfile(data) {
+                const profile = {
+                    name: data.profileName,
+                    emails: data.emails ? data.emails.split(',').map(e => e.trim()).filter(e => e) : [],
+                    scrape_interval_hours: parseInt(data.scrapeInterval) || 4,
+                    filters: {}
+                };
+                
+                // Convert location data
+                if (data.locationType === 'city' && data.city) {
+                    profile.filters.city = data.city;
+                }
+                // Note: radius and travel-time would need backend support
+                
+                // Convert basic requirements
+                if (data.minPrice) profile.filters.min_price = parseInt(data.minPrice);
+                if (data.maxPrice) profile.filters.max_price = parseInt(data.maxPrice);
+                if (data.minBedrooms) profile.filters.min_bedrooms = parseInt(data.minBedrooms);
+                if (data.maxBedrooms) profile.filters.max_bedrooms = parseInt(data.maxBedrooms);
+                if (data.minArea) profile.filters.min_floor_area = parseInt(data.minArea);
+                if (data.maxArea) profile.filters.max_floor_area = parseInt(data.maxArea);
+                
+                // Convert detailed filters
+                if (data.propertyTypes && data.propertyTypes.length > 0) {
+                    profile.filters.property_types = data.propertyTypes;
+                }
+                if (data.energyLabel) profile.filters.energy_label = data.energyLabel;
+                if (data.hasBalcony) profile.filters.has_balcony = true;
+                if (data.hasGarden) profile.filters.has_garden = true;
+                if (data.hasRoofTerrace) profile.filters.has_roof_terrace = true;
+                if (data.furnished) profile.filters.furnished = true;
+                if (data.partlyFurnished) profile.filters.partly_furnished = true;
+                if (data.hasParking) profile.filters.has_parking = true;
+                if (data.hasGarage) profile.filters.has_garage = true;
+                if (data.hasLift) profile.filters.has_lift = true;
+                if (data.hasDisabledAccess) profile.filters.has_disabled_access = true;
+                
+                return profile;
+            }
+
+        }); // End of DOMContentLoaded event handler
 
     </script>
-    <!-- Quick Save Modal -->
-    <div id="quick-save-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 hidden">
+    
+    <!-- Custom Notification System -->
+    <div id="notification-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+    
+    <!-- Confirmation Modal -->
+    <div id="confirmation-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 hidden">
         <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm">
-            <h2 class="text-lg font-bold mb-3 text-secondary">Quick Save Search Profile</h2>
-            <label for="quick-save-profile-name" class="block text-sm font-medium text-gray-700 mb-2">Profile Name</label>
-            <input type="text" id="quick-save-profile-name" class="w-full px-3 py-2 border border-gray-200 rounded mb-4" placeholder="Enter profile name...">
+            <h2 id="confirmation-title" class="text-lg font-bold mb-3 text-secondary">Confirm Action</h2>
+            <p id="confirmation-message" class="text-gray-700 mb-4">Are you sure you want to proceed?</p>
             <div class="flex justify-end gap-2">
-                <button type="button" id="quick-save-cancel" class="px-4 py-2 rounded bg-gray-100 text-gray-700 hover:bg-gray-200">Cancel</button>
-                <button type="button" id="quick-save-confirm" class="px-4 py-2 rounded bg-primary text-white hover:bg-primary-600">Save</button>
+                <button type="button" id="confirmation-cancel" class="px-4 py-2 rounded bg-gray-100 text-gray-700 hover:bg-gray-200">Cancel</button>
+                <button type="button" id="confirmation-confirm" class="px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600">Confirm</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Create New Search Profile Wizard -->
+    <div id="profile-wizard-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 hidden">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl h-[90vh] overflow-hidden flex flex-col">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between p-6 border-b border-gray-200">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-secondary">Create New Search Profile</h2>
+                        <p class="text-sm text-gray-500">Step <span id="wizard-current-step">1</span> of 4</p>
+                    </div>
+                </div>
+                <button id="wizard-close" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="px-6 py-4 border-b border-gray-100">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-medium text-gray-700">Location</span>
+                    <span class="text-sm font-medium text-gray-700">Requirements</span>
+                    <span class="text-sm font-medium text-gray-700">Details</span>
+                    <span class="text-sm font-medium text-gray-700">Setup</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div id="wizard-progress" class="bg-primary h-2 rounded-full transition-all duration-300" style="width: 25%"></div>
+                </div>
+            </div>
+
+            <!-- Modal Content -->
+            <div class="flex-1 overflow-y-auto">
+                
+                <!-- Step 1: Location Selection -->
+                <div id="wizard-step-1" class="wizard-step p-6">
+                    <div class="max-w-2xl mx-auto">
+                        <div class="text-center mb-8">
+                            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h4M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-bold text-secondary mb-2">Where would you like to search?</h3>
+                            <p class="text-gray-600">Choose your preferred location method</p>
+                        </div>
+
+                        <div class="space-y-4">
+                            <!-- City Selection -->
+                            <div class="location-option border-2 border-gray-200 rounded-xl p-6 cursor-pointer hover:border-primary hover:bg-primary/5 transition-all" data-location-type="city">
+                                <div class="flex items-start gap-4">
+                                    <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h4M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="flex-1">
+                                        <h4 class="font-semibold text-lg text-secondary mb-1">Search by City</h4>
+                                        <p class="text-gray-600 mb-3">Search within specific cities or municipalities</p>
+                                        <div class="city-options" style="display: none;">
+                                            <input type="text" id="city-input" placeholder="Enter city name (e.g., Amsterdam, Utrecht)" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                                        </div>
+                                    </div>
+                                    <div class="location-radio w-5 h-5 border-2 border-gray-300 rounded-full flex-shrink-0"></div>
+                                </div>
+                            </div>
+
+                            <!-- Radius Selection -->
+                            <div class="location-option border-2 border-gray-200 rounded-xl p-6 cursor-pointer hover:border-primary hover:bg-primary/5 transition-all" data-location-type="radius">
+                                <div class="flex items-start gap-4">
+                                    <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="flex-1">
+                                        <h4 class="font-semibold text-lg text-secondary mb-1">Search by Radius</h4>
+                                        <p class="text-gray-600 mb-3">Search within a specific distance from a location</p>
+                                        <div class="radius-options" style="display: none;">
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-2">Center Location</label>
+                                                    <input type="text" id="radius-center" placeholder="Enter address or city" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-2">Radius (km)</label>
+                                                    <select id="radius-distance" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                                                        <option value="">Select distance</option>
+                                                        <option value="1">1 km</option>
+                                                        <option value="2">2 km</option>
+                                                        <option value="5">5 km</option>
+                                                        <option value="10">10 km</option>
+                                                        <option value="15">15 km</option>
+                                                        <option value="20">20 km</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="location-radio w-5 h-5 border-2 border-gray-300 rounded-full flex-shrink-0"></div>
+                                </div>
+                            </div>
+
+                            <!-- Travel Time Selection -->
+                            <div class="location-option border-2 border-gray-200 rounded-xl p-6 cursor-pointer hover:border-primary hover:bg-primary/5 transition-all" data-location-type="travel-time">
+                                <div class="flex items-start gap-4">
+                                    <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="flex-1">
+                                        <h4 class="font-semibold text-lg text-secondary mb-1">Search by Travel Time</h4>
+                                        <p class="text-gray-600 mb-3">Search within a specific travel time from a location</p>
+                                        <div class="travel-time-options" style="display: none;">
+                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-2">From Location</label>
+                                                    <input type="text" id="travel-center" placeholder="Enter address" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-2">Travel Time</label>
+                                                    <select id="travel-time" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                                                        <option value="">Select time</option>
+                                                        <option value="15">15 minutes</option>
+                                                        <option value="30">30 minutes</option>
+                                                        <option value="45">45 minutes</option>
+                                                        <option value="60">1 hour</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-2">Transport Mode</label>
+                                                    <select id="transport-mode" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                                                        <option value="">Select mode</option>
+                                                        <option value="walking">Walking</option>
+                                                        <option value="cycling">Cycling</option>
+                                                        <option value="public-transport">Public Transport</option>
+                                                        <option value="driving">Driving</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="location-radio w-5 h-5 border-2 border-gray-300 rounded-full flex-shrink-0"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Basic Requirements -->
+                <div id="wizard-step-2" class="wizard-step p-6 hidden">
+                    <div class="max-w-2xl mx-auto">
+                        <div class="text-center mb-8">
+                            <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-bold text-secondary mb-2">What are your main requirements?</h3>
+                            <p class="text-gray-600">Set your budget and space needs</p>
+                        </div>
+
+                        <div class="space-y-6">
+                            <!-- Price Range -->
+                            <div class="bg-gray-50 rounded-xl p-6">
+                                <h4 class="font-semibold text-lg text-secondary mb-4 flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                                    </svg>
+                                    Price Range (€)
+                                </h4>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Minimum Price</label>
+                                        <input type="number" id="wizard-min-price" placeholder="e.g. 800" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Maximum Price</label>
+                                        <input type="number" id="wizard-max-price" placeholder="e.g. 2500" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Bedrooms -->
+                            <div class="bg-gray-50 rounded-xl p-6">
+                                <h4 class="font-semibold text-lg text-secondary mb-4 flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                                    </svg>
+                                    Bedrooms
+                                </h4>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Minimum Bedrooms</label>
+                                        <select id="wizard-min-bedrooms" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                                            <option value="">Any</option>
+                                            <option value="1">1</option>
+                                            <option value="2">2</option>
+                                            <option value="3">3</option>
+                                            <option value="4">4</option>
+                                            <option value="5">5+</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Maximum Bedrooms</label>
+                                        <select id="wizard-max-bedrooms" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                                            <option value="">Any</option>
+                                            <option value="1">1</option>
+                                            <option value="2">2</option>
+                                            <option value="3">3</option>
+                                            <option value="4">4</option>
+                                            <option value="5">5+</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Floor Area -->
+                            <div class="bg-gray-50 rounded-xl p-6">
+                                <h4 class="font-semibold text-lg text-secondary mb-4 flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+                                    </svg>
+                                    Floor Area (m²)
+                                </h4>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Minimum Area</label>
+                                        <input type="number" id="wizard-min-area" placeholder="e.g. 50" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Maximum Area</label>
+                                        <input type="number" id="wizard-max-area" placeholder="e.g. 150" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Detailed Filters -->
+                <div id="wizard-step-3" class="wizard-step p-6 hidden">
+                    <div class="max-w-4xl mx-auto">
+                        <div class="text-center mb-8">
+                            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-bold text-secondary mb-2">Additional preferences</h3>
+                            <p class="text-gray-600">Fine-tune your search with detailed filters</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <!-- Property Features -->
+                            <div class="space-y-6">
+                                <div class="bg-gray-50 rounded-xl p-6">
+                                    <h4 class="font-semibold text-lg text-secondary mb-4">Property Type</h4>
+                                    <div class="space-y-3">
+                                        <label class="flex items-center gap-3">
+                                            <input type="checkbox" name="wizard-property-type" value="apartment" class="form-checkbox">
+                                            <span class="text-sm">Apartment</span>
+                                        </label>
+                                        <label class="flex items-center gap-3">
+                                            <input type="checkbox" name="wizard-property-type" value="house" class="form-checkbox">
+                                            <span class="text-sm">House</span>
+                                        </label>
+                                        <label class="flex items-center gap-3">
+                                            <input type="checkbox" name="wizard-property-type" value="studio" class="form-checkbox">
+                                            <span class="text-sm">Studio</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="bg-gray-50 rounded-xl p-6">
+                                    <h4 class="font-semibold text-lg text-secondary mb-4">Energy Label</h4>
+                                    <select id="wizard-energy-label" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                                        <option value="">Any</option>
+                                        <option value="A+++">A+++</option>
+                                        <option value="A++">A++</option>
+                                        <option value="A+">A+</option>
+                                        <option value="A">A</option>
+                                        <option value="B">B or better</option>
+                                        <option value="C">C or better</option>
+                                    </select>
+                                </div>
+
+                                <div class="bg-gray-50 rounded-xl p-6">
+                                    <h4 class="font-semibold text-lg text-secondary mb-4">Outdoor Space</h4>
+                                    <div class="space-y-3">
+                                        <label class="flex items-center gap-3">
+                                            <input type="checkbox" id="wizard-balcony" class="form-checkbox">
+                                            <span class="text-sm">Balcony</span>
+                                        </label>
+                                        <label class="flex items-center gap-3">
+                                            <input type="checkbox" id="wizard-garden" class="form-checkbox">
+                                            <span class="text-sm">Garden</span>
+                                        </label>
+                                        <label class="flex items-center gap-3">
+                                            <input type="checkbox" id="wizard-roof-terrace" class="form-checkbox">
+                                            <span class="text-sm">Roof Terrace</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Amenities & Features -->
+                            <div class="space-y-6">
+                                <div class="bg-gray-50 rounded-xl p-6">
+                                    <h4 class="font-semibold text-lg text-secondary mb-4">Furnishing</h4>
+                                    <div class="space-y-3">
+                                        <label class="flex items-center gap-3">
+                                            <input type="checkbox" id="wizard-furnished" class="form-checkbox">
+                                            <span class="text-sm">Furnished</span>
+                                        </label>
+                                        <label class="flex items-center gap-3">
+                                            <input type="checkbox" id="wizard-partly-furnished" class="form-checkbox">
+                                            <span class="text-sm">Partly Furnished</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="bg-gray-50 rounded-xl p-6">
+                                    <h4 class="font-semibold text-lg text-secondary mb-4">Parking & Storage</h4>
+                                    <div class="space-y-3">
+                                        <label class="flex items-center gap-3">
+                                            <input type="checkbox" id="wizard-parking" class="form-checkbox">
+                                            <span class="text-sm">Parking</span>
+                                        </label>
+                                        <label class="flex items-center gap-3">
+                                            <input type="checkbox" id="wizard-garage" class="form-checkbox">
+                                            <span class="text-sm">Garage</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="bg-gray-50 rounded-xl p-6">
+                                    <h4 class="font-semibold text-lg text-secondary mb-4">Accessibility</h4>
+                                    <div class="space-y-3">
+                                        <label class="flex items-center gap-3">
+                                            <input type="checkbox" id="wizard-lift" class="form-checkbox">
+                                            <span class="text-sm">Elevator</span>
+                                        </label>
+                                        <label class="flex items-center gap-3">
+                                            <input type="checkbox" id="wizard-disabled-access" class="form-checkbox">
+                                            <span class="text-sm">Disabled Access</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Profile Setup -->
+                <div id="wizard-step-4" class="wizard-step p-6 hidden">
+                    <div class="max-w-2xl mx-auto">
+                        <div class="text-center mb-8">
+                            <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-bold text-secondary mb-2">Profile setup</h3>
+                            <p class="text-gray-600">Name your profile and configure notifications</p>
+                        </div>
+
+                        <div class="space-y-6">
+                            <!-- Profile Name -->
+                            <div class="bg-gray-50 rounded-xl p-6">
+                                <h4 class="font-semibold text-lg text-secondary mb-4 flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                                    </svg>
+                                    Profile Name
+                                </h4>
+                                <input type="text" id="wizard-profile-name" placeholder="e.g., Amsterdam City Center Search" class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-lg">
+                            </div>
+
+                            <!-- Email Notifications -->
+                            <div class="bg-gray-50 rounded-xl p-6">
+                                <h4 class="font-semibold text-lg text-secondary mb-4 flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                    </svg>
+                                    Email Notifications
+                                </h4>
+                                <div class="space-y-3">
+                                    <textarea id="wizard-emails" rows="3" placeholder="Enter email addresses separated by commas&#10;e.g., john@example.com, jane@example.com" class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none"></textarea>
+                                    <p class="text-sm text-gray-600">You'll receive notifications when new properties matching your criteria are found.</p>
+                                </div>
+                            </div>
+
+                            <!-- Scraping Frequency -->
+                            <div class="bg-gray-50 rounded-xl p-6">
+                                <h4 class="font-semibold text-lg text-secondary mb-4 flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    Search Frequency
+                                </h4>
+                                <select id="wizard-scrape-interval" class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                                    <option value="1">Every hour</option>
+                                    <option value="2">Every 2 hours</option>
+                                    <option value="4" selected>Every 4 hours (recommended)</option>
+                                    <option value="6">Every 6 hours</option>
+                                    <option value="12">Twice daily</option>
+                                    <option value="24">Daily</option>
+                                </select>
+                                <p class="text-sm text-gray-600 mt-2">How often should we check for new properties?</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-6 border-t border-gray-200 flex items-center justify-between">
+                <button id="wizard-prev" class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors hidden">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                        Previous
+                    </span>
+                </button>
+                <div class="flex gap-3">
+                    <button id="wizard-skip" class="px-6 py-2 text-gray-600 hover:text-gray-800 transition-colors">
+                        Skip this step
+                    </button>
+                    <button id="wizard-next" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-600 transition-colors">
+                        <span class="flex items-center gap-2">
+                            Next
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </span>
+                    </button>
+                    <button id="wizard-create" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors hidden">
+                        <span class="flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            Create Profile
+                        </span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Notification Container -->
+    <div id="notification-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmation-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 hidden">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg font-medium text-gray-900" id="confirmation-title">Confirm Action</h3>
+                <div class="mt-2 px-7 py-3">
+                    <p class="text-sm text-gray-500" id="confirmation-message">Are you sure you want to proceed?</p>
+                </div>
+                <div class="items-center px-4 py-3 flex justify-end gap-2">
+                    <button id="confirmation-cancel" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">Cancel</button>
+                    <button id="confirmation-confirm" class="px-4 py-2 rounded text-white bg-red-500 hover:bg-red-600">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load authentication script -->
+    <script src="/static/auth.js"></script>
+    
+    <script>
+        // Initialize authentication UI
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Initializing authentication...');
+            
+            // Wait for auth.js to load
+            function initializeAuth() {
+                if (typeof authManager === 'undefined' || typeof authUI === 'undefined') {
+                    console.log('Auth components not loaded yet, retrying...');
+                    setTimeout(initializeAuth, 100);
+                    return;
+                }
+                
+                console.log('Auth components loaded, setting up event listeners...');
+                
+                // Setup authentication event listeners
+                const loginBtn = document.getElementById('login-btn');
+                const registerBtn = document.getElementById('register-btn');
+                const logoutBtn = document.getElementById('logout-btn');
+                const userMenuBtn = document.getElementById('user-menu-btn');
+                
+                if (loginBtn) {
+                    loginBtn.addEventListener('click', () => {
+                        authUI.showLogin();
+                    });
+                }
+                
+                if (registerBtn) {
+                    registerBtn.addEventListener('click', () => {
+                        authUI.showRegister();
+                    });
+                }
+                
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', async () => {
+                        try {
+                            await authManager.logout();
+                            showNotification('Logged out successfully!', 'success');
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1000);
+                        } catch (error) {
+                            showNotification('Error logging out: ' + error.message, 'error');
+                        }
+                    });
+                }
+                
+                // Setup user menu toggle
+                if (userMenuBtn) {
+                    userMenuBtn.addEventListener('click', () => {
+                        const menu = document.getElementById('user-menu');
+                        if (menu) {
+                            menu.classList.toggle('hidden');
+                        }
+                    });
+                }
+                
+                // Close user menu when clicking outside
+                document.addEventListener('click', (e) => {
+                    const menu = document.getElementById('user-menu');
+                    const btn = document.getElementById('user-menu-btn');
+                    if (menu && btn && !menu.contains(e.target) && !btn.contains(e.target)) {
+                        menu.classList.add('hidden');
+                    }
+                });
+                
+                // Update UI based on authentication state
+                function updateAuthUI() {
+                    const user = authManager.getCurrentUser();
+                    const notLoggedIn = document.getElementById('auth-not-logged-in');
+                    const loggedIn = document.getElementById('auth-logged-in');
+                    const authNotice = document.getElementById('auth-notice');
+                    
+                    if (user) {
+                        // User is authenticated
+                        if (notLoggedIn) notLoggedIn.classList.add('hidden');
+                        if (loggedIn) loggedIn.classList.remove('hidden');
+                        if (authNotice) authNotice.classList.add('hidden');
+                        
+                        // Update user display
+                        const userName = document.getElementById('user-name');
+                        const userInitial = document.getElementById('user-initial');
+                        if (userName) userName.textContent = user.username;
+                        if (userInitial) userInitial.textContent = user.username.charAt(0).toUpperCase();
+                    } else {
+                        // User is not authenticated
+                        if (notLoggedIn) notLoggedIn.classList.remove('hidden');
+                        if (loggedIn) loggedIn.classList.add('hidden');
+                        if (authNotice) authNotice.classList.remove('hidden');
+                    }
+                }
+                
+                // Listen for auth state changes
+                authManager.addListener(updateAuthUI);
+                
+                // Initial auth state update
+                updateAuthUI();
+                
+                console.log('Authentication initialization complete');
+            }
+            
+            // Start initialization
+            initializeAuth();
+        });
+    </script>
 </body>
 </html>

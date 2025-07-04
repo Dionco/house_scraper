@@ -71,11 +71,13 @@ class PeriodicScraper:
             # Load current database
             db = self.load_database()
             
-            if profile_id not in db:
+            # Get profiles from the nested structure
+            profiles = db.get("profiles", {})
+            if profile_id not in profiles:
                 logger.warning(f"Profile {profile_id} not found in database")
                 return
                 
-            profile = db[profile_id]
+            profile = profiles[profile_id]
             filters = profile.get("filters", {})
             
             # Build URL and scrape
@@ -197,8 +199,9 @@ class PeriodicScraper:
         try:
             db = self.load_database()
             
-            # Get current profile IDs
-            current_profile_ids = set(db.keys())
+            # Get current profile IDs from the nested structure
+            profiles = db.get("profiles", {})
+            current_profile_ids = set(profiles.keys())
             
             # Get existing job IDs
             existing_job_ids = set()
@@ -211,7 +214,7 @@ class PeriodicScraper:
             for profile_id in current_profile_ids:
                 if profile_id not in existing_job_ids:
                     # Get profile-specific interval or use default
-                    profile = db[profile_id]
+                    profile = profiles[profile_id]
                     interval = profile.get("scrape_interval_hours", self.default_interval_hours)
                     self.add_profile_job(profile_id, interval)
             
