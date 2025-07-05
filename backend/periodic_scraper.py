@@ -90,7 +90,24 @@ class PeriodicScraper:
                 clean_filters = {}
                 for key, value in filters.items():
                     if value is not None and value != "":
-                        clean_filters[key] = value
+                        # Handle price parameter conversion
+                        if key == "price" and isinstance(value, str):
+                            # Convert price range like "3000-5000" to min_price and max_price
+                            if "-" in value:
+                                try:
+                                    min_p, max_p = value.split("-", 1)
+                                    clean_filters["min_price"] = int(min_p.strip())
+                                    clean_filters["max_price"] = int(max_p.strip())
+                                except ValueError:
+                                    logger.warning(f"Invalid price format: {value}")
+                            else:
+                                try:
+                                    # Single price value, use as max_price
+                                    clean_filters["max_price"] = int(value.strip())
+                                except ValueError:
+                                    logger.warning(f"Invalid price value: {value}")
+                        else:
+                            clean_filters[key] = value
                         
                 url = build_rental_url(**clean_filters)
                 logger.info(f"Scraping URL: {url}")
