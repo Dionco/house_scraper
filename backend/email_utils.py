@@ -11,12 +11,34 @@ load_dotenv()
 
 class EmailSender:
     def __init__(self):
-        self.smtp_host = os.environ.get('SMTP_HOST', 'localhost')
-        self.smtp_port = int(os.environ.get('SMTP_PORT', 25))
+        # Railway-compatible SMTP settings with better defaults
+        self.smtp_host = os.environ.get('SMTP_HOST', 'smtp.gmail.com')  # Gmail as default
+        self.smtp_port = int(os.environ.get('SMTP_PORT', 587))  # TLS port as default
         self.smtp_user = os.environ.get('SMTP_USER', None)
         self.smtp_pass = os.environ.get('SMTP_PASS', None)
-        self.from_email = os.environ.get('FROM_EMAIL', self.smtp_user or 'noreply@example.com')
+        self.from_email = os.environ.get('FROM_EMAIL', self.smtp_user or 'noreply@housescraper.com')
+        self.use_tls = os.environ.get('SMTP_USE_TLS', 'true').lower() == 'true'
         self.templates_dir = Path(__file__).parent / 'templates'
+        
+        # Validate SMTP configuration
+        if not self.smtp_user or not self.smtp_pass:
+            print("[WARNING] SMTP credentials not configured. Email notifications will fail.")
+            print("Set SMTP_USER and SMTP_PASS environment variables in Railway.")
+    
+    def test_smtp_connection(self):
+        """Test SMTP connection for debugging"""
+        try:
+            print(f"Testing SMTP connection to {self.smtp_host}:{self.smtp_port}")
+            with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
+                if self.use_tls:
+                    server.starttls()
+                if self.smtp_user and self.smtp_pass:
+                    server.login(self.smtp_user, self.smtp_pass)
+                print("✓ SMTP connection successful")
+                return True
+        except Exception as e:
+            print(f"✗ SMTP connection failed: {e}")
+            return False
     
     def load_template(self, template_name):
         """Load and return a Jinja2 template"""
@@ -112,14 +134,22 @@ class EmailSender:
             msg['To'] = to_header
             msg['Subject'] = subject
             msg.attach(MIMEText(html_content, 'html'))
-            # Send email
-            with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
-                if self.smtp_user and self.smtp_pass:
-                    server.starttls()
-                    server.login(self.smtp_user, self.smtp_pass)
-                server.sendmail(self.from_email, recipients, msg.as_string())
-            print(f"Successfully sent email to {to_header}")
-            return True
+            # Send email with proper error handling
+            try:
+                with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
+                    if self.use_tls:
+                        server.starttls()
+                    if self.smtp_user and self.smtp_pass:
+                        server.login(self.smtp_user, self.smtp_pass)
+                    server.sendmail(self.from_email, recipients, msg.as_string())
+                print(f"Successfully sent email to {to_header}")
+                return True
+            except smtplib.SMTPException as e:
+                print(f"SMTP error sending email to {to_email}: {e}")
+                return False
+            except Exception as e:
+                print(f"Failed to send email to {to_email}: {e}")
+                return False
         except Exception as e:
             print(f"Failed to send email to {to_email}: {e}")
             return False
