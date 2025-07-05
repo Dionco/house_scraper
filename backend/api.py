@@ -90,6 +90,20 @@ async def health_check():
     """Health check endpoint for Railway deployment"""
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
+# Admin page endpoint
+@app.get("/admin-scraper.html", response_class=HTMLResponse)
+async def admin_scraper_page():
+    """Serve the admin scraper management page"""
+    admin_html_path = os.path.join(os.path.dirname(__file__), "admin-scraper.html")
+    if os.path.exists(admin_html_path):
+        with open(admin_html_path, 'r', encoding='utf-8') as f:
+            return f.read()
+    else:
+        return HTMLResponse(
+            content="<h1>Admin page not found</h1><p>The admin-scraper.html file was not found.</p>",
+            status_code=404
+        )
+
 # Root endpoint - Serve the main UI
 @app.get("/", response_class=HTMLResponse)
 async def root():
