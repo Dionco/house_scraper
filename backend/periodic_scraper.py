@@ -81,17 +81,64 @@ class PeriodicScraper:
             filters = profile.get("filters", {})
             
             # Build URL and scrape
-            url = build_rental_url(**filters)
-            logger.info(f"Scraping URL: {url}")
+            try:
+                # Clean filters to avoid unexpected parameters
+                clean_filters = {}
+                for key, value in filters.items():
+                    if value is not None and value != "":
+                        clean_filters[key] = value
+                        
+                url = build_rental_url(**clean_filters)
+                logger.info(f"Scraping URL: {url}")
+            except Exception as url_error:
+                logger.error(f"Failed to build URL for profile {profile_id}: {url_error}")
+                profile["last_scraped"] = datetime.now().isoformat()
+                profile["last_new_listings_count"] = 0
+                profile["last_scrape_error"] = f"URL building error: {url_error}"
+                self.save_database(db)
+                return
             
-            html = scrape_funda_html(url)
+            # Try scraping with retries and better timeout handling
+            html = None
+            try:
+                html = scrape_funda_html(url, max_retries=2, timeout=45)  # Reduced timeout for Railway
+            except Exception as scrape_error:
+                logger.error(f"Failed to scrape HTML for profile {profile_id}: {scrape_error}")
+                
+                # Update profile with failed scrape info but don't crash
+                profile["last_scraped"] = datetime.now().isoformat()
+                profile["last_new_listings_count"] = 0
+                profile["last_scrape_error"] = str(scrape_error)
+                self.save_database(db)
+                return
+                
             if not html:
-                logger.error(f"Failed to scrape HTML for profile {profile_id}")
+                logger.error(f"No HTML content received for profile {profile_id}")
+                
+                # Update profile with empty result
+                profile["last_scraped"] = datetime.now().isoformat()
+                profile["last_new_listings_count"] = 0
+                profile["last_scrape_error"] = "No HTML content received"
+                self.save_database(db)
                 return
                 
             # Extract listings
-            listings = extract_simple_listings_from_html(html)
-            logger.info(f"Extracted {len(listings)} listings for profile {profile_id}")
+            try:
+                listings = extract_simple_listings_from_html(html)
+                logger.info(f"Extracted {len(listings)} listings for profile {profile_id}")
+            except Exception as extract_error:
+                logger.error(f"Failed to extract listings for profile {profile_id}: {extract_error}")
+                
+                # Update profile with extraction error
+                profile["last_scraped"] = datetime.now().isoformat()
+                profile["last_new_listings_count"] = 0
+                profile["last_scrape_error"] = f"Extraction error: {extract_error}"
+                self.save_database(db)
+                return
+            
+            # Clear any previous error
+            if "last_scrape_error" in profile:
+                del profile["last_scrape_error"]
             
             # Get existing URLs to avoid duplicates
             existing_urls = set()
