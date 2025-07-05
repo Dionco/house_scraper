@@ -228,6 +228,122 @@ async def api_info():
     """
     return html_content
 
+# --- PROFILE ENDPOINTS (UPDATED FOR USER AUTHENTICATION) ---
+
+@app.get("/api/profiles", response_model=List[ProfileResponse])
+async def get_user_profiles(current_user: Dict[str, Any] = Depends(get_current_user)):
+    """Get all profiles for the current user."""
+    db = load_db()
+    profiles = db.get("profiles", {})
+    user_id = current_user["id"]
+    
+    # Track if we need to save the database
+    db_updated = False
+    
+    user_profiles = []
+    for profile_id, profile in profiles.items():
+        if profile.get("user_id") == user_id:
+            # Update listing timestamps and ensure correct is_new flags
+            listings = profile.get("listings", [])
+            original_listings_length = len([l for l in listings if l.get("added_timestamp")])
+            update_listing_timestamps(listings)
+            new_listings_length = len([l for l in listings if l.get("added_timestamp")])
+            
+            # If timestamps were added, mark for database save
+            if new_listings_length > original_listings_length:
+                db_updated = True
+            
+            # Convert last_scraped from ISO string to timestamp if needed
+            last_scraped = profile.get("last_scraped")
+            if last_scraped and isinstance(last_scraped, str):
+                try:
+                    dt = datetime.fromisoformat(last_scraped.replace('Z', '+00:00'))
+                    last_scraped = dt.timestamp()
+                except:
+                    last_scraped = None
+            
+            profile_response = ProfileResponse(
+                id=profile_id,
+                user_id=profile["user_id"],
+                name=profile["name"],
+                filters=profile.get("filters", {}),
+                emails=profile.get("emails", []),
+                scrape_interval_hours=profile.get("scrape_interval_hours", 4),
+                created_at=profile.get("created_at", 0),
+                last_scraped=last_scraped,
+                last_new_listings_count=profile.get("last_new_listings_count", 0),
+                listings_count=len(listings),
+                new_today_count=calculate_new_today_count(listings)
+            )
+            user_profiles.append(profile_response)
+    
+    # Save database if any timestamps were added
+    if db_updated:
+        save_db(db)
+    
+    return user_profiles
+
+@app.post("/api/profiles", response_model=ProfileResponse)
+async def create_user_profile(
+    profile_data: ProfileCreate,
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
+    """Create a new profile for the current user."""
+    db = load_db()
+    
+    # Ensure profiles section exists
+    if "profiles" not in db:
+        db["profiles"] = {}
+    
+    profiles = db["profiles"]
+    users = db.get("users", {})
+    user_id = current_user["id"]
+    
+    # Generate profile ID
+    profile_id = f"profile_{int(time.time())}"
+    
+    # Create profile
+    profile = {
+        "id": profile_id,
+        "user_id": user_id,
+        "name": profile_data.name,
+        "filters": profile_data.filters,
+        "emails": profile_data.emails,
+        "scrape_interval_hours": profile_data.scrape_interval_hours,
+        "listings": [],
+        "created_at": time.time(),
+        "last_scraped": None,
+        "last_new_listings_count": 0
+    }
+    
+    profiles[profile_id] = profile
+    
+    # Update user's profile_ids
+    if user_id in users:
+        if "profile_ids" not in users[user_id]:
+            users[user_id]["profile_ids"] = []
+        users[user_id]["profile_ids"].append(profile_id)
+    
+    save_db(db)
+    
+    # Add periodic job for this profile
+    from periodic_scraper import periodic_scraper
+    periodic_scraper.add_profile_job(profile_id, profile_data.scrape_interval_hours)
+    
+    return ProfileResponse(
+        id=profile_id,
+        user_id=user_id,
+        name=profile["name"],
+        filters=profile["filters"],
+        emails=profile["emails"],
+        scrape_interval_hours=profile["scrape_interval_hours"],
+        created_at=profile["created_at"],
+        last_scraped=profile.get("last_scraped"),
+        last_new_listings_count=profile["last_new_listings_count"],
+        listings_count=len(profile["listings"]),
+        new_today_count=calculate_new_today_count(profile["listings"])
+    )
+
 # Get all listings (optionally for a profile)
 
 @app.delete("/api/profiles/{profile_id}")
@@ -334,474 +450,14 @@ async def update_profile_email(
     profile["emails"] = email_update.emails
     save_db(db)
     
-    return ProfileResponse(
-        id=profile_id,
-        user_id=profile["user_id"],
-        name=profile["name"],
-        filters=profile["filters"],
-        emails=profile["emails"],
-        scrape_interval_hours=profile["scrape_interval_hours"],
-        created_at=profile["created_at"],
-        last_scraped=profile.get("last_scraped") if not isinstance(profile.get("last_scraped"), str) else (datetime.fromisoformat(profile["last_scraped"].replace("Z", "+00:00")).timestamp() if profile["last_scraped"] else None),
-        last_new_listings_count=profile["last_new_listings_count"],
-        listings_count=len(profile["listings"])
-    )
-
-# Update complete profile (name, filters, emails) - Updated for user authentication
-@app.put("/api/profiles/{profile_id}")
-async def update_profile(
-    profile_id: str,
-    profile_update: ProfileUpdate,
-    current_user: Dict[str, Any] = Depends(get_current_user)
-):
-    """Update a user's profile."""
-    db = load_db()
-    profiles = db.get("profiles", {})
-    user_id = current_user["id"]
+    # Update listing timestamps and calculate new today count
+    listings = profile.get("listings", [])
+    update_listing_timestamps(listings)
     
-    if profile_id not in profiles:
-        raise HTTPException(status_code=404, detail="Profile not found")
-    
-    profile = profiles[profile_id]
-    
-    # Check if user owns this profile
-    if profile.get("user_id") != user_id:
-        raise HTTPException(status_code=403, detail="Not authorized to update this profile")
-    
-    # Update profile fields
-    if profile_update.name is not None:
-        profile["name"] = profile_update.name
-    if profile_update.filters is not None:
-        profile["filters"] = profile_update.filters
-    if profile_update.emails is not None:
-        profile["emails"] = profile_update.emails
-    if profile_update.scrape_interval_hours is not None:
-        profile["scrape_interval_hours"] = profile_update.scrape_interval_hours
-        # Update the periodic job with new interval
-        from periodic_scraper import periodic_scraper
-        periodic_scraper.add_profile_job(profile_id, profile_update.scrape_interval_hours)
-    
-    save_db(db)
-    
-    return ProfileResponse(
-        id=profile_id,
-        user_id=profile["user_id"],
-        name=profile["name"],
-        filters=profile["filters"],
-        emails=profile["emails"],
-        scrape_interval_hours=profile["scrape_interval_hours"],
-        created_at=profile["created_at"],
-        last_scraped=profile.get("last_scraped") if not isinstance(profile.get("last_scraped"), str) else (datetime.fromisoformat(profile["last_scraped"].replace("Z", "+00:00")).timestamp() if profile["last_scraped"] else None),
-        last_new_listings_count=profile["last_new_listings_count"],
-        listings_count=len(profile["listings"])
-    )
-
-@app.get("/api/data")
-def get_all_data():
-    """Return the entire database.json contents."""
-    return load_db()
-
-# --- PERIODIC SCRAPING ENDPOINTS ---
-
-@app.get("/api/scraper/status")
-def get_scraper_status():
-    """Get the current status of the periodic scraper"""
-    return periodic_scraper.get_status()
-
-@app.post("/api/scraper/start")
-def start_scraper():
-    """Start the periodic scraper"""
-    if not periodic_scraper.is_running:
-        periodic_scraper.start()
-        return {"message": "Periodic scraper started", "status": "success"}
-    return {"message": "Periodic scraper is already running", "status": "info"}
-
-@app.post("/api/scraper/stop")
-def stop_scraper():
-    """Stop the periodic scraper"""
-    if periodic_scraper.is_running:
-        periodic_scraper.stop()
-        return {"message": "Periodic scraper stopped", "status": "success"}
-    return {"message": "Periodic scraper is not running", "status": "info"}
-
-@app.post("/api/scraper/sync")
-def sync_scraper():
-    """Sync scraper jobs with current profiles"""
-    periodic_scraper.sync_jobs_with_profiles()
-    return {"message": "Scraper jobs synchronized", "status": "success"}
-
-# --- SCRAPING ENDPOINTS (UPDATED FOR USER AUTHENTICATION) ---
-
-@app.post("/api/profiles/{profile_id}/scrape")
-async def trigger_profile_scrape(
-    profile_id: str,
-    current_user: Dict[str, Any] = Depends(get_current_user)
-):
-    """Trigger a manual scrape for a specific user profile."""
-    db = load_db()
-    profiles = db.get("profiles", {})
-    user_id = current_user["id"]
-    
-    if profile_id not in profiles:
-        raise HTTPException(status_code=404, detail="Profile not found")
-    
-    profile = profiles[profile_id]
-    
-    # Check if user owns this profile
-    if profile.get("user_id") != user_id:
-        raise HTTPException(status_code=403, detail="Not authorized to scrape this profile")
-    
-    # Trigger scrape
-    from periodic_scraper import periodic_scraper
-    result = periodic_scraper.trigger_profile_scrape(profile_id)
-    
-    if result:
-        return {"message": "Scrape triggered successfully", "profile_id": profile_id}
-    else:
-        return {"message": "Scrape already in progress", "profile_id": profile_id}
-
-@app.put("/api/profiles/{profile_id}/scrape-interval")
-async def update_scrape_interval(
-    profile_id: str,
-    interval_update: ScrapeIntervalUpdate,
-    current_user: Dict[str, Any] = Depends(get_current_user)
-):
-    """Update the scrape interval for a user's profile."""
-    db = load_db()
-    profiles = db.get("profiles", {})
-    user_id = current_user["id"]
-    
-    if profile_id not in profiles:
-        raise HTTPException(status_code=404, detail="Profile not found")
-    
-    profile = profiles[profile_id]
-    
-    # Check if user owns this profile
-    if profile.get("user_id") != user_id:
-        raise HTTPException(status_code=403, detail="Not authorized to update this profile")
-    
-    # Update scrape interval
-    profile["scrape_interval_hours"] = interval_update.scrape_interval_hours
-    save_db(db)
-    
-    # Update periodic job
-    from periodic_scraper import periodic_scraper
-    periodic_scraper.add_profile_job(profile_id, interval_update.scrape_interval_hours)
-    
-    return {"message": "Scrape interval updated successfully", "profile_id": profile_id, "interval_hours": interval_update.scrape_interval_hours}
-
-# --- AUTHENTICATION ENDPOINTS ---
-
-@app.post("/api/auth/register", response_model=TokenResponse)
-async def register(user_data: UserRegister):
-    """Register a new user."""
-    db = load_db()
-    
-    # Ensure users section exists
-    if "users" not in db:
-        db["users"] = {}
-    
-    users = db["users"]
-    
-    # Check if username already exists
-    for user in users.values():
-        if user.get("username") == user_data.username:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Username already registered"
-            )
-        if user.get("email") == user_data.email:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered"
-            )
-    
-    # Create new user
-    user_id = generate_user_id()
-    new_user = create_user_dict(
-        user_id=user_id,
-        username=user_data.username,
-        email=user_data.email,
-        password=user_data.password
-    )
-    
-    users[user_id] = new_user
-    save_db(db)
-    
-    # Generate tokens
-    tokens = generate_tokens(user_id)
-    
-    # Update last login
-    users[user_id]["last_login"] = time.time()
-    save_db(db)
-    
-    return TokenResponse(
-        access_token=tokens["access_token"],
-        refresh_token=tokens["refresh_token"],
-        token_type=tokens["token_type"],
-        user=UserResponse(**new_user)
-    )
-
-@app.post("/api/auth/login", response_model=TokenResponse)
-async def login(user_data: UserLogin):
-    """Login user and return tokens."""
-    db = load_db()
-    users = db.get("users", {})
-    
-    # Find user by username
-    user = None
-    user_id = None
-    for uid, u in users.items():
-        if u.get("username") == user_data.username:
-            user = u
-            user_id = uid
-            break
-    
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid username or password"
-        )
-    
-    # Verify password
-    if not AuthUtils.verify_password(user_data.password, user["password_hash"]):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid username or password"
-        )
-    
-    # Check if user is active
-    if not user.get("is_active", True):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User account is disabled"
-        )
-    
-    # Generate tokens
-    tokens = generate_tokens(user_id)
-    
-    # Update last login
-    user["last_login"] = time.time()
-    save_db(db)
-    
-    return TokenResponse(
-        access_token=tokens["access_token"],
-        refresh_token=tokens["refresh_token"],
-        token_type=tokens["token_type"],
-        user=UserResponse(**user)
-    )
-
-@app.post("/api/auth/logout")
-async def logout(
-    request: Request,
-    current_user: Dict[str, Any] = Depends(get_current_user)
-):
-    """Logout user and blacklist token."""
-    # Get token from request
-    auth_header = request.headers.get("Authorization")
-    if auth_header and auth_header.startswith("Bearer "):
-        token = auth_header.split(" ")[1]
-        blacklist_token(token)
-    
-    return {"message": "Successfully logged out"}
-
-@app.post("/api/auth/refresh", response_model=TokenResponse)
-async def refresh_token(token_data: TokenRefresh):
-    """Refresh access token using refresh token."""
-    try:
-        payload = AuthUtils.verify_token(token_data.refresh_token, "refresh")
-        user_id = payload.get("sub")
-        
-        if not user_id:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid refresh token"
-            )
-        
-        # Load user from database
-        db = load_db()
-        users = db.get("users", {})
-        user = users.get(user_id)
-        
-        if not user or not user.get("is_active", True):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User not found or inactive"
-            )
-        
-        # Generate new tokens
-        tokens = generate_tokens(user_id)
-        
-        return TokenResponse(
-            access_token=tokens["access_token"],
-            refresh_token=tokens["refresh_token"],
-            token_type=tokens["token_type"],
-            user=UserResponse(**user)
-        )
-        
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid refresh token"
-        )
-
-@app.get("/api/auth/me", response_model=UserResponse)
-async def get_current_user_info(current_user: Dict[str, Any] = Depends(get_current_user)):
-    """Get current user information."""
-    return UserResponse(**current_user)
-
-@app.put("/api/auth/me", response_model=UserResponse)
-async def update_current_user(
-    user_update: UserUpdate,
-    current_user: Dict[str, Any] = Depends(get_current_user)
-):
-    """Update current user information."""
-    db = load_db()
-    users = db.get("users", {})
-    user_id = current_user["id"]
-    
-    if user_id not in users:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    
-    user = users[user_id]
-    
-    # Update email if provided
-    if user_update.email:
-        # Check if email is already taken by another user
-        for uid, u in users.items():
-            if uid != user_id and u.get("email") == user_update.email:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Email already registered"
-                )
-        user["email"] = user_update.email
-    
-    # Update password if provided
-    if user_update.new_password:
-        if not user_update.current_password:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Current password required to change password"
-            )
-        
-        if not AuthUtils.verify_password(user_update.current_password, user["password_hash"]):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Current password is incorrect"
-            )
-        
-        user["password_hash"] = AuthUtils.hash_password(user_update.new_password)
-    
-    save_db(db)
-    return UserResponse(**user)
-
-# --- PROFILE ENDPOINTS (UPDATED FOR USER AUTHENTICATION) ---
-
-@app.get("/api/profiles", response_model=List[ProfileResponse])
-async def get_user_profiles(current_user: Dict[str, Any] = Depends(get_current_user)):
-    """Get all profiles for the current user."""
-    db = load_db()
-    profiles = db.get("profiles", {})
-    user_id = current_user["id"]
-    
-    user_profiles = []
-    for profile_id, profile in profiles.items():
-        if profile.get("user_id") == user_id:
-            # Convert last_scraped from ISO string to timestamp if needed
-            last_scraped = profile.get("last_scraped")
-            if last_scraped and isinstance(last_scraped, str):
-                try:
-
-                    dt = datetime.fromisoformat(last_scraped.replace('Z', '+00:00'))
-                    last_scraped = dt.timestamp()
-                except:
-                    last_scraped = None
-            
-            profile_response = ProfileResponse(
-                id=profile_id,
-                user_id=profile["user_id"],
-                name=profile["name"],
-                filters=profile.get("filters", {}),
-                emails=profile.get("emails", []),
-                scrape_interval_hours=profile.get("scrape_interval_hours", 4),
-                created_at=profile.get("created_at", 0),
-                last_scraped=last_scraped,
-                last_new_listings_count=profile.get("last_new_listings_count", 0),
-                listings_count=len(profile.get("listings", []))
-            )
-            user_profiles.append(profile_response)
-    
-    return user_profiles
-
-@app.post("/api/profiles", response_model=ProfileResponse)
-async def create_user_profile(
-    profile_data: ProfileCreate,
-    current_user: Dict[str, Any] = Depends(get_current_user)
-):
-    """Create a new profile for the current user."""
-    db = load_db()
-    
-    # Ensure profiles section exists
-    if "profiles" not in db:
-        db["profiles"] = {}
-    
-    profiles = db["profiles"]
-    users = db.get("users", {})
-    user_id = current_user["id"]
-    
-    # Generate profile ID
-    profile_id = f"profile_{int(time.time())}"
-    
-    # Create profile
-    profile = {
-        "id": profile_id,
-        "user_id": user_id,
-        "name": profile_data.name,
-        "filters": profile_data.filters,
-        "emails": profile_data.emails,
-        "scrape_interval_hours": profile_data.scrape_interval_hours,
-        "listings": [],
-        "created_at": time.time(),
-        "last_scraped": None,
-        "last_new_listings_count": 0
-    }
-    
-    profiles[profile_id] = profile
-    
-    # Update user's profile_ids
-    if user_id in users:
-        users[user_id]["profile_ids"].append(profile_id)
-    
-    save_db(db)
-    
-    # Add periodic job for this profile
-    from periodic_scraper import periodic_scraper
-    periodic_scraper.add_profile_job(profile_id, profile_data.scrape_interval_hours)
-    
-    return ProfileResponse(
-        id=profile_id,
-        user_id=user_id,
-        name=profile["name"],
-        filters=profile["filters"],
-        emails=profile["emails"],
-        scrape_interval_hours=profile["scrape_interval_hours"],
-        created_at=profile["created_at"],
-        last_scraped=profile.get("last_scraped") if not isinstance(profile.get("last_scraped"), str) else (datetime.fromisoformat(profile["last_scraped"].replace("Z", "+00:00")).timestamp() if profile["last_scraped"] else None),
-        last_new_listings_count=profile["last_new_listings_count"],
-        listings_count=len(profile["listings"])
-    )
-
-# Helper function to create ProfileResponse with proper last_scraped conversion
-def create_profile_response(profile_id: str, profile: dict) -> ProfileResponse:
-    """Helper function to create ProfileResponse with proper data type conversion."""
     # Convert last_scraped from ISO string to timestamp if needed
     last_scraped = profile.get("last_scraped")
     if last_scraped and isinstance(last_scraped, str):
         try:
-
             dt = datetime.fromisoformat(last_scraped.replace('Z', '+00:00'))
             last_scraped = dt.timestamp()
         except:
@@ -811,97 +467,14 @@ def create_profile_response(profile_id: str, profile: dict) -> ProfileResponse:
         id=profile_id,
         user_id=profile["user_id"],
         name=profile["name"],
-        filters=profile.get("filters", {}),
-        emails=profile.get("emails", []),
-        scrape_interval_hours=profile.get("scrape_interval_hours", 4),
-        created_at=profile.get("created_at", 0),
-        last_scraped=last_scraped,
-        last_new_listings_count=profile.get("last_new_listings_count", 0),
-        listings_count=len(profile.get("listings", []))
-    )
-
-# --- LISTINGS ENDPOINTS ---
-
-@app.get("/api/listings")
-def get_user_listings(
-    profile_id: str = None,
-    current_user: Optional[Dict[str, Any]] = Depends(get_optional_user)
-):
-    """Get listings for authenticated user's profiles, or all listings if not authenticated."""
-    db = load_db()
-    profiles = db.get("profiles", {})
-    
-    if current_user:
-        # Authenticated user - return their listings
-        user_id = current_user["id"]
-        
-        if profile_id:
-            # Specific profile requested
-            if profile_id not in profiles:
-                raise HTTPException(status_code=404, detail="Profile not found")
-            
-            profile = profiles[profile_id]
-            if profile.get("user_id") != user_id:
-                raise HTTPException(status_code=403, detail="Not authorized to view this profile")
-            
-            return {"listings": profile.get("listings", [])}
-        else:
-            # All user's listings
-            all_listings = []
-            for profile in profiles.values():
-                if profile.get("user_id") == user_id:
-                    all_listings.extend(profile.get("listings", []))
-            return {"listings": all_listings}
-    else:
-        # Not authenticated - return all listings (backward compatibility)
-        if profile_id:
-            profile = profiles.get(profile_id)
-            if not profile:
-                raise HTTPException(status_code=404, detail="Profile not found")
-            return {"listings": profile.get("listings", [])}
-        
-        # All listings from all profiles
-        all_listings = []
-        for profile in profiles.values():
-            all_listings.extend(profile.get("listings", []))
-        return {"listings": all_listings}
-
-# Update email(s) for a profile - Updated for user authentication
-@app.put("/api/profiles/{profile_id}/email")
-async def update_profile_email(
-    profile_id: str, 
-    email_update: EmailUpdate,
-    current_user: Dict[str, Any] = Depends(get_current_user)
-):
-    """Update email addresses for a user's profile."""
-    db = load_db()
-    profiles = db.get("profiles", {})
-    user_id = current_user["id"]
-    
-    if profile_id not in profiles:
-        raise HTTPException(status_code=404, detail="Profile not found")
-    
-    profile = profiles[profile_id]
-    
-    # Check if user owns this profile
-    if profile.get("user_id") != user_id:
-        raise HTTPException(status_code=403, detail="Not authorized to update this profile")
-    
-    # Update emails
-    profile["emails"] = email_update.emails
-    save_db(db)
-    
-    return ProfileResponse(
-        id=profile_id,
-        user_id=profile["user_id"],
-        name=profile["name"],
         filters=profile["filters"],
         emails=profile["emails"],
         scrape_interval_hours=profile["scrape_interval_hours"],
         created_at=profile["created_at"],
-        last_scraped=profile.get("last_scraped") if not isinstance(profile.get("last_scraped"), str) else (datetime.fromisoformat(profile["last_scraped"].replace("Z", "+00:00")).timestamp() if profile["last_scraped"] else None),
-        last_new_listings_count=profile["last_new_listings_count"],
-        listings_count=len(profile["listings"])
+        last_scraped=last_scraped,
+        last_new_listings_count=profile.get("last_new_listings_count", 0),
+        listings_count=len(listings),
+        new_today_count=calculate_new_today_count(listings)
     )
 
 # Update complete profile (name, filters, emails) - Updated for user authentication
@@ -940,425 +513,14 @@ async def update_profile(
     
     save_db(db)
     
-    return ProfileResponse(
-        id=profile_id,
-        user_id=profile["user_id"],
-        name=profile["name"],
-        filters=profile["filters"],
-        emails=profile["emails"],
-        scrape_interval_hours=profile["scrape_interval_hours"],
-        created_at=profile["created_at"],
-        last_scraped=profile.get("last_scraped") if not isinstance(profile.get("last_scraped"), str) else (datetime.fromisoformat(profile["last_scraped"].replace("Z", "+00:00")).timestamp() if profile["last_scraped"] else None),
-        last_new_listings_count=profile["last_new_listings_count"],
-        listings_count=len(profile["listings"])
-    )
-
-@app.get("/api/data")
-def get_all_data():
-    """Return the entire database.json contents."""
-    return load_db()
-
-# --- PERIODIC SCRAPING ENDPOINTS ---
-
-@app.get("/api/scraper/status")
-def get_scraper_status():
-    """Get the current status of the periodic scraper"""
-    return periodic_scraper.get_status()
-
-@app.post("/api/scraper/start")
-def start_scraper():
-    """Start the periodic scraper"""
-    if not periodic_scraper.is_running:
-        periodic_scraper.start()
-        return {"message": "Periodic scraper started", "status": "success"}
-    return {"message": "Periodic scraper is already running", "status": "info"}
-
-@app.post("/api/scraper/stop")
-def stop_scraper():
-    """Stop the periodic scraper"""
-    if periodic_scraper.is_running:
-        periodic_scraper.stop()
-        return {"message": "Periodic scraper stopped", "status": "success"}
-    return {"message": "Periodic scraper is not running", "status": "info"}
-
-@app.post("/api/scraper/sync")
-def sync_scraper():
-    """Sync scraper jobs with current profiles"""
-    periodic_scraper.sync_jobs_with_profiles()
-    return {"message": "Scraper jobs synchronized", "status": "success"}
-
-# --- SCRAPING ENDPOINTS (UPDATED FOR USER AUTHENTICATION) ---
-
-@app.post("/api/profiles/{profile_id}/scrape")
-async def trigger_profile_scrape(
-    profile_id: str,
-    current_user: Dict[str, Any] = Depends(get_current_user)
-):
-    """Trigger a manual scrape for a specific user profile."""
-    db = load_db()
-    profiles = db.get("profiles", {})
-    user_id = current_user["id"]
+    # Update listing timestamps and calculate new today count
+    listings = profile.get("listings", [])
+    update_listing_timestamps(listings)
     
-    if profile_id not in profiles:
-        raise HTTPException(status_code=404, detail="Profile not found")
-    
-    profile = profiles[profile_id]
-    
-    # Check if user owns this profile
-    if profile.get("user_id") != user_id:
-        raise HTTPException(status_code=403, detail="Not authorized to scrape this profile")
-    
-    # Trigger scrape
-    from periodic_scraper import periodic_scraper
-    result = periodic_scraper.trigger_profile_scrape(profile_id)
-    
-    if result:
-        return {"message": "Scrape triggered successfully", "profile_id": profile_id}
-    else:
-        return {"message": "Scrape already in progress", "profile_id": profile_id}
-
-@app.put("/api/profiles/{profile_id}/scrape-interval")
-async def update_scrape_interval(
-    profile_id: str,
-    interval_update: ScrapeIntervalUpdate,
-    current_user: Dict[str, Any] = Depends(get_current_user)
-):
-    """Update the scrape interval for a user's profile."""
-    db = load_db()
-    profiles = db.get("profiles", {})
-    user_id = current_user["id"]
-    
-    if profile_id not in profiles:
-        raise HTTPException(status_code=404, detail="Profile not found")
-    
-    profile = profiles[profile_id]
-    
-    # Check if user owns this profile
-    if profile.get("user_id") != user_id:
-        raise HTTPException(status_code=403, detail="Not authorized to update this profile")
-    
-    # Update scrape interval
-    profile["scrape_interval_hours"] = interval_update.scrape_interval_hours
-    save_db(db)
-    
-    # Update periodic job
-    from periodic_scraper import periodic_scraper
-    periodic_scraper.add_profile_job(profile_id, interval_update.scrape_interval_hours)
-    
-    return {"message": "Scrape interval updated successfully", "profile_id": profile_id, "interval_hours": interval_update.scrape_interval_hours}
-
-# --- AUTHENTICATION ENDPOINTS ---
-
-@app.post("/api/auth/register", response_model=TokenResponse)
-async def register(user_data: UserRegister):
-    """Register a new user."""
-    db = load_db()
-    
-    # Ensure users section exists
-    if "users" not in db:
-        db["users"] = {}
-    
-    users = db["users"]
-    
-    # Check if username already exists
-    for user in users.values():
-        if user.get("username") == user_data.username:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Username already registered"
-            )
-        if user.get("email") == user_data.email:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered"
-            )
-    
-    # Create new user
-    user_id = generate_user_id()
-    new_user = create_user_dict(
-        user_id=user_id,
-        username=user_data.username,
-        email=user_data.email,
-        password=user_data.password
-    )
-    
-    users[user_id] = new_user
-    save_db(db)
-    
-    # Generate tokens
-    tokens = generate_tokens(user_id)
-    
-    # Update last login
-    users[user_id]["last_login"] = time.time()
-    save_db(db)
-    
-    return TokenResponse(
-        access_token=tokens["access_token"],
-        refresh_token=tokens["refresh_token"],
-        token_type=tokens["token_type"],
-        user=UserResponse(**new_user)
-    )
-
-@app.post("/api/auth/login", response_model=TokenResponse)
-async def login(user_data: UserLogin):
-    """Login user and return tokens."""
-    db = load_db()
-    users = db.get("users", {})
-    
-    # Find user by username
-    user = None
-    user_id = None
-    for uid, u in users.items():
-        if u.get("username") == user_data.username:
-            user = u
-            user_id = uid
-            break
-    
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid username or password"
-        )
-    
-    # Verify password
-    if not AuthUtils.verify_password(user_data.password, user["password_hash"]):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid username or password"
-        )
-    
-    # Check if user is active
-    if not user.get("is_active", True):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User account is disabled"
-        )
-    
-    # Generate tokens
-    tokens = generate_tokens(user_id)
-    
-    # Update last login
-    user["last_login"] = time.time()
-    save_db(db)
-    
-    return TokenResponse(
-        access_token=tokens["access_token"],
-        refresh_token=tokens["refresh_token"],
-        token_type=tokens["token_type"],
-        user=UserResponse(**user)
-    )
-
-@app.post("/api/auth/logout")
-async def logout(
-    request: Request,
-    current_user: Dict[str, Any] = Depends(get_current_user)
-):
-    """Logout user and blacklist token."""
-    # Get token from request
-    auth_header = request.headers.get("Authorization")
-    if auth_header and auth_header.startswith("Bearer "):
-        token = auth_header.split(" ")[1]
-        blacklist_token(token)
-    
-    return {"message": "Successfully logged out"}
-
-@app.post("/api/auth/refresh", response_model=TokenResponse)
-async def refresh_token(token_data: TokenRefresh):
-    """Refresh access token using refresh token."""
-    try:
-        payload = AuthUtils.verify_token(token_data.refresh_token, "refresh")
-        user_id = payload.get("sub")
-        
-        if not user_id:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid refresh token"
-            )
-        
-        # Load user from database
-        db = load_db()
-        users = db.get("users", {})
-        user = users.get(user_id)
-        
-        if not user or not user.get("is_active", True):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User not found or inactive"
-            )
-        
-        # Generate new tokens
-        tokens = generate_tokens(user_id)
-        
-        return TokenResponse(
-            access_token=tokens["access_token"],
-            refresh_token=tokens["refresh_token"],
-            token_type=tokens["token_type"],
-            user=UserResponse(**user)
-        )
-        
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid refresh token"
-        )
-
-@app.get("/api/auth/me", response_model=UserResponse)
-async def get_current_user_info(current_user: Dict[str, Any] = Depends(get_current_user)):
-    """Get current user information."""
-    return UserResponse(**current_user)
-
-@app.put("/api/auth/me", response_model=UserResponse)
-async def update_current_user(
-    user_update: UserUpdate,
-    current_user: Dict[str, Any] = Depends(get_current_user)
-):
-    """Update current user information."""
-    db = load_db()
-    users = db.get("users", {})
-    user_id = current_user["id"]
-    
-    if user_id not in users:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    
-    user = users[user_id]
-    
-    # Update email if provided
-    if user_update.email:
-        # Check if email is already taken by another user
-        for uid, u in users.items():
-            if uid != user_id and u.get("email") == user_update.email:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Email already registered"
-                )
-        user["email"] = user_update.email
-    
-    # Update password if provided
-    if user_update.new_password:
-        if not user_update.current_password:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Current password required to change password"
-            )
-        
-        if not AuthUtils.verify_password(user_update.current_password, user["password_hash"]):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Current password is incorrect"
-            )
-        
-        user["password_hash"] = AuthUtils.hash_password(user_update.new_password)
-    
-    save_db(db)
-    return UserResponse(**user)
-
-# --- PROFILE ENDPOINTS (UPDATED FOR USER AUTHENTICATION) ---
-
-@app.get("/api/profiles", response_model=List[ProfileResponse])
-async def get_user_profiles(current_user: Dict[str, Any] = Depends(get_current_user)):
-    """Get all profiles for the current user."""
-    db = load_db()
-    profiles = db.get("profiles", {})
-    user_id = current_user["id"]
-    
-    user_profiles = []
-    for profile_id, profile in profiles.items():
-        if profile.get("user_id") == user_id:
-            # Convert last_scraped from ISO string to timestamp if needed
-            last_scraped = profile.get("last_scraped")
-            if last_scraped and isinstance(last_scraped, str):
-                try:
-
-                    dt = datetime.fromisoformat(last_scraped.replace('Z', '+00:00'))
-                    last_scraped = dt.timestamp()
-                except:
-                    last_scraped = None
-            
-            profile_response = ProfileResponse(
-                id=profile_id,
-                user_id=profile["user_id"],
-                name=profile["name"],
-                filters=profile.get("filters", {}),
-                emails=profile.get("emails", []),
-                scrape_interval_hours=profile.get("scrape_interval_hours", 4),
-                created_at=profile.get("created_at", 0),
-                last_scraped=last_scraped,
-                last_new_listings_count=profile.get("last_new_listings_count", 0),
-                listings_count=len(profile.get("listings", []))
-            )
-            user_profiles.append(profile_response)
-    
-    return user_profiles
-
-@app.post("/api/profiles", response_model=ProfileResponse)
-async def create_user_profile(
-    profile_data: ProfileCreate,
-    current_user: Dict[str, Any] = Depends(get_current_user)
-):
-    """Create a new profile for the current user."""
-    db = load_db()
-    
-    # Ensure profiles section exists
-    if "profiles" not in db:
-        db["profiles"] = {}
-    
-    profiles = db["profiles"]
-    users = db.get("users", {})
-    user_id = current_user["id"]
-    
-    # Generate profile ID
-    profile_id = f"profile_{int(time.time())}"
-    
-    # Create profile
-    profile = {
-        "id": profile_id,
-        "user_id": user_id,
-        "name": profile_data.name,
-        "filters": profile_data.filters,
-        "emails": profile_data.emails,
-        "scrape_interval_hours": profile_data.scrape_interval_hours,
-        "listings": [],
-        "created_at": time.time(),
-        "last_scraped": None,
-        "last_new_listings_count": 0
-    }
-    
-    profiles[profile_id] = profile
-    
-    # Update user's profile_ids
-    if user_id in users:
-        users[user_id]["profile_ids"].append(profile_id)
-    
-    save_db(db)
-    
-    # Add periodic job for this profile
-    from periodic_scraper import periodic_scraper
-    periodic_scraper.add_profile_job(profile_id, profile_data.scrape_interval_hours)
-    
-    return ProfileResponse(
-        id=profile_id,
-        user_id=user_id,
-        name=profile["name"],
-        filters=profile["filters"],
-        emails=profile["emails"],
-        scrape_interval_hours=profile["scrape_interval_hours"],
-        created_at=profile["created_at"],
-        last_scraped=profile.get("last_scraped") if not isinstance(profile.get("last_scraped"), str) else (datetime.fromisoformat(profile["last_scraped"].replace("Z", "+00:00")).timestamp() if profile["last_scraped"] else None),
-        last_new_listings_count=profile["last_new_listings_count"],
-        listings_count=len(profile["listings"])
-    )
-
-# Helper function to create ProfileResponse with proper last_scraped conversion
-def create_profile_response(profile_id: str, profile: dict) -> ProfileResponse:
-    """Helper function to create ProfileResponse with proper data type conversion."""
     # Convert last_scraped from ISO string to timestamp if needed
     last_scraped = profile.get("last_scraped")
     if last_scraped and isinstance(last_scraped, str):
         try:
-
             dt = datetime.fromisoformat(last_scraped.replace('Z', '+00:00'))
             last_scraped = dt.timestamp()
         except:
@@ -1368,703 +530,14 @@ def create_profile_response(profile_id: str, profile: dict) -> ProfileResponse:
         id=profile_id,
         user_id=profile["user_id"],
         name=profile["name"],
-        filters=profile.get("filters", {}),
-        emails=profile.get("emails", []),
-        scrape_interval_hours=profile.get("scrape_interval_hours", 4),
-        created_at=profile.get("created_at", 0),
+        filters=profile["filters"],
+        emails=profile["emails"],
+        scrape_interval_hours=profile["scrape_interval_hours"],
+        created_at=profile["created_at"],
         last_scraped=last_scraped,
         last_new_listings_count=profile.get("last_new_listings_count", 0),
-        listings_count=len(profile.get("listings", []))
-    )
-
-# --- LISTINGS ENDPOINTS ---
-
-@app.get("/api/listings")
-def get_user_listings(
-    profile_id: str = None,
-    current_user: Optional[Dict[str, Any]] = Depends(get_optional_user)
-):
-    """Get listings for authenticated user's profiles, or all listings if not authenticated."""
-    db = load_db()
-    profiles = db.get("profiles", {})
-    
-    if current_user:
-        # Authenticated user - return their listings
-        user_id = current_user["id"]
-        
-        if profile_id:
-            # Specific profile requested
-            if profile_id not in profiles:
-                raise HTTPException(status_code=404, detail="Profile not found")
-            
-            profile = profiles[profile_id]
-            if profile.get("user_id") != user_id:
-                raise HTTPException(status_code=403, detail="Not authorized to view this profile")
-            
-            return {"listings": profile.get("listings", [])}
-        else:
-            # All user's listings
-            all_listings = []
-            for profile in profiles.values():
-                if profile.get("user_id") == user_id:
-                    all_listings.extend(profile.get("listings", []))
-            return {"listings": all_listings}
-    else:
-        # Not authenticated - return all listings (backward compatibility)
-        if profile_id:
-            profile = profiles.get(profile_id)
-            if not profile:
-                raise HTTPException(status_code=404, detail="Profile not found")
-            return {"listings": profile.get("listings", [])}
-        
-        # All listings from all profiles
-        all_listings = []
-        for profile in profiles.values():
-            all_listings.extend(profile.get("listings", []))
-        return {"listings": all_listings}
-
-# Update email(s) for a profile - Updated for user authentication
-@app.put("/api/profiles/{profile_id}/email")
-async def update_profile_email(
-    profile_id: str, 
-    email_update: EmailUpdate,
-    current_user: Dict[str, Any] = Depends(get_current_user)
-):
-    """Update email addresses for a user's profile."""
-    db = load_db()
-    profiles = db.get("profiles", {})
-    user_id = current_user["id"]
-    
-    if profile_id not in profiles:
-        raise HTTPException(status_code=404, detail="Profile not found")
-    
-    profile = profiles[profile_id]
-    
-    # Check if user owns this profile
-    if profile.get("user_id") != user_id:
-        raise HTTPException(status_code=403, detail="Not authorized to update this profile")
-    
-    # Update emails
-    profile["emails"] = email_update.emails
-    save_db(db)
-    
-    return ProfileResponse(
-        id=profile_id,
-        user_id=profile["user_id"],
-        name=profile["name"],
-        filters=profile["filters"],
-        emails=profile["emails"],
-        scrape_interval_hours=profile["scrape_interval_hours"],
-        created_at=profile["created_at"],
-        last_scraped=profile.get("last_scraped") if not isinstance(profile.get("last_scraped"), str) else (datetime.fromisoformat(profile["last_scraped"].replace("Z", "+00:00")).timestamp() if profile["last_scraped"] else None),
-        last_new_listings_count=profile["last_new_listings_count"],
-        listings_count=len(profile["listings"])
-    )
-
-# Update complete profile (name, filters, emails) - Updated for user authentication
-@app.put("/api/profiles/{profile_id}")
-async def update_profile(
-    profile_id: str,
-    profile_update: ProfileUpdate,
-    current_user: Dict[str, Any] = Depends(get_current_user)
-):
-    """Update a user's profile."""
-    db = load_db()
-    profiles = db.get("profiles", {})
-    user_id = current_user["id"]
-    
-    if profile_id not in profiles:
-        raise HTTPException(status_code=404, detail="Profile not found")
-    
-    profile = profiles[profile_id]
-    
-    # Check if user owns this profile
-    if profile.get("user_id") != user_id:
-        raise HTTPException(status_code=403, detail="Not authorized to update this profile")
-    
-    # Update profile fields
-    if profile_update.name is not None:
-        profile["name"] = profile_update.name
-    if profile_update.filters is not None:
-        profile["filters"] = profile_update.filters
-    if profile_update.emails is not None:
-        profile["emails"] = profile_update.emails
-    if profile_update.scrape_interval_hours is not None:
-        profile["scrape_interval_hours"] = profile_update.scrape_interval_hours
-        # Update the periodic job with new interval
-        from periodic_scraper import periodic_scraper
-        periodic_scraper.add_profile_job(profile_id, profile_update.scrape_interval_hours)
-    
-    save_db(db)
-    
-    return ProfileResponse(
-        id=profile_id,
-        user_id=profile["user_id"],
-        name=profile["name"],
-        filters=profile["filters"],
-        emails=profile["emails"],
-        scrape_interval_hours=profile["scrape_interval_hours"],
-        created_at=profile["created_at"],
-        last_scraped=profile.get("last_scraped") if not isinstance(profile.get("last_scraped"), str) else (datetime.fromisoformat(profile["last_scraped"].replace("Z", "+00:00")).timestamp() if profile["last_scraped"] else None),
-        last_new_listings_count=profile["last_new_listings_count"],
-        listings_count=len(profile["listings"])
-    )
-
-@app.get("/api/data")
-def get_all_data():
-    """Return the entire database.json contents."""
-    return load_db()
-
-# --- PERIODIC SCRAPING ENDPOINTS ---
-
-@app.get("/api/scraper/status")
-def get_scraper_status():
-    """Get the current status of the periodic scraper"""
-    return periodic_scraper.get_status()
-
-@app.post("/api/scraper/start")
-def start_scraper():
-    """Start the periodic scraper"""
-    if not periodic_scraper.is_running:
-        periodic_scraper.start()
-        return {"message": "Periodic scraper started", "status": "success"}
-    return {"message": "Periodic scraper is already running", "status": "info"}
-
-@app.post("/api/scraper/stop")
-def stop_scraper():
-    """Stop the periodic scraper"""
-    if periodic_scraper.is_running:
-        periodic_scraper.stop()
-        return {"message": "Periodic scraper stopped", "status": "success"}
-    return {"message": "Periodic scraper is not running", "status": "info"}
-
-@app.post("/api/scraper/sync")
-def sync_scraper():
-    """Sync scraper jobs with current profiles"""
-    periodic_scraper.sync_jobs_with_profiles()
-    return {"message": "Scraper jobs synchronized", "status": "success"}
-
-# --- SCRAPING ENDPOINTS (UPDATED FOR USER AUTHENTICATION) ---
-
-@app.post("/api/profiles/{profile_id}/scrape")
-async def trigger_profile_scrape(
-    profile_id: str,
-    current_user: Dict[str, Any] = Depends(get_current_user)
-):
-    """Trigger a manual scrape for a specific user profile."""
-    db = load_db()
-    profiles = db.get("profiles", {})
-    user_id = current_user["id"]
-    
-    if profile_id not in profiles:
-        raise HTTPException(status_code=404, detail="Profile not found")
-    
-    profile = profiles[profile_id]
-    
-    # Check if user owns this profile
-    if profile.get("user_id") != user_id:
-        raise HTTPException(status_code=403, detail="Not authorized to scrape this profile")
-    
-    # Trigger scrape
-    from periodic_scraper import periodic_scraper
-    result = periodic_scraper.trigger_profile_scrape(profile_id)
-    
-    if result:
-        return {"message": "Scrape triggered successfully", "profile_id": profile_id}
-    else:
-        return {"message": "Scrape already in progress", "profile_id": profile_id}
-
-@app.put("/api/profiles/{profile_id}/scrape-interval")
-async def update_scrape_interval(
-    profile_id: str,
-    interval_update: ScrapeIntervalUpdate,
-    current_user: Dict[str, Any] = Depends(get_current_user)
-):
-    """Update the scrape interval for a user's profile."""
-    db = load_db()
-    profiles = db.get("profiles", {})
-    user_id = current_user["id"]
-    
-    if profile_id not in profiles:
-        raise HTTPException(status_code=404, detail="Profile not found")
-    
-    profile = profiles[profile_id]
-    
-    # Check if user owns this profile
-    if profile.get("user_id") != user_id:
-        raise HTTPException(status_code=403, detail="Not authorized to update this profile")
-    
-    # Update scrape interval
-    profile["scrape_interval_hours"] = interval_update.scrape_interval_hours
-    save_db(db)
-    
-    # Update periodic job
-    from periodic_scraper import periodic_scraper
-    periodic_scraper.add_profile_job(profile_id, interval_update.scrape_interval_hours)
-    
-    return {"message": "Scrape interval updated successfully", "profile_id": profile_id, "interval_hours": interval_update.scrape_interval_hours}
-
-# --- AUTHENTICATION ENDPOINTS ---
-
-@app.post("/api/auth/register", response_model=TokenResponse)
-async def register(user_data: UserRegister):
-    """Register a new user."""
-    db = load_db()
-    
-    # Ensure users section exists
-    if "users" not in db:
-        db["users"] = {}
-    
-    users = db["users"]
-    
-    # Check if username already exists
-    for user in users.values():
-        if user.get("username") == user_data.username:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Username already registered"
-            )
-        if user.get("email") == user_data.email:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered"
-            )
-    
-    # Create new user
-    user_id = generate_user_id()
-    new_user = create_user_dict(
-        user_id=user_id,
-        username=user_data.username,
-        email=user_data.email,
-        password=user_data.password
-    )
-    
-    users[user_id] = new_user
-    save_db(db)
-    
-    # Generate tokens
-    tokens = generate_tokens(user_id)
-    
-    # Update last login
-    users[user_id]["last_login"] = time.time()
-    save_db(db)
-    
-    return TokenResponse(
-        access_token=tokens["access_token"],
-        refresh_token=tokens["refresh_token"],
-        token_type=tokens["token_type"],
-        user=UserResponse(**new_user)
-    )
-
-@app.post("/api/auth/login", response_model=TokenResponse)
-async def login(user_data: UserLogin):
-    """Login user and return tokens."""
-    db = load_db()
-    users = db.get("users", {})
-    
-    # Find user by username
-    user = None
-    user_id = None
-    for uid, u in users.items():
-        if u.get("username") == user_data.username:
-            user = u
-            user_id = uid
-            break
-    
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid username or password"
-        )
-    
-    # Verify password
-    if not AuthUtils.verify_password(user_data.password, user["password_hash"]):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid username or password"
-        )
-    
-    # Check if user is active
-    if not user.get("is_active", True):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User account is disabled"
-        )
-    
-    # Generate tokens
-    tokens = generate_tokens(user_id)
-    
-    # Update last login
-    user["last_login"] = time.time()
-    save_db(db)
-    
-    return TokenResponse(
-        access_token=tokens["access_token"],
-        refresh_token=tokens["refresh_token"],
-        token_type=tokens["token_type"],
-        user=UserResponse(**user)
-    )
-
-@app.post("/api/auth/logout")
-async def logout(
-    request: Request,
-    current_user: Dict[str, Any] = Depends(get_current_user)
-):
-    """Logout user and blacklist token."""
-    # Get token from request
-    auth_header = request.headers.get("Authorization")
-    if auth_header and auth_header.startswith("Bearer "):
-        token = auth_header.split(" ")[1]
-        blacklist_token(token)
-    
-    return {"message": "Successfully logged out"}
-
-@app.post("/api/auth/refresh", response_model=TokenResponse)
-async def refresh_token(token_data: TokenRefresh):
-    """Refresh access token using refresh token."""
-    try:
-        payload = AuthUtils.verify_token(token_data.refresh_token, "refresh")
-        user_id = payload.get("sub")
-        
-        if not user_id:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid refresh token"
-            )
-        
-        # Load user from database
-        db = load_db()
-        users = db.get("users", {})
-        user = users.get(user_id)
-        
-        if not user or not user.get("is_active", True):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User not found or inactive"
-            )
-        
-        # Generate new tokens
-        tokens = generate_tokens(user_id)
-        
-        return TokenResponse(
-            access_token=tokens["access_token"],
-            refresh_token=tokens["refresh_token"],
-            token_type=tokens["token_type"],
-            user=UserResponse(**user)
-        )
-        
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid refresh token"
-        )
-
-@app.get("/api/auth/me", response_model=UserResponse)
-async def get_current_user_info(current_user: Dict[str, Any] = Depends(get_current_user)):
-    """Get current user information."""
-    return UserResponse(**current_user)
-
-@app.put("/api/auth/me", response_model=UserResponse)
-async def update_current_user(
-    user_update: UserUpdate,
-    current_user: Dict[str, Any] = Depends(get_current_user)
-):
-    """Update current user information."""
-    db = load_db()
-    users = db.get("users", {})
-    user_id = current_user["id"]
-    
-    if user_id not in users:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    
-    user = users[user_id]
-    
-    # Update email if provided
-    if user_update.email:
-        # Check if email is already taken by another user
-        for uid, u in users.items():
-            if uid != user_id and u.get("email") == user_update.email:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Email already registered"
-                )
-        user["email"] = user_update.email
-    
-    # Update password if provided
-    if user_update.new_password:
-        if not user_update.current_password:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Current password required to change password"
-            )
-        
-        if not AuthUtils.verify_password(user_update.current_password, user["password_hash"]):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Current password is incorrect"
-            )
-        
-        user["password_hash"] = AuthUtils.hash_password(user_update.new_password)
-    
-    save_db(db)
-    return UserResponse(**user)
-
-# --- PROFILE ENDPOINTS (UPDATED FOR USER AUTHENTICATION) ---
-
-@app.get("/api/profiles", response_model=List[ProfileResponse])
-async def get_user_profiles(current_user: Dict[str, Any] = Depends(get_current_user)):
-    """Get all profiles for the current user."""
-    db = load_db()
-    profiles = db.get("profiles", {})
-    user_id = current_user["id"]
-    
-    user_profiles = []
-    for profile_id, profile in profiles.items():
-        if profile.get("user_id") == user_id:
-            # Convert last_scraped from ISO string to timestamp if needed
-            last_scraped = profile.get("last_scraped")
-            if last_scraped and isinstance(last_scraped, str):
-                try:
-
-                    dt = datetime.fromisoformat(last_scraped.replace('Z', '+00:00'))
-                    last_scraped = dt.timestamp()
-                except:
-                    last_scraped = None
-            
-            profile_response = ProfileResponse(
-                id=profile_id,
-                user_id=profile["user_id"],
-                name=profile["name"],
-                filters=profile.get("filters", {}),
-                emails=profile.get("emails", []),
-                scrape_interval_hours=profile.get("scrape_interval_hours", 4),
-                created_at=profile.get("created_at", 0),
-                last_scraped=last_scraped,
-                last_new_listings_count=profile.get("last_new_listings_count", 0),
-                listings_count=len(profile.get("listings", []))
-            )
-            user_profiles.append(profile_response)
-    
-    return user_profiles
-
-@app.post("/api/profiles", response_model=ProfileResponse)
-async def create_user_profile(
-    profile_data: ProfileCreate,
-    current_user: Dict[str, Any] = Depends(get_current_user)
-):
-    """Create a new profile for the current user."""
-    db = load_db()
-    
-    # Ensure profiles section exists
-    if "profiles" not in db:
-        db["profiles"] = {}
-    
-    profiles = db["profiles"]
-    users = db.get("users", {})
-    user_id = current_user["id"]
-    
-    # Generate profile ID
-    profile_id = f"profile_{int(time.time())}"
-    
-    # Create profile
-    profile = {
-        "id": profile_id,
-        "user_id": user_id,
-        "name": profile_data.name,
-        "filters": profile_data.filters,
-        "emails": profile_data.emails,
-        "scrape_interval_hours": profile_data.scrape_interval_hours,
-        "listings": [],
-        "created_at": time.time(),
-        "last_scraped": None,
-        "last_new_listings_count": 0
-    }
-    
-    profiles[profile_id] = profile
-    
-    # Update user's profile_ids
-    if user_id in users:
-        users[user_id]["profile_ids"].append(profile_id)
-    
-    save_db(db)
-    
-    # Add periodic job for this profile
-    from periodic_scraper import periodic_scraper
-    periodic_scraper.add_profile_job(profile_id, profile_data.scrape_interval_hours)
-    
-    return ProfileResponse(
-        id=profile_id,
-        user_id=user_id,
-        name=profile["name"],
-        filters=profile["filters"],
-        emails=profile["emails"],
-        scrape_interval_hours=profile["scrape_interval_hours"],
-        created_at=profile["created_at"],
-        last_scraped=profile.get("last_scraped") if not isinstance(profile.get("last_scraped"), str) else (datetime.fromisoformat(profile["last_scraped"].replace("Z", "+00:00")).timestamp() if profile["last_scraped"] else None),
-        last_new_listings_count=profile["last_new_listings_count"],
-        listings_count=len(profile["listings"])
-    )
-
-# Helper function to create ProfileResponse with proper last_scraped conversion
-def create_profile_response(profile_id: str, profile: dict) -> ProfileResponse:
-    """Helper function to create ProfileResponse with proper data type conversion."""
-    # Convert last_scraped from ISO string to timestamp if needed
-    last_scraped = profile.get("last_scraped")
-    if last_scraped and isinstance(last_scraped, str):
-        try:
-
-            dt = datetime.fromisoformat(last_scraped.replace('Z', '+00:00'))
-            last_scraped = dt.timestamp()
-        except:
-            last_scraped = None
-    
-    return ProfileResponse(
-        id=profile_id,
-        user_id=profile["user_id"],
-        name=profile["name"],
-        filters=profile.get("filters", {}),
-        emails=profile.get("emails", []),
-        scrape_interval_hours=profile.get("scrape_interval_hours", 4),
-        created_at=profile.get("created_at", 0),
-        last_scraped=last_scraped,
-        last_new_listings_count=profile.get("last_new_listings_count", 0),
-        listings_count=len(profile.get("listings", []))
-    )
-
-# --- LISTINGS ENDPOINTS ---
-
-@app.get("/api/listings")
-def get_user_listings(
-    profile_id: str = None,
-    current_user: Optional[Dict[str, Any]] = Depends(get_optional_user)
-):
-    """Get listings for authenticated user's profiles, or all listings if not authenticated."""
-    db = load_db()
-    profiles = db.get("profiles", {})
-    
-    if current_user:
-        # Authenticated user - return their listings
-        user_id = current_user["id"]
-        
-        if profile_id:
-            # Specific profile requested
-            if profile_id not in profiles:
-                raise HTTPException(status_code=404, detail="Profile not found")
-            
-            profile = profiles[profile_id]
-            if profile.get("user_id") != user_id:
-                raise HTTPException(status_code=403, detail="Not authorized to view this profile")
-            
-            return {"listings": profile.get("listings", [])}
-        else:
-            # All user's listings
-            all_listings = []
-            for profile in profiles.values():
-                if profile.get("user_id") == user_id:
-                    all_listings.extend(profile.get("listings", []))
-            return {"listings": all_listings}
-    else:
-        # Not authenticated - return all listings (backward compatibility)
-        if profile_id:
-            profile = profiles.get(profile_id)
-            if not profile:
-                raise HTTPException(status_code=404, detail="Profile not found")
-            return {"listings": profile.get("listings", [])}
-        
-        # All listings from all profiles
-        all_listings = []
-        for profile in profiles.values():
-            all_listings.extend(profile.get("listings", []))
-        return {"listings": all_listings}
-
-# Update email(s) for a profile - Updated for user authentication
-@app.put("/api/profiles/{profile_id}/email")
-async def update_profile_email(
-    profile_id: str, 
-    email_update: EmailUpdate,
-    current_user: Dict[str, Any] = Depends(get_current_user)
-):
-    """Update email addresses for a user's profile."""
-    db = load_db()
-    profiles = db.get("profiles", {})
-    user_id = current_user["id"]
-    
-    if profile_id not in profiles:
-        raise HTTPException(status_code=404, detail="Profile not found")
-    
-    profile = profiles[profile_id]
-    
-    # Check if user owns this profile
-    if profile.get("user_id") != user_id:
-        raise HTTPException(status_code=403, detail="Not authorized to update this profile")
-    
-    # Update emails
-    profile["emails"] = email_update.emails
-    save_db(db)
-    
-    return ProfileResponse(
-        id=profile_id,
-        user_id=profile["user_id"],
-        name=profile["name"],
-        filters=profile["filters"],
-        emails=profile["emails"],
-        scrape_interval_hours=profile["scrape_interval_hours"],
-        created_at=profile["created_at"],
-        last_scraped=profile.get("last_scraped") if not isinstance(profile.get("last_scraped"), str) else (datetime.fromisoformat(profile["last_scraped"].replace("Z", "+00:00")).timestamp() if profile["last_scraped"] else None),
-        last_new_listings_count=profile["last_new_listings_count"],
-        listings_count=len(profile["listings"])
-    )
-
-# Update complete profile (name, filters, emails) - Updated for user authentication
-@app.put("/api/profiles/{profile_id}")
-async def update_profile(
-    profile_id: str,
-    profile_update: ProfileUpdate,
-    current_user: Dict[str, Any] = Depends(get_current_user)
-):
-    """Update a user's profile."""
-    db = load_db()
-    profiles = db.get("profiles", {})
-    user_id = current_user["id"]
-    
-    if profile_id not in profiles:
-        raise HTTPException(status_code=404, detail="Profile not found")
-    
-    profile = profiles[profile_id]
-    
-    # Check if user owns this profile
-    if profile.get("user_id") != user_id:
-        raise HTTPException(status_code=403, detail="Not authorized to update this profile")
-    
-    # Update profile fields
-    if profile_update.name is not None:
-        profile["name"] = profile_update.name
-    if profile_update.filters is not None:
-        profile["filters"] = profile_update.filters
-    if profile_update.emails is not None:
-        profile["emails"] = profile_update.emails
-    if profile_update.scrape_interval_hours is not None:
-        profile["scrape_interval_hours"] = profile_update.scrape_interval_hours
-        # Update the periodic job with new interval
-        from periodic_scraper import periodic_scraper
-        periodic_scraper.add_profile_job(profile_id, profile_update.scrape_interval_hours)
-    
-    save_db(db)
-    
-    return ProfileResponse(
-        id=profile_id,
-        user_id=profile["user_id"],
-        name=profile["name"],
-        filters=profile["filters"],
-        emails=profile["emails"],
-        scrape_interval_hours=profile["scrape_interval_hours"],
-        created_at=profile["created_at"],
-        last_scraped=profile.get("last_scraped") if not isinstance(profile.get("last_scraped"), str) else (datetime.fromisoformat(profile["last_scraped"].replace("Z", "+00:00")).timestamp() if profile["last_scraped"] else None),
-        last_new_listings_count=profile["last_new_listings_count"],
-        listings_count=len(profile["listings"])
+        listings_count=len(listings),
+        new_today_count=calculate_new_today_count(listings)
     )
 
 @app.get("/api/data")
@@ -2347,3 +820,45 @@ async def update_current_user(
     
     save_db(db)
     return UserResponse(**db["users"][user_id])
+
+def calculate_new_today_count(listings: List[dict]) -> int:
+    """Calculate how many listings were added in the last 24 hours."""
+    if not listings:
+        return 0
+    
+    current_time = time.time()
+    count = 0
+    
+    for listing in listings:
+        added_timestamp = listing.get("added_timestamp")
+        if added_timestamp:
+            time_diff = current_time - added_timestamp
+            if time_diff < 86400:  # 24 hours = 86400 seconds
+                count += 1
+        elif listing.get("is_new"):
+            # Fallback for listings that might not have timestamps but are marked as new
+            count += 1
+    
+    return count
+
+def update_listing_timestamps(listings: List[dict]) -> None:
+    """Update is_new flags based on 24-hour rule and ensure all listings have timestamps."""
+    current_time = datetime.now()
+    
+    for listing in listings:
+        if not listing.get("added_timestamp"):
+            # Legacy listing without timestamp, add one based on scraped_at or current time
+            scraped_at = listing.get("scraped_at")
+            if scraped_at:
+                try:
+                    dt = datetime.fromisoformat(scraped_at.replace('Z', '+00:00'))
+                    listing["added_timestamp"] = dt.timestamp()
+                except:
+                    listing["added_timestamp"] = current_time.timestamp()
+            else:
+                listing["added_timestamp"] = current_time.timestamp()
+                listing["scraped_at"] = current_time.isoformat()
+        
+        # Update is_new flag based on 24-hour rule
+        time_diff = current_time.timestamp() - listing.get("added_timestamp", 0)
+        listing["is_new"] = time_diff < 86400  # 24 hours = 86400 seconds

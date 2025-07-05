@@ -175,12 +175,15 @@ class PeriodicScraper:
             
             # Find new listings
             new_listings = []
+            current_time = datetime.now()
+            
             for listing in listings:
                 url = listing.get("funda_url") or listing.get("object_detail_page_relative_url")
                 if url and url not in existing_urls:
                     mapped = map_listing_for_frontend(listing)
                     mapped["is_new"] = True
-                    mapped["scraped_at"] = datetime.now().isoformat()
+                    mapped["scraped_at"] = current_time.isoformat()
+                    mapped["added_timestamp"] = current_time.timestamp()  # Add timestamp for easier comparison
                     new_listings.append(mapped)
                     existing_urls.add(url)
             
@@ -190,9 +193,24 @@ class PeriodicScraper:
                 # Add new listings to profile
                 current_listings = profile.get("listings", [])
                 
-                # Mark existing listings as not new
+                # Update existing listings - check if they're still "new" (less than 24 hours old)
                 for listing in current_listings:
-                    listing["is_new"] = False
+                    if not listing.get("added_timestamp"):
+                        # Legacy listing without timestamp, add one based on scraped_at or current time
+                        scraped_at = listing.get("scraped_at")
+                        if scraped_at:
+                            try:
+                                dt = datetime.fromisoformat(scraped_at.replace('Z', '+00:00'))
+                                listing["added_timestamp"] = dt.timestamp()
+                            except:
+                                listing["added_timestamp"] = current_time.timestamp()
+                        else:
+                            listing["added_timestamp"] = current_time.timestamp()
+                            listing["scraped_at"] = current_time.isoformat()
+                    
+                    # Check if listing is still new (less than 24 hours old)
+                    time_diff = current_time.timestamp() - listing.get("added_timestamp", 0)
+                    listing["is_new"] = time_diff < 86400  # 24 hours = 86400 seconds
                 
                 # Add new listings at the beginning
                 current_listings = new_listings + current_listings

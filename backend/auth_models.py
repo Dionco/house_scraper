@@ -116,6 +116,7 @@ class ProfileResponse(BaseModel):
     last_scraped: Optional[float] = None
     last_new_listings_count: int = 0
     listings_count: int = 0  # Computed field for number of listings
+    new_today_count: int = 0  # Computed field for listings added in last 24 hours
 
 class EmailUpdate(BaseModel):
     """Email update request model."""

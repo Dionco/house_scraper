@@ -183,9 +183,17 @@
                         <!-- Active Profile Info -->
                         <div id="active-profile-info" class="hidden mb-3 p-3 bg-primary/5 border border-primary/20 rounded-lg">
                             <div class="flex items-center justify-between">
-                                <div>
+                                <div class="flex-1">
                                     <div class="text-sm font-medium text-primary" id="active-profile-name">Profile Name</div>
                                     <div class="text-xs text-gray-500" id="active-profile-emails">No emails set</div>
+                                    <div class="text-xs text-green-600 font-medium mt-1" id="active-profile-new-today">
+                                        <span class="inline-flex items-center gap-1">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            <span id="new-today-count">0</span> new today
+                                        </span>
+                                    </div>
                                 </div>
                                 <div class="flex gap-1">
                                     <button id="edit-profile-btn" class="p-1.5 rounded-md hover:bg-primary/10 transition-colors" title="Edit profile">
@@ -921,6 +929,25 @@
                         ? `${profile.emails.length} email${profile.emails.length > 1 ? 's' : ''} configured`
                         : 'No emails set';
                     
+                    // Update new today count
+                    const newTodayCountSpan = document.getElementById('new-today-count');
+                    if (newTodayCountSpan) {
+                        const newTodayCount = profile.new_today_count || 0;
+                        newTodayCountSpan.textContent = newTodayCount;
+                        
+                        // Update visibility and styling based on count
+                        const newTodaySection = document.getElementById('active-profile-new-today');
+                        if (newTodaySection) {
+                            if (newTodayCount > 0) {
+                                newTodaySection.classList.remove('text-gray-400');
+                                newTodaySection.classList.add('text-green-600');
+                            } else {
+                                newTodaySection.classList.remove('text-green-600');
+                                newTodaySection.classList.add('text-gray-400');
+                            }
+                        }
+                    }
+                    
                     // Fill form fields
                     profileEmailsInput.value = profile.emails ? profile.emails.join(', ') : '';
                     saveProfileNameInput.value = profile.name;
@@ -956,6 +983,12 @@
                     saveProfileNameInput.value = '';
                     if (scrapeIntervalInput) scrapeIntervalInput.value = '4';
                     if (lastScrapedSpan) lastScrapedSpan.textContent = 'Last scraped: Never';
+                    
+                    // Clear new today count
+                    const newTodayCountSpan = document.getElementById('new-today-count');
+                    if (newTodayCountSpan) {
+                        newTodayCountSpan.textContent = '0';
+                    }
                     
                     // Disable buttons
                     updateEmailsBtn.disabled = true;
