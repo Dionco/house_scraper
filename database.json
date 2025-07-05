@@ -6,7 +6,7 @@
       "email": "admin@housescraper.local",
       "password_hash": "$2b$12$TmBUelK6whs68Fs1boTVSuAxHJZKQ14AXHFmV4550caZ.sLDQ5xpu",
       "created_at": 1751646532.227505,
-      "last_login": 1751713273.21908,
+      "last_login": 1751735895.2348979,
       "is_active": true,
       "profile_ids": [
         "profile_1751536894",
@@ -646,8 +646,8 @@
         "dioncobelens@me.com"
       ],
       "scrape_interval_hours": 3,
-      "last_scraped": "2025-07-05T19:03:41.896703",
-      "last_new_listings_count": 1,
+      "last_scraped": "2025-07-05T19:19:47.468171",
+      "last_new_listings_count": 0,
       "id": "profile_1751537183",
       "user_id": "user_1751646531",
       "created_at": 1751646532.227526
