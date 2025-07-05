@@ -81,6 +81,45 @@ def scrape_funda_html(url, max_retries=2, timeout=45):
             driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
             driver.execute_script("Object.defineProperty(navigator, 'languages', {get: () => ['nl-NL', 'nl']})")
             
+            # Handle cookie consent popup
+            try:
+                # Wait for the cookie popup to appear and dismiss it
+                from selenium.webdriver.common.by import By
+                cookie_selectors = [
+                    'button[data-test-id="didomi-notice-agree-button"]',
+                    'button[id="didomi-notice-agree-button"]',
+                    'button[class*="didomi-notice-agree-button"]',
+                    'button[aria-label*="Akkoord"]',
+                    'button[aria-label*="Agree"]',
+                    'button:contains("Akkoord")',
+                    'button:contains("Agree")',
+                    '.didomi-popup-backdrop',
+                    '.didomi-notice-component-button--highlight'
+                ]
+                
+                cookie_dismissed = False
+                for selector in cookie_selectors:
+                    try:
+                        if ':contains(' in selector:
+                            # Skip CSS selectors with :contains for now
+                            continue
+                        elements = driver.find_elements(By.CSS_SELECTOR, selector)
+                        if elements:
+                            elements[0].click()
+                            logger.info(f"Clicked cookie consent button: {selector}")
+                            cookie_dismissed = True
+                            time.sleep(1)  # Wait for popup to disappear
+                            break
+                    except Exception as e:
+                        logger.debug(f"Cookie button {selector} not found or not clickable: {e}")
+                        continue
+                
+                if not cookie_dismissed:
+                    logger.info("No cookie consent popup found or already dismissed")
+                    
+            except Exception as e:
+                logger.warning(f"Error handling cookie popup: {e}")
+            
             # Wait for page to load with Railway-friendly timeout
             from selenium.webdriver.support.ui import WebDriverWait
             from selenium.webdriver.support import expected_conditions as EC
@@ -98,18 +137,48 @@ def scrape_funda_html(url, max_retries=2, timeout=45):
                 # Check if listings are present
                 listings_found = False
                 try:
-                    # Check for common Funda listing selectors
-                    listings = driver.find_elements(By.CSS_SELECTOR, '[data-test-id="search-result-item"], .search-result, .object-list-item')
-                    if listings:
-                        listings_found = True
-                        logger.info(f"Found {len(listings)} listing elements")
+                    # Check for modern Funda listing selectors based on the site structure
+                    listing_selectors = [
+                        '[data-test-id="search-result-item"]',
+                        '.search-result',
+                        '.object-list-item',
+                        '.search-result-item',
+                        '[data-object-url-tracking]',  # Common Funda attribute
+                        'a[href*="/huur/"]',           # Rental links
+                        'div[data-test-id*="result"]', # Any result divs
+                        'div[class*="result"]',        # Any result divs
+                        'article',                     # Article elements (common for listings)
+                        'div[data-lazy-module]'        # Lazy-loaded modules
+                    ]
+                    
+                    for selector in listing_selectors:
+                        elements = driver.find_elements(By.CSS_SELECTOR, selector)
+                        if elements:
+                            listings_found = True
+                            logger.info(f"Found {len(elements)} listing elements with selector: {selector}")
+                            break
+                            
                 except Exception as e:
                     logger.warning(f"Could not check for listings: {e}")
                 
                 # If no listings found, wait a bit more for dynamic content
                 if not listings_found:
                     logger.info("No listings found immediately, waiting for dynamic content...")
-                    time.sleep(random.uniform(2, 4))
+                    time.sleep(random.uniform(3, 6))  # Wait longer for JS to load
+                    
+                    # Try again after waiting
+                    try:
+                        for selector in listing_selectors:
+                            elements = driver.find_elements(By.CSS_SELECTOR, selector)
+                            if elements:
+                                listings_found = True
+                                logger.info(f"Found {len(elements)} listing elements after wait: {selector}")
+                                break
+                    except Exception as e:
+                        logger.warning(f"Could not check for listings after wait: {e}")
+                else:
+                    # Quick additional wait for content to fully load
+                    time.sleep(random.uniform(1, 2))
                 
             except Exception as e:
                 logger.warning(f"Page may not be fully loaded: {e}")
@@ -118,11 +187,23 @@ def scrape_funda_html(url, max_retries=2, timeout=45):
             # Get the HTML
             html = driver.page_source
             
-            if html and len(html) > 5000:  # More realistic minimum for Funda pages
-                logger.info(f"Successfully scraped {len(html)} characters")
-                return html
-            else:
-                raise Exception(f"HTML too short or empty: {len(html) if html else 0} characters")
+            # Validate HTML content
+            if not html:
+                raise Exception("Empty HTML content received")
+                
+            if len(html) < 5000:  # Too short for a real Funda page
+                raise Exception(f"HTML too short: {len(html)} characters")
+                
+            # Check if page shows an error or has no results
+            if "geen resultaten" in html.lower() or "no results" in html.lower():
+                logger.warning("Page shows no results - this might be expected")
+                
+            # Check if page is properly loaded (has the expected structure)
+            if "funda.nl" not in html.lower():
+                raise Exception("HTML does not appear to be from Funda")
+            
+            logger.info(f"Successfully scraped {len(html)} characters")
+            return html
                 
         except Exception as e:
             logger.error(f"Scraping attempt {attempt + 1} failed: {e}")
