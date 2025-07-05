@@ -5,6 +5,7 @@ Uses APScheduler to run periodic tasks for each profile.
 import os
 import json
 import logging
+import gc  # For memory management
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -68,6 +69,9 @@ class PeriodicScraper:
         try:
             logger.info(f"Starting scrape for profile: {profile_id}")
             
+            # Force garbage collection before scraping to free memory
+            gc.collect()
+            
             # Load current database
             db = self.load_database()
             
@@ -98,10 +102,15 @@ class PeriodicScraper:
                 self.save_database(db)
                 return
             
-            # Try scraping with retries and better timeout handling
+            # Try scraping with Railway-optimized settings
             html = None
             try:
-                html = scrape_funda_html(url, max_retries=2, timeout=45)  # Reduced timeout for Railway
+                # Use shorter timeout and fewer retries for Railway
+                html = scrape_funda_html(url, max_retries=1, timeout=30)  # Reduced further for Railway
+                if html:
+                    logger.info(f"Successfully scraped {len(html)} characters for profile {profile_id}")
+                else:
+                    logger.warning(f"Scraping returned empty HTML for profile {profile_id}")
             except Exception as scrape_error:
                 logger.error(f"Failed to scrape HTML for profile {profile_id}: {scrape_error}")
                 
@@ -205,6 +214,10 @@ class PeriodicScraper:
                 
         except Exception as e:
             logger.error(f"Error scraping profile {profile_id}: {e}")
+        finally:
+            # Clean up memory after scraping
+            gc.collect()
+            logger.info(f"Completed scrape for profile: {profile_id}")
     
     def add_profile_job(self, profile_id: str, interval_hours: int = None):
         """Add a periodic job for a profile"""

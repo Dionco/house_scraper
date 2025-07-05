@@ -8,9 +8,9 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def scrape_funda_html(url, max_retries=3, timeout=60):
+def scrape_funda_html(url, max_retries=2, timeout=45):
     """
-    Scrape Funda HTML with improved error handling and retries
+    Scrape Funda HTML with Railway-optimized settings
     
     Args:
         url: The URL to scrape
@@ -25,76 +25,91 @@ def scrape_funda_html(url, max_retries=3, timeout=60):
         try:
             logger.info(f"Scraping attempt {attempt + 1}/{max_retries} for URL: {url}")
             
-            ua = UserAgent()
-            user_agent = ua.random
-            print(f"Using User-Agent: {user_agent}")
+            # Use a fixed, reliable user agent instead of random
+            user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
             
             options = uc.ChromeOptions()
             options.add_argument(f'--user-agent={user_agent}')
             options.add_argument('--headless=new')
             options.add_argument('--no-sandbox')
-            options.add_argument('--disable-dev-shm-usage')  # Fix for Railway memory issues
+            options.add_argument('--disable-dev-shm-usage')
             options.add_argument('--disable-blink-features=AutomationControlled')
-            options.add_argument('--window-size=1920,1080')
+            options.add_argument('--window-size=1280,720')  # Smaller window for Railway
             options.add_argument('--lang=nl-NL,nl')
-            options.add_argument('--disable-gpu')  # Reduce resource usage
+            options.add_argument('--disable-gpu')
             options.add_argument('--disable-web-security')
             options.add_argument('--disable-features=VizDisplayCompositor')
             options.add_argument('--disable-extensions')
             options.add_argument('--disable-plugins')
             options.add_argument('--disable-images')  # Speed up loading
-            options.add_argument('--disable-javascript')  # Speed up loading if not needed
+            options.add_argument('--disable-background-timer-throttling')
+            options.add_argument('--disable-backgrounding-occluded-windows')
+            options.add_argument('--disable-renderer-backgrounding')
+            options.add_argument('--disable-features=TranslateUI')
+            options.add_argument('--disable-ipc-flooding-protection')
+            options.add_argument('--memory-pressure-off')
+            options.add_argument('--max_old_space_size=4096')
             
-            # Set timeouts
-            options.add_argument(f'--timeout={timeout}')
-            options.add_argument('--page-load-strategy=eager')  # Don't wait for all resources
+            # Railway-specific optimizations
+            options.add_argument('--single-process')  # Use single process to save memory
+            options.add_argument('--disable-background-networking')
+            options.add_argument('--disable-default-apps')
+            options.add_argument('--disable-sync')
             
-            # Initialize driver with retries
-            driver = uc.Chrome(options=options, version_main=None)
+            # Don't disable JavaScript - Funda needs it!
+            # options.add_argument('--disable-javascript')  # REMOVED - Funda requires JS
             
-            # Set timeouts
+            # Set page load strategy
+            options.add_argument('--page-load-strategy=normal')  # Changed from eager to normal
+            
+            # Initialize driver with shorter timeout
+            logger.info("Initializing Chrome driver...")
+            driver = uc.Chrome(options=options, version_main=None, driver_executable_path=None)
+            
+            # Set shorter timeouts for Railway
             driver.set_page_load_timeout(timeout)
-            driver.implicitly_wait(10)
+            driver.implicitly_wait(5)  # Reduced from 10 to 5
             
-            # Add random delay to avoid detection
-            time.sleep(random.uniform(1, 3))
+            # Add short random delay to avoid detection
+            time.sleep(random.uniform(0.5, 1.5))
             
             # Navigate to URL
+            logger.info(f"Navigating to URL: {url}")
             driver.get(url)
             
-            # Execute anti-detection scripts
+            # Execute minimal anti-detection scripts
             driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
             driver.execute_script("Object.defineProperty(navigator, 'languages', {get: () => ['nl-NL', 'nl']})")
-            driver.execute_script("Object.defineProperty(navigator, 'plugins', {get: () => [1,2,3,4,5]})")
-            driver.execute_script("delete window.cdc_adoQpoasnfa76pfcZLmcfl_Array;")
-            driver.execute_script("delete window.cdc_adoQpoasnfa76pfcZLmcfl_Promise;")
-            driver.execute_script("delete window.cdc_adoQpoasnfa76pfcZLmcfl_Symbol;")
-            driver.execute_script("Object.defineProperty(navigator, 'maxTouchPoints', {get: () => 1})")
-            driver.execute_script("Object.defineProperty(navigator, 'hardwareConcurrency', {get: () => 8})")
-            driver.execute_script("Object.defineProperty(navigator, 'deviceMemory', {get: () => 8})")
-            driver.execute_script("Object.defineProperty(navigator, 'vendor', {get: () => 'Google Inc.'})")
-            driver.execute_script("Object.defineProperty(navigator, 'appVersion', {get: () => '5.0 (Windows)'});")
-            driver.execute_script("Object.defineProperty(navigator, 'appName', {get: () => 'Netscape'});")
-            driver.execute_script("Object.defineProperty(navigator, 'appCodeName', {get: () => 'Mozilla'});")
-            driver.execute_script("Object.defineProperty(navigator, 'cookieEnabled', {get: () => true})")
-            driver.execute_script("Object.defineProperty(navigator, 'doNotTrack', {get: () => null})")
-            driver.execute_script("Object.defineProperty(navigator, 'onLine', {get: () => true})")
-            driver.execute_script("Object.defineProperty(navigator, 'product', {get: () => 'Gecko'})")
-            driver.execute_script("Object.defineProperty(navigator, 'productSub', {get: () => '20030107'})")
-            driver.execute_script("Object.defineProperty(navigator, 'userAgentData', {get: () => undefined})")
             
-            # Wait for page to load with shorter timeout for Railway
+            # Wait for page to load with Railway-friendly timeout
             from selenium.webdriver.support.ui import WebDriverWait
             from selenium.webdriver.support import expected_conditions as EC
             
             try:
-                WebDriverWait(driver, min(timeout, 30)).until(
+                # Wait for body to be present
+                WebDriverWait(driver, min(timeout, 20)).until(
                     EC.presence_of_element_located((By.CSS_SELECTOR, 'body'))
                 )
-                print("[INFO] Page loaded.")
+                logger.info("Page body loaded.")
                 
-                # Additional wait for dynamic content
-                time.sleep(random.uniform(2, 5))
+                # Wait for content to load (but not too long)
+                time.sleep(random.uniform(1, 3))
+                
+                # Check if listings are present
+                listings_found = False
+                try:
+                    # Check for common Funda listing selectors
+                    listings = driver.find_elements(By.CSS_SELECTOR, '[data-test-id="search-result-item"], .search-result, .object-list-item')
+                    if listings:
+                        listings_found = True
+                        logger.info(f"Found {len(listings)} listing elements")
+                except Exception as e:
+                    logger.warning(f"Could not check for listings: {e}")
+                
+                # If no listings found, wait a bit more for dynamic content
+                if not listings_found:
+                    logger.info("No listings found immediately, waiting for dynamic content...")
+                    time.sleep(random.uniform(2, 4))
                 
             except Exception as e:
                 logger.warning(f"Page may not be fully loaded: {e}")
@@ -103,7 +118,7 @@ def scrape_funda_html(url, max_retries=3, timeout=60):
             # Get the HTML
             html = driver.page_source
             
-            if html and len(html) > 1000:  # Basic validation
+            if html and len(html) > 5000:  # More realistic minimum for Funda pages
                 logger.info(f"Successfully scraped {len(html)} characters")
                 return html
             else:
@@ -112,7 +127,7 @@ def scrape_funda_html(url, max_retries=3, timeout=60):
         except Exception as e:
             logger.error(f"Scraping attempt {attempt + 1} failed: {e}")
             if attempt < max_retries - 1:
-                wait_time = (attempt + 1) * 10  # Exponential backoff
+                wait_time = 5 + (attempt * 5)  # Shorter backoff for Railway
                 logger.info(f"Waiting {wait_time} seconds before retry...")
                 time.sleep(wait_time)
             
