@@ -146,7 +146,7 @@
     <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 py-8">
 
-            <aside class="lg:col-span-3">
+            <aside class="lg:col-span-3 sidebar-decorative">
                 <div class="sticky-sidebar pr-4">
                     <!-- Authentication Notice -->
                     <div id="auth-notice" class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg hidden">
@@ -676,24 +676,17 @@
                         ? `${profile.emails.length} email${profile.emails.length > 1 ? 's' : ''} configured`
                         : 'No emails set';
 
-                    // Update new today count
+                    // Hide new today count
                     const newTodayCountSpan = document.getElementById('new-today-count');
                     if (newTodayCountSpan) {
-                        const newTodayCount = profile.new_today_count || 0;
-                        newTodayCountSpan.textContent = newTodayCount;
-                        
-                        // Update visibility and styling based on count
+                        newTodayCountSpan.textContent = '';
+                        // Optionally hide the parent section as well
                         const newTodaySection = document.getElementById('active-profile-new-today');
                         if (newTodaySection) {
-                            if (newTodayCount > 0) {
-                                newTodaySection.classList.remove('text-gray-400');
-                                newTodaySection.classList.add('text-green-600');
-                            } else {
-                                newTodaySection.classList.remove('text-green-600');
-                                newTodaySection.classList.add('text-gray-400');
-                            }
+                            newTodaySection.style.display = 'none';
                         }
                     }
+                    
                     
                     // Update scrape button to show last scraped time
                     updateScrapeButtonDisplay();
@@ -1420,16 +1413,12 @@
                 const locationType = option.dataset.locationType;
                 wizardData.locationType = locationType;
                 
-                document.querySelectorAll('.city-options, .radius-options, .travel-time-options').forEach(el => {
+                document.querySelectorAll('.city-options').forEach(el => {
                     el.style.display = 'none';
                 });
                 
                 if (locationType === 'city') {
                     document.querySelector('.city-options').style.display = 'block';
-                } else if (locationType === 'radius') {
-                    document.querySelector('.radius-options').style.display = 'block';
-                } else if (locationType === 'travel-time') {
-                    document.querySelector('.travel-time-options').style.display = 'block';
                 }
             }
             
@@ -1460,38 +1449,6 @@
                         if (!cityInput) {
                             showNotification('Please enter a city name.', 'warning');
                             document.getElementById('city-input').focus();
-                            return false;
-                        }
-                    } else if (wizardData.locationType === 'radius') {
-                        const centerInput = document.getElementById('radius-center').value.trim();
-                        const distanceInput = document.getElementById('radius-distance').value;
-                        if (!centerInput) {
-                            showNotification('Please enter a center location.', 'warning');
-                            document.getElementById('radius-center').focus();
-                            return false;
-                        }
-                        if (!distanceInput) {
-                            showNotification('Please select a radius distance.', 'warning');
-                            document.getElementById('radius-distance').focus();
-                            return false;
-                        }
-                    } else if (wizardData.locationType === 'travel-time') {
-                        const centerInput = document.getElementById('travel-center').value.trim();
-                        const timeInput = document.getElementById('travel-time').value;
-                        const modeInput = document.getElementById('transport-mode').value;
-                        if (!centerInput) {
-                            showNotification('Please enter a starting location.', 'warning');
-                            document.getElementById('travel-center').focus();
-                            return false;
-                        }
-                        if (!timeInput) {
-                            showNotification('Please select a travel time.', 'warning');
-                            document.getElementById('travel-time').focus();
-                            return false;
-                        }
-                        if (!modeInput) {
-                            showNotification('Please select a transport mode.', 'warning');
-                            document.getElementById('transport-mode').focus();
                             return false;
                         }
                     }
@@ -1525,13 +1482,6 @@
                     // Location data
                     if (wizardData.locationType === 'city') {
                         wizardData.city = document.getElementById('city-input').value.trim();
-                    } else if (wizardData.locationType === 'radius') {
-                        wizardData.radiusCenter = document.getElementById('radius-center').value.trim();
-                        wizardData.radiusDistance = document.getElementById('radius-distance').value;
-                    } else if (wizardData.locationType === 'travel-time') {
-                        wizardData.travelCenter = document.getElementById('travel-center').value.trim();
-                        wizardData.travelTime = document.getElementById('travel-time').value;
-                        wizardData.transportMode = document.getElementById('transport-mode').value;
                     }
                 } else if (currentWizardStep === 2) {
                     // Basic requirements
@@ -1568,11 +1518,6 @@
             function resetWizardForm() {
                 // Reset all form fields
                 document.getElementById('city-input').value = '';
-                document.getElementById('radius-center').value = '';
-                document.getElementById('radius-distance').value = '';
-                document.getElementById('travel-center').value = '';
-                document.getElementById('travel-time').value = '';
-                document.getElementById('transport-mode').value = '';
                 document.getElementById('wizard-min-price').value = '';
                 document.getElementById('wizard-max-price').value = '';
                 document.getElementById('wizard-min-bedrooms').value = '';
@@ -1604,7 +1549,7 @@
                 });
                 
                 // Hide all input sections
-                document.querySelectorAll('.city-options, .radius-options, .travel-time-options').forEach(el => {
+                document.querySelectorAll('.city-options').forEach(el => {
                     el.style.display = 'none';
                 });
             }
@@ -1682,7 +1627,6 @@
                 if (data.locationType === 'city' && data.city) {
                     profile.filters.city = data.city;
                 }
-                // Note: radius and travel-time would need backend support
                 
                 // Convert basic requirements
                 if (data.minPrice) profile.filters.min_price = parseInt(data.minPrice);
@@ -2064,7 +2008,6 @@
                                 </svg>
                             </div>
                             <h3 class="text-2xl font-bold text-secondary mb-2">Where would you like to search?</h3>
-                            <p class="text-gray-600">Choose your preferred location method</p>
                         </div>
 
                         <div class="space-y-4">
@@ -2087,85 +2030,7 @@
                                 </div>
                             </div>
 
-                            <!-- Radius Selection -->
-                            <div class="location-option border-2 border-gray-200 rounded-xl p-6 cursor-pointer hover:border-primary hover:bg-primary/5 transition-all" data-location-type="radius">
-                                <div class="flex items-start gap-4">
-                                    <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
-                                        </svg>
-                                    </div>
-                                    <div class="flex-1">
-                                        <h4 class="font-semibold text-lg text-secondary mb-1">Search by Radius</h4>
-                                        <p class="text-gray-600 mb-3">Search within a specific distance from a location</p>
-                                        <div class="radius-options" style="display: none;">
-                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <div>
-                                                    <label class="block text-sm font-medium text-gray-700 mb-2">Center Location</label>
-                                                    <input type="text" id="radius-center" placeholder="Enter address or city" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                                                </div>
-                                                <div>
-                                                    <label class="block text-sm font-medium text-gray-700 mb-2">Radius (km)</label>
-                                                    <select id="radius-distance" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                                                        <option value="">Select distance</option>
-                                                        <option value="1">1 km</option>
-                                                        <option value="2">2 km</option>
-                                                        <option value="5">5 km</option>
-                                                        <option value="10">10 km</option>
-                                                        <option value="15">15 km</option>
-                                                        <option value="20">20 km</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="location-radio w-5 h-5 border-2 border-gray-300 rounded-full flex-shrink-0"></div>
-                                </div>
-                            </div>
 
-                            <!-- Travel Time Selection -->
-                            <div class="location-option border-2 border-gray-200 rounded-xl p-6 cursor-pointer hover:border-primary hover:bg-primary/5 transition-all" data-location-type="travel-time">
-                                <div class="flex items-start gap-4">
-                                    <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                        </svg>
-                                    </div>
-                                    <div class="flex-1">
-                                        <h4 class="font-semibold text-lg text-secondary mb-1">Search by Travel Time</h4>
-                                        <p class="text-gray-600 mb-3">Search within a specific travel time from a location</p>
-                                        <div class="travel-time-options" style="display: none;">
-                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                                                <div>
-                                                    <label class="block text-sm font-medium text-gray-700 mb-2">From Location</label>
-                                                    <input type="text" id="travel-center" placeholder="Enter address" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                                                </div>
-                                                <div>
-                                                    <label class="block text-sm font-medium text-gray-700 mb-2">Travel Time</label>
-                                                    <select id="travel-time" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                                                        <option value="">Select time</option>
-                                                        <option value="15">15 minutes</option>
-                                                        <option value="30">30 minutes</option>
-                                                        <option value="45">45 minutes</option>
-                                                        <option value="60">1 hour</option>
-                                                    </select>
-                                                </div>
-                                                <div>
-                                                    <label class="block text-sm font-medium text-gray-700 mb-2">Transport Mode</label>
-                                                    <select id="transport-mode" class="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                                                        <option value="">Select mode</option>
-                                                        <option value="walking">Walking</option>
-                                                        <option value="cycling">Cycling</option>
-                                                        <option value="public-transport">Public Transport</option>
-                                                        <option value="driving">Driving</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="location-radio w-5 h-5 border-2 border-gray-300 rounded-full flex-shrink-0"></div>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
