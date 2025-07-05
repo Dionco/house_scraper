@@ -6,7 +6,7 @@
       "email": "admin@housescraper.local",
       "password_hash": "$2b$12$TmBUelK6whs68Fs1boTVSuAxHJZKQ14AXHFmV4550caZ.sLDQ5xpu",
       "created_at": 1751646532.227505,
-      "last_login": 1751649765.2325602,
+      "last_login": 1751713273.21908,
       "is_active": true,
       "profile_ids": [
         "profile_1751536894",
@@ -87,7 +87,9 @@
           "elderly_access": null,
           "description": "",
           "is_new": true,
-          "scraped_at": "2025-07-04T19:20:25.597165"
+          "scraped_at": "2025-07-04T19:20:25.597165",
+          "added_at": "2025-06-29T12:40:12.637275",
+          "added_timestamp": 1751649625.597165
         },
         {
           "address.street_name": "Wilhelminapark 23",
@@ -126,7 +128,9 @@
           "elderly_access": null,
           "description": "",
           "is_new": true,
-          "scraped_at": "2025-07-04T19:20:25.597187"
+          "scraped_at": "2025-07-04T19:20:25.597187",
+          "added_at": "2025-06-30T12:40:12.637275",
+          "added_timestamp": 1751649625.597187
         },
         {
           "address.street_name": "Wolvenplein 7-C",
@@ -164,7 +168,10 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": false
+          "is_new": false,
+          "added_at": "2025-06-29T12:40:12.637275",
+          "scraped_at": "2025-06-29T12:40:12.637275",
+          "added_timestamp": 1751193612.637275
         },
         {
           "address.street_name": "Hoola van Nootenstraat 321",
@@ -202,7 +209,10 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": false
+          "is_new": false,
+          "added_at": "2025-07-01T12:40:12.637275",
+          "scraped_at": "2025-07-01T12:40:12.637275",
+          "added_timestamp": 1751366412.637275
         },
         {
           "address.street_name": "Dillenburgstraat 9",
@@ -240,7 +250,10 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": false
+          "is_new": false,
+          "added_at": "2025-06-29T12:40:12.637275",
+          "scraped_at": "2025-06-29T12:40:12.637275",
+          "added_timestamp": 1751193612.637275
         },
         {
           "address.street_name": "Biltstraat 86-B",
@@ -278,7 +291,10 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": false
+          "is_new": false,
+          "added_at": "2025-07-02T12:40:12.637275",
+          "scraped_at": "2025-07-02T12:40:12.637275",
+          "added_timestamp": 1751452812.637275
         },
         {
           "address.street_name": "Vredenburg 64",
@@ -316,7 +332,10 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": false
+          "is_new": false,
+          "added_at": "2025-07-02T12:40:12.637275",
+          "scraped_at": "2025-07-02T12:40:12.637275",
+          "added_timestamp": 1751452812.637275
         },
         {
           "address.street_name": "Oudegracht 127-1",
@@ -354,7 +373,10 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": false
+          "is_new": false,
+          "added_at": "2025-07-02T12:40:12.637275",
+          "scraped_at": "2025-07-02T12:40:12.637275",
+          "added_timestamp": 1751452812.637275
         },
         {
           "address.street_name": "Kerkstraat 12",
@@ -392,7 +414,10 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": false
+          "is_new": false,
+          "added_at": "2025-07-03T12:40:12.637275",
+          "scraped_at": "2025-07-03T12:40:12.637275",
+          "added_timestamp": 1751539212.637275
         }
       ],
       "email": "dioncobelens@me.com",
@@ -448,8 +473,10 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": false,
-          "scraped_at": "2025-07-04T16:56:02.575437"
+          "is_new": true,
+          "scraped_at": "2025-07-04T16:56:02.575437",
+          "added_at": "2025-06-29T12:40:12.637275",
+          "added_timestamp": 1751640962.575437
         },
         {
           "address.street_name": "Chris van Abkoudestraat 21",
@@ -487,7 +514,10 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": false
+          "is_new": false,
+          "added_at": "2025-07-03T12:40:12.637275",
+          "scraped_at": "2025-07-03T12:40:12.637275",
+          "added_timestamp": 1751539212.637275
         },
         {
           "address.street_name": "Mangoweg 331",
@@ -525,7 +555,10 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": false
+          "is_new": false,
+          "added_at": "2025-06-30T12:40:12.637275",
+          "scraped_at": "2025-06-30T12:40:12.637275",
+          "added_timestamp": 1751280012.637275
         },
         {
           "address.street_name": "Parmentierweg 53",
@@ -563,7 +596,10 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": false
+          "is_new": false,
+          "added_at": "2025-07-01T12:40:12.637275",
+          "scraped_at": "2025-07-01T12:40:12.637275",
+          "added_timestamp": 1751366412.637275
         }
       ],
       "emails": [
@@ -620,7 +656,10 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": true
+          "is_new": false,
+          "added_at": "2025-06-29T12:40:12.637275",
+          "scraped_at": "2025-06-29T12:40:12.637275",
+          "added_timestamp": 1751193612.637275
         },
         {
           "address.street_name": "'t Krom 32",
@@ -658,7 +697,10 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": true
+          "is_new": false,
+          "added_at": "2025-06-29T12:40:12.637275",
+          "scraped_at": "2025-06-29T12:40:12.637275",
+          "added_timestamp": 1751193612.637275
         },
         {
           "address.street_name": "Zuider Buiten Spaarne 142",
@@ -696,7 +738,10 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": true
+          "is_new": false,
+          "added_at": "2025-07-01T12:40:12.637275",
+          "scraped_at": "2025-07-01T12:40:12.637275",
+          "added_timestamp": 1751366412.637275
         },
         {
           "address.street_name": "Nieuwe Gracht 80",
@@ -734,7 +779,10 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": true
+          "is_new": false,
+          "added_at": "2025-06-30T12:40:12.637275",
+          "scraped_at": "2025-06-30T12:40:12.637275",
+          "added_timestamp": 1751280012.637275
         }
       ],
       "emails": [],
@@ -792,7 +840,10 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": true
+          "is_new": false,
+          "added_at": "2025-07-01T12:40:12.637275",
+          "scraped_at": "2025-07-01T12:40:12.637275",
+          "added_timestamp": 1751366412.637275
         },
         {
           "address.street_name": "Geulstraat 21-2",
@@ -830,7 +881,10 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": true
+          "is_new": false,
+          "added_at": "2025-07-01T12:40:12.637275",
+          "scraped_at": "2025-07-01T12:40:12.637275",
+          "added_timestamp": 1751366412.637275
         },
         {
           "address.street_name": "Van Leijenberghlaan 170",
@@ -868,7 +922,10 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": true
+          "is_new": false,
+          "added_at": "2025-06-29T12:40:12.637275",
+          "scraped_at": "2025-06-29T12:40:12.637275",
+          "added_timestamp": 1751193612.637275
         },
         {
           "address.street_name": "Van Leijenberghlaan 180",
@@ -906,7 +963,10 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": true
+          "is_new": false,
+          "added_at": "2025-06-30T12:40:12.637275",
+          "scraped_at": "2025-06-30T12:40:12.637275",
+          "added_timestamp": 1751280012.637275
         },
         {
           "address.street_name": "Zocherstraat 42-C",
@@ -944,7 +1004,10 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": true
+          "is_new": false,
+          "added_at": "2025-07-03T12:40:12.637275",
+          "scraped_at": "2025-07-03T12:40:12.637275",
+          "added_timestamp": 1751539212.637275
         },
         {
           "address.street_name": "Zocherstraat 42-C",
@@ -982,7 +1045,10 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": true
+          "is_new": false,
+          "added_at": "2025-07-01T12:40:12.637275",
+          "scraped_at": "2025-07-01T12:40:12.637275",
+          "added_timestamp": 1751366412.637275
         },
         {
           "address.street_name": "Zocherstraat 42-B",
@@ -1020,7 +1086,10 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": true
+          "is_new": false,
+          "added_at": "2025-07-01T12:40:12.637275",
+          "scraped_at": "2025-07-01T12:40:12.637275",
+          "added_timestamp": 1751366412.637275
         },
         {
           "address.street_name": "Florence Pricehof 28",
@@ -1058,7 +1127,10 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": true
+          "is_new": false,
+          "added_at": "2025-06-29T12:40:12.637275",
+          "scraped_at": "2025-06-29T12:40:12.637275",
+          "added_timestamp": 1751193612.637275
         },
         {
           "address.street_name": "Florence Pricehof 18",
@@ -1096,7 +1168,10 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": true
+          "is_new": false,
+          "added_at": "2025-06-30T12:40:12.637275",
+          "scraped_at": "2025-06-30T12:40:12.637275",
+          "added_timestamp": 1751280012.637275
         },
         {
           "address.street_name": "Florence Pricehof 20",
@@ -1134,7 +1209,10 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": true
+          "is_new": false,
+          "added_at": "2025-07-02T12:40:12.637275",
+          "scraped_at": "2025-07-02T12:40:12.637275",
+          "added_timestamp": 1751452812.637275
         },
         {
           "address.street_name": "Florence Pricehof 12",
@@ -1172,7 +1250,10 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": true
+          "is_new": false,
+          "added_at": "2025-06-29T12:40:12.637275",
+          "scraped_at": "2025-06-29T12:40:12.637275",
+          "added_timestamp": 1751193612.637275
         },
         {
           "address.street_name": "Florence Pricehof 24",
@@ -1210,7 +1291,10 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": true
+          "is_new": false,
+          "added_at": "2025-07-03T12:40:12.637275",
+          "scraped_at": "2025-07-03T12:40:12.637275",
+          "added_timestamp": 1751539212.637275
         },
         {
           "address.street_name": "Florence Pricehof 30",
@@ -1248,7 +1332,10 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": true
+          "is_new": false,
+          "added_at": "2025-07-01T12:40:12.637275",
+          "scraped_at": "2025-07-01T12:40:12.637275",
+          "added_timestamp": 1751366412.637275
         }
       ],
       "id": "profile_1751631745",
@@ -1326,8 +1413,9 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": true,
-          "scraped_at": "2025-07-05T10:42:32.118672"
+          "is_new": false,
+          "scraped_at": "2025-07-05T10:42:32.118672",
+          "added_at": "2025-07-01T12:40:12.637275"
         },
         {
           "address.street_name": "Geulstraat 21-2",
@@ -1365,8 +1453,9 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": true,
-          "scraped_at": "2025-07-05T10:42:32.118705"
+          "is_new": false,
+          "scraped_at": "2025-07-05T10:42:32.118705",
+          "added_at": "2025-07-01T12:40:12.637275"
         },
         {
           "address.street_name": "Van Leijenberghlaan 170",
@@ -1404,8 +1493,9 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": true,
-          "scraped_at": "2025-07-05T10:42:32.118722"
+          "is_new": false,
+          "scraped_at": "2025-07-05T10:42:32.118722",
+          "added_at": "2025-06-29T12:40:12.637275"
         },
         {
           "address.street_name": "Van Leijenberghlaan 180",
@@ -1443,8 +1533,9 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": true,
-          "scraped_at": "2025-07-05T10:42:32.118735"
+          "is_new": false,
+          "scraped_at": "2025-07-05T10:42:32.118735",
+          "added_at": "2025-06-30T12:40:12.637275"
         },
         {
           "address.street_name": "Zocherstraat 42-C",
@@ -1482,8 +1573,9 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": true,
-          "scraped_at": "2025-07-05T10:42:32.118747"
+          "is_new": false,
+          "scraped_at": "2025-07-05T10:42:32.118747",
+          "added_at": "2025-07-03T12:40:12.637275"
         },
         {
           "address.street_name": "Zocherstraat 42-C",
@@ -1521,8 +1613,9 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": true,
-          "scraped_at": "2025-07-05T10:42:32.118761"
+          "is_new": false,
+          "scraped_at": "2025-07-05T10:42:32.118761",
+          "added_at": "2025-07-01T12:40:12.637275"
         },
         {
           "address.street_name": "Zocherstraat 42-B",
@@ -1560,8 +1653,9 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": true,
-          "scraped_at": "2025-07-05T10:42:32.118773"
+          "is_new": false,
+          "scraped_at": "2025-07-05T10:42:32.118773",
+          "added_at": "2025-07-01T12:40:12.637275"
         },
         {
           "address.street_name": "Pieter Goosstraat 38",
@@ -1599,8 +1693,9 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": true,
-          "scraped_at": "2025-07-05T10:42:32.118784"
+          "is_new": false,
+          "scraped_at": "2025-07-05T10:42:32.118784",
+          "added_at": "2025-06-30T12:40:12.637275"
         },
         {
           "address.street_name": "Florence Pricehof 28",
@@ -1638,8 +1733,9 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": true,
-          "scraped_at": "2025-07-05T10:42:32.118796"
+          "is_new": false,
+          "scraped_at": "2025-07-05T10:42:32.118796",
+          "added_at": "2025-06-29T12:40:12.637275"
         },
         {
           "address.street_name": "Florence Pricehof 18",
@@ -1677,8 +1773,9 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": true,
-          "scraped_at": "2025-07-05T10:42:32.118808"
+          "is_new": false,
+          "scraped_at": "2025-07-05T10:42:32.118808",
+          "added_at": "2025-06-30T12:40:12.637275"
         },
         {
           "address.street_name": "Florence Pricehof 20",
@@ -1716,8 +1813,9 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": true,
-          "scraped_at": "2025-07-05T10:42:32.118820"
+          "is_new": false,
+          "scraped_at": "2025-07-05T10:42:32.118820",
+          "added_at": "2025-07-02T12:40:12.637275"
         },
         {
           "address.street_name": "Florence Pricehof 12",
@@ -1755,8 +1853,9 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": true,
-          "scraped_at": "2025-07-05T10:42:32.118830"
+          "is_new": false,
+          "scraped_at": "2025-07-05T10:42:32.118830",
+          "added_at": "2025-06-29T12:40:12.637275"
         },
         {
           "address.street_name": "Florence Pricehof 24",
@@ -1794,8 +1893,9 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": true,
-          "scraped_at": "2025-07-05T10:42:32.118840"
+          "is_new": false,
+          "scraped_at": "2025-07-05T10:42:32.118840",
+          "added_at": "2025-07-03T12:40:12.637275"
         },
         {
           "address.street_name": "Florence Pricehof 30",
@@ -1833,8 +1933,9 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": true,
-          "scraped_at": "2025-07-05T10:42:32.118851"
+          "is_new": false,
+          "scraped_at": "2025-07-05T10:42:32.118851",
+          "added_at": "2025-07-01T12:40:12.637275"
         },
         {
           "address.street_name": "Florence Pricehof 14",
@@ -1872,8 +1973,9 @@
           "disabled_access": null,
           "elderly_access": null,
           "description": "",
-          "is_new": true,
-          "scraped_at": "2025-07-05T10:42:32.118862"
+          "is_new": false,
+          "scraped_at": "2025-07-05T10:42:32.118862",
+          "added_at": "2025-06-30T12:40:12.637275"
         }
       ],
       "created_at": 1751647597.998427,

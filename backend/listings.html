@@ -210,58 +210,18 @@
                             </div>
                         </div>
 
-                        <!-- Profile Actions (Collapsible) -->
-                        <div id="profile-actions-section" class="hidden space-y-3">
-                            <!-- Periodic Scraping Status -->
-                            <div class="p-3 bg-blue-50 rounded-lg">
-                                <div class="flex items-center justify-between mb-2">
-                                    <label class="text-sm font-medium text-gray-700">Periodic Scraping</label>
-                                    <span id="scraper-status" class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800">Active</span>
-                                </div>
-                                <div class="space-y-2">
-                                    <div class="flex items-center gap-2">
-                                        <label class="text-sm text-gray-600">Interval (hours):</label>
-                                        <input type="number" id="scrape-interval" class="w-20 px-2 py-1 text-sm border border-gray-200 rounded" value="4" min="1" max="168">
-                                        <button id="update-interval-btn" class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-200" disabled>Update</button>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <button id="trigger-scrape-btn" class="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600 transition duration-200" disabled>Scrape Now</button>
-                                        <div class="text-xs text-gray-500">
-                                            <span id="last-scraped">Last scraped: Never</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Email Management -->
-                            <div class="p-3 bg-gray-50 rounded-lg">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Email Notifications</label>
-                                <div class="flex gap-2">
-                                    <input type="text" id="profile-emails" class="flex-1 px-2 py-1.5 border border-gray-200 rounded text-sm" placeholder="Enter emails, comma separated">
-                                    <button id="update-emails-btn" class="px-3 py-1.5 bg-primary text-white text-sm font-medium rounded hover:bg-primary-600 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                                        Update
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Profile Management -->
-                            <div class="p-3 bg-gray-50 rounded-lg">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Save Profile</label>
-                                <div class="space-y-2">
-                                    <input type="text" id="save-profile-name" class="w-full px-2 py-1.5 border border-gray-200 rounded text-sm" placeholder="Profile name">
-                                    <div class="flex gap-2">
-                                        <button id="save-profile-btn" class="flex-1 px-3 py-1.5 bg-secondary text-white text-sm font-medium rounded hover:bg-secondary/90 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                                            Save New
-                                        </button>
-                                        <button id="overwrite-profile-btn" class="flex-1 px-3 py-1.5 bg-primary text-white text-sm font-medium rounded hover:bg-primary-600 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                                            Update
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
+                        <!-- Edit Search Profile Button -->
+                        <div id="edit-search-profile-container" class="hidden mb-3">
+                            <button id="edit-search-profile-btn" class="w-full flex items-center justify-center gap-2 px-3 py-2 bg-white border border-primary text-primary text-sm font-medium rounded-lg hover:bg-primary/5 transition duration-200">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                                Edit Search Profile
+                            </button>
                         </div>
 
                         <!-- Save new profile action -->
+                        <div class="mt-3 pt-3 border-t border-gray-100">
                         <div class="mt-3 pt-3 border-t border-gray-100">
                             <button id="create-new-profile-btn" class="w-full flex items-center justify-center gap-2 px-3 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-600 transition duration-200">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -665,31 +625,12 @@
             const activeProfileNameSpan = document.getElementById('active-profile-name');
             const activeProfileEmails = document.getElementById('active-profile-emails');
             
-            // Profile emails and update button
-            const profileEmailsInput = document.getElementById('profile-emails');
-            const updateEmailsBtn = document.getElementById('update-emails-btn');
-            
-            // Save profile elements
-            const saveProfileNameInput = document.getElementById('save-profile-name');
-            const saveProfileBtn = document.getElementById('save-profile-btn');
-            const overwriteProfileBtn = document.getElementById('overwrite-profile-btn');
-            
             // Scrape updates button
             const scrapeUpdatesBtn = document.getElementById('scrape-updates-btn');
             
             // Profile management buttons
             const editProfileBtn = document.getElementById('edit-profile-btn');
             const deleteProfileBtn = document.getElementById('delete-profile-btn');
-            
-            // Profile actions section
-            const profileActionsSection = document.getElementById('profile-actions-section');
-            
-            // Periodic scraping elements
-            const scraperStatus = document.getElementById('scraper-status');
-            const scrapeIntervalInput = document.getElementById('scrape-interval');
-            const updateIntervalBtn = document.getElementById('update-interval-btn');
-            const triggerScrapeBtn = document.getElementById('trigger-scrape-btn');
-            const lastScrapedSpan = document.getElementById('last-scraped');
             
             // Profile wizard elements
             const profileWizardModal = document.getElementById('profile-wizard-modal');
@@ -701,6 +642,22 @@
             const wizardCreateBtn = document.getElementById('wizard-create');
             const wizardCurrentStepSpan = document.getElementById('wizard-current-step');
             const wizardProgress = document.getElementById('wizard-progress');
+            
+            // Edit search profile modal elements
+            const editSearchProfileModal = document.getElementById('edit-search-profile-modal');
+            const editSearchProfileBtn = document.getElementById('edit-search-profile-btn');
+            const editSearchProfileContainer = document.getElementById('edit-search-profile-container');
+            const editProfileClose = document.getElementById('edit-profile-close');
+            const editProfileCancel = document.getElementById('edit-profile-cancel');
+            const editProfileSave = document.getElementById('edit-profile-save');
+            const editProfileDeleteBtn = document.getElementById('edit-profile-delete-btn');
+            const editProfileName = document.getElementById('edit-profile-name');
+            const editProfileEmails = document.getElementById('edit-profile-emails');
+            const editUpdateEmailsBtn = document.getElementById('edit-update-emails-btn');
+            const editScraperStatus = document.getElementById('edit-scraper-status');
+            const editScrapeInterval = document.getElementById('edit-scrape-interval');
+            const editUpdateIntervalBtn = document.getElementById('edit-update-interval-btn');
+            const editLastScraped = document.getElementById('edit-last-scraped');
             
             // --- UTILITY FUNCTIONS (moved inside DOMContentLoaded) ---
             function renderListings(listings, emptyMessage) {
@@ -747,7 +704,8 @@
                 document.getElementById('total-listings').textContent = listings.length;
                 const pricedListings = listings.filter(l => typeof l.rent_price === 'number');
                 document.getElementById('avg-price').textContent = pricedListings.length > 0 ? `€${Math.round(pricedListings.reduce((sum, l) => sum + l.rent_price, 0) / pricedListings.length).toLocaleString('nl-NL')}` : 'N/A';
-                document.getElementById('new-today').textContent = listings.filter(l => l.publish_date && new Date(l.publish_date).toDateString() === new Date().toDateString()).length;
+                // document.getElementById('new-today').textContent = listings.filter(l => l.publish_date && new Date(l.publish_date).toDateString() === new Date().toDateString()).length;
+                document.getElementById('new-today').textContent = listings.filter(l => l.is_new).length;
             }
             
             // --- API & DATA FETCHING FUNCTIONS ---
@@ -905,7 +863,6 @@
                 }
 
                 currentProfileId = profileId;
-                saveProfileNameInput.value = profile.name; // Pre-fill save as new with current profile name
 
                 // Update all UI elements related to the profile state
                 updateProfileViewState(profileId);
@@ -922,8 +879,9 @@
                 const profile = profileId ? profiles[profileId] : null;
 
                 if (profile) {
-                    // Show active profile info
+                    // Show active profile info and edit button
                     activeProfileInfo.classList.remove('hidden');
+                    editSearchProfileContainer.classList.remove('hidden');
                     activeProfileNameSpan.textContent = profile.name;
                     activeProfileEmails.textContent = profile.emails && profile.emails.length > 0 
                         ? `${profile.emails.length} email${profile.emails.length > 1 ? 's' : ''} configured`
@@ -948,41 +906,16 @@
                         }
                     }
                     
-                    // Fill form fields
-                    profileEmailsInput.value = profile.emails ? profile.emails.join(', ') : '';
-                    saveProfileNameInput.value = profile.name;
-                    
-                    // Fill periodic scraping fields
-                    if (scrapeIntervalInput) {
-                        scrapeIntervalInput.value = profile.scrape_interval_hours || 4;
-                    }
-                    
-                    // Update last scraped display
-                    if (lastScrapedSpan) {
-                        if (profile.last_scraped) {
-                            const lastScraped = new Date(profile.last_scraped);
-                            lastScrapedSpan.textContent = `Last scraped: ${lastScraped.toLocaleDateString()} ${lastScraped.toLocaleTimeString()}`;
-                        } else {
-                            lastScrapedSpan.textContent = 'Last scraped: Never';
-                        }
-                    }
-                    
                     // Enable buttons
-                    updateEmailsBtn.disabled = false;
-                    overwriteProfileBtn.disabled = false;
                     deleteProfileBtn.disabled = false;
-                    if (updateIntervalBtn) updateIntervalBtn.disabled = false;
-                    if (triggerScrapeBtn) triggerScrapeBtn.disabled = false;
+                    
+                    // Update scrape button to show last scraped time
+                    updateScrapeButtonDisplay();
 
                 } else {
-                    // Hide active profile info
+                    // Hide active profile info and edit button
                     activeProfileInfo.classList.add('hidden');
-                    
-                    // Clear form fields
-                    profileEmailsInput.value = '';
-                    saveProfileNameInput.value = '';
-                    if (scrapeIntervalInput) scrapeIntervalInput.value = '4';
-                    if (lastScrapedSpan) lastScrapedSpan.textContent = 'Last scraped: Never';
+                    editSearchProfileContainer.classList.add('hidden');
                     
                     // Clear new today count
                     const newTodayCountSpan = document.getElementById('new-today-count');
@@ -991,16 +924,45 @@
                     }
                     
                     // Disable buttons
-                    updateEmailsBtn.disabled = true;
-                    overwriteProfileBtn.disabled = true;
                     deleteProfileBtn.disabled = true;
-                    if (updateIntervalBtn) updateIntervalBtn.disabled = true;
-                    if (triggerScrapeBtn) triggerScrapeBtn.disabled = true;
-
-                    // Hide profile actions if expanded
-                    profileActionsSection.classList.add('hidden');
-                    isProfileActionsExpanded = false;
+                    
+                    // Reset scrape button to default display
+                    scrapeUpdatesBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                        </svg>
+                        <span>Scrape for Updates</span>
+                    `;
                 }
+            }
+
+            /**
+             * Updates the scrape button display to show last scraped time.
+             */
+            function updateScrapeButtonDisplay() {
+                if (!currentProfileId || !profiles[currentProfileId]) {
+                    scrapeUpdatesBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                        </svg>
+                        <span>Scrape for Updates</span>
+                    `;
+                    return;
+                }
+
+                const lastScrapedTime = profiles[currentProfileId].last_scraped 
+                    ? new Date(profiles[currentProfileId].last_scraped).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                    : 'Never';
+                
+                scrapeUpdatesBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                    </svg>
+                    <div class="flex flex-col items-start">
+                        <span>Scrape for Updates</span>
+                        <span class="text-xs opacity-75">Last: ${lastScrapedTime}</span>
+                    </div>
+                `;
             }
 
             /**
@@ -1031,197 +993,47 @@
                 return filters;
             }
 
+            // --- OLD PROFILE FUNCTIONS (kept for compatibility with wizard) ---
+            
             /**
-             * Saves a new search profile.
+             * Saves a new search profile (used by wizard).
              */
             async function saveNewProfile() {
-                if (typeof authManager === 'undefined' || !authManager.isAuthenticated()) {
-                    showNotification('Please log in to save search profiles.', 'warning');
-                    if (typeof authUI !== 'undefined') {
-                        authUI.showLogin();
-                    }
-                    return;
-                }
-                
-                const profileName = saveProfileNameInput.value.trim();
-                if (!profileName) {
-                    showNotification('Please enter a name for the new search profile.', 'warning');
-                    return;
-                }
-
-                // Check if a profile with the same name already exists
-                const existingProfile = Object.values(profiles).find(p => p.name === profileName);
-                if (existingProfile) {
-                    showNotification('A profile with this name already exists. Please choose a different name or use "Update Profile".', 'warning');
-                    return;
-                }
-
-                const profileEmails = profileEmailsInput.value.split(',').map(email => email.trim()).filter(email => email);
-                const filters = getCurrentFilters();
-                const scrapeInterval = scrapeIntervalInput ? parseInt(scrapeIntervalInput.value) || 4 : 4;
-
-                try {
-                    const response = await authManager.apiRequest('/api/profiles', {
-                        method: 'POST',
-                        body: JSON.stringify({ 
-                            name: profileName, 
-                            filters, 
-                            emails: profileEmails,
-                            scrape_interval_hours: scrapeInterval
-                        })
-                    });
-                    if (!response.ok) throw new Error(`Failed to save profile: ${response.statusText}`);
-                    const result = await response.json();
-                    
-                    // Add to local profiles store
-                    profiles[result.id] = result;
-                    currentProfileId = result.id;
-                    renderProfileSelect();
-                    profileSelect.value = result.id;
-                    updateProfileViewState(result.id);
-                    
-                    showNotification(`Profile "${result.name}" saved successfully!`, 'success');
-                } catch (error) {
-                    console.error('Error saving new profile:', error);
-                    showNotification('Could not save new profile. Please try again.', 'error');
-                }
+                // This function is now primarily used by the wizard
+                // The actual save functionality is handled by the wizard
+                showNotification('Please use the "Create New Search Profile" wizard to save profiles.', 'info');
             }
 
             /**
-             * Overwrites the currently selected profile with the current filter settings.
+             * Overwrites the currently selected profile (deprecated).
              */
             async function overwriteSelectedProfile() {
-                if (!currentProfileId) {
-                    showNotification('Please select a profile to overwrite.', 'warning');
-                    return;
-                }
-
-                const profileName = saveProfileNameInput.value.trim(); // Use the name from the input field
-                const profileEmails = profileEmailsInput.value.split(',').map(email => email.trim()).filter(email => email);
-                const filters = getCurrentFilters();
-
-                try {
-                    const response = await authManager.apiRequest(`/api/profiles/${currentProfileId}`, {
-                        method: 'PUT',
-                        body: JSON.stringify({ name: profileName, filters, emails: profileEmails })
-                    });
-                    if (!response.ok) throw new Error(`Failed to update profile: ${response.statusText}`);
-                    const result = await response.json();
-                    // Update the local profile with the response data
-                    profiles[currentProfileId] = {
-                        id: currentProfileId,
-                        name: result.name,
-                        filters: result.filters,
-                        emails: result.emails || [],
-                        listings: result.listings || []
-                    };
-                    // Refresh the UI
-                    renderProfileSelect();
-                    updateProfileViewState(currentProfileId);
-                    showNotification(`Profile "${result.name}" updated successfully!`, 'success');
-                } catch (error) {
-                    console.error('Error updating profile:', error);
-                    showNotification('Could not update profile. Please try again.', 'error');
-                }
+                // This functionality is now handled by the edit profile modal
+                showNotification('Please use the "Edit Search Profile" button to update profiles.', 'info');
             }
 
             /**
-             * Updates the email addresses for the currently selected profile.
+             * Updates the email addresses for the currently selected profile (deprecated).
              */
             async function updateProfileEmails() {
-                if (!currentProfileId) {
-                    showNotification('Please select a profile to update emails for.', 'warning');
-                    return;
-                }
-                const emails = profileEmailsInput.value.split(',').map(email => email.trim()).filter(email => email);
-
-                try {
-                    const response = await authManager.apiRequest(`/api/profiles/${currentProfileId}/email`, {
-                        method: 'PUT',
-                        body: JSON.stringify({ emails: emails })
-                    });
-                    if (!response.ok) throw new Error(`Failed to update emails: ${response.statusText}`);
-                    const result = await response.json();
-                    // Update local profile data
-                    if (profiles[currentProfileId]) {
-                        profiles[currentProfileId].emails = emails;
-                        updateProfileViewState(currentProfileId); // Refresh UI
-                    }
-                    showNotification('Notification emails updated successfully!', 'success');
-                } catch (error) {
-                    console.error('Error updating emails:', error);
-                    showNotification('Could not update notification emails. Please try again.', 'error');
-                }
+                // This functionality is now handled by the edit profile modal
+                showNotification('Please use the "Edit Search Profile" button to update emails.', 'info');
             }
 
-            // --- PERIODIC SCRAPING FUNCTIONS ---
+            // --- PERIODIC SCRAPING FUNCTIONS (deprecated - now handled by modal) ---
 
             /**
-             * Updates the scraping interval for the current profile.
+             * Updates the scraping interval for the current profile (deprecated).
              */
             async function updateScrapeInterval() {
-                if (!currentProfileId) {
-                    showNotification('Please select a profile to update the scraping interval for.', 'warning');
-                    return;
-                }
-                
-                const intervalHours = parseInt(scrapeIntervalInput.value);
-                if (!intervalHours || intervalHours < 1 || intervalHours > 168) {
-                    showNotification('Please enter a valid interval between 1 and 168 hours.', 'warning');
-                    return;
-                }
-
-                try {
-                    const response = await authManager.apiRequest(`/api/profiles/${currentProfileId}/scrape-interval`, {
-                        method: 'PUT',
-                        body: JSON.stringify({ scrape_interval_hours: intervalHours })
-                    });
-                    if (!response.ok) throw new Error(`Failed to update interval: ${response.statusText}`);
-                    // Update local profile data
-                    if (profiles[currentProfileId]) {
-                        profiles[currentProfileId].scrape_interval_hours = intervalHours;
-                        updateProfileViewState(currentProfileId); // Refresh UI
-                    }
-                    showNotification(`Scraping interval updated to ${intervalHours} hours.`, 'success');
-                } catch (error) {
-                    console.error('Error updating scraping interval:', error);
-                    showNotification('Could not update scraping interval. Please try again.', 'error');
-                }
+                showNotification('Please use the "Edit Search Profile" button to update scraping intervals.', 'info');
             }
 
             /**
-             * Manually triggers a scrape for the current profile.
+             * Manually triggers a scrape for the current profile (deprecated).
              */
             async function triggerProfileScrape() {
-                if (!currentProfileId) {
-                    showNotification('Please select a profile to scrape.', 'warning');
-                    return;
-                }
-
-                try {
-                    // Show loading state
-                    triggerScrapeBtn.disabled = true;
-                    triggerScrapeBtn.textContent = 'Scraping...';
-                    const response = await authManager.apiRequest(`/api/profiles/${currentProfileId}/scrape`, {
-                        method: 'POST'
-                    });
-                    if (!response.ok) throw new Error(`Failed to trigger scrape: ${response.statusText}`);
-                    const result = await response.json();
-                    showNotification(result.message || 'Scrape completed successfully!', 'success');
-                    // Refresh the listings
-                    await fetchListings(currentProfileId, false);
-                    // Update the last scraped time
-                    if (profiles[currentProfileId]) {
-                        profiles[currentProfileId].last_scraped = new Date().toISOString();
-                        updateProfileViewState(currentProfileId);
-                    }
-                } catch (error) {
-                    console.error('Error triggering scrape:', error);
-                    showNotification('Could not trigger scrape. Please try again.', 'error');
-                } finally {
-                    triggerScrapeBtn.disabled = false;
-                    triggerScrapeBtn.textContent = 'Scrape Now';
-                }
+                showNotification('Please use the "Edit Search Profile" button to trigger scrapes.', 'info');
             }
 
             /**
@@ -1247,36 +1059,170 @@
                     return { is_running: false, total_jobs: 0, jobs: [] };
                 }
             }
+
+            // --- EDIT PROFILE MODAL FUNCTIONS ---
+
+            /**
+             * Opens the edit profile modal and populates it with current profile data.
+             */
+            function openEditProfileModal() {
+                if (!currentProfileId) {
+                    showNotification('Please select a profile to edit.', 'warning');
+                    return;
+                }
+
+                const profile = profiles[currentProfileId];
+                if (!profile) {
+                    showNotification('Profile not found.', 'error');
+                    return;
+                }
+
+                // Populate modal fields
+                editProfileName.value = profile.name;
+                editProfileEmails.value = profile.emails ? profile.emails.join(', ') : '';
+                editScrapeInterval.value = profile.scrape_interval_hours || 4;
+
+                // Update status displays
+                if (editScraperStatus) {
+                    editScraperStatus.textContent = 'Active'; // This would be updated by fetchScraperStatus
+                    editScraperStatus.className = 'text-xs px-2 py-1 rounded-full bg-green-100 text-green-800';
+                }
+
+                // Update last scraped display
+                if (editLastScraped) {
+                    if (profile.last_scraped) {
+                        const lastScraped = new Date(profile.last_scraped);
+                        editLastScraped.textContent = `Last scraped: ${lastScraped.toLocaleDateString()} ${lastScraped.toLocaleTimeString()}`;
+                    } else {
+                        editLastScraped.textContent = 'Last scraped: Never';
+                    }
+                }
+
+                // Enable/disable buttons
+                editUpdateEmailsBtn.disabled = false;
+                editUpdateIntervalBtn.disabled = false;
+                editProfileDeleteBtn.disabled = false;
+                editProfileSave.disabled = false;
+
+                // Show modal
+                editSearchProfileModal.classList.remove('hidden');
+            }
+
+            /**
+             * Closes the edit profile modal.
+             */
+            function closeEditProfileModal() {
+                editSearchProfileModal.classList.add('hidden');
+            }
+
+            /**
+             * Updates the email addresses for the current profile from the modal.
+             */
+            async function updateProfileEmailsFromModal() {
+                if (!currentProfileId) {
+                    showNotification('Please select a profile to update emails for.', 'warning');
+                    return;
+                }
+                const emails = editProfileEmails.value.split(',').map(email => email.trim()).filter(email => email);
+
+                try {
+                    const response = await authManager.apiRequest(`/api/profiles/${currentProfileId}/email`, {
+                        method: 'PUT',
+                        body: JSON.stringify({ emails: emails })
+                    });
+                    if (!response.ok) throw new Error(`Failed to update emails: ${response.statusText}`);
+                    const result = await response.json();
+                    // Update local profile data
+                    if (profiles[currentProfileId]) {
+                        profiles[currentProfileId].emails = emails;
+                        updateProfileViewState(currentProfileId); // Refresh UI
+                    }
+                    showNotification('Notification emails updated successfully!', 'success');
+                } catch (error) {
+                    console.error('Error updating emails:', error);
+                    showNotification('Could not update notification emails. Please try again.', 'error');
+                }
+            }
+
+            /**
+             * Updates the scraping interval for the current profile from the modal.
+             */
+            async function updateScrapeIntervalFromModal() {
+                if (!currentProfileId) {
+                    showNotification('Please select a profile to update the scraping interval for.', 'warning');
+                    return;
+                }
+                
+                const intervalHours = parseInt(editScrapeInterval.value);
+                if (!intervalHours || intervalHours < 1 || intervalHours > 168) {
+                    showNotification('Please enter a valid interval between 1 and 168 hours.', 'warning');
+                    return;
+                }
+
+                try {
+                    const response = await authManager.apiRequest(`/api/profiles/${currentProfileId}/scrape-interval`, {
+                        method: 'PUT',
+                        body: JSON.stringify({ scrape_interval_hours: intervalHours })
+                    });
+                    if (!response.ok) throw new Error(`Failed to update interval: ${response.statusText}`);
+                    // Update local profile data
+                    if (profiles[currentProfileId]) {
+                        profiles[currentProfileId].scrape_interval_hours = intervalHours;
+                        updateProfileViewState(currentProfileId); // Refresh UI
+                    }
+                    showNotification(`Scraping interval updated to ${intervalHours} hours.`, 'success');
+                } catch (error) {
+                    console.error('Error updating scraping interval:', error);
+                    showNotification('Could not update scraping interval. Please try again.', 'error');
+                }
+            }
+
+            /**
+             * Saves the profile changes from the modal.
+             */
+            async function saveProfileChanges() {
+                if (!currentProfileId) {
+                    showNotification('Please select a profile to save changes for.', 'warning');
+                    return;
+                }
+
+                const profileName = editProfileName.value.trim();
+                if (!profileName) {
+                    showNotification('Please enter a profile name.', 'warning');
+                    return;
+                }
+
+                const profileEmails = editProfileEmails.value.split(',').map(email => email.trim()).filter(email => email);
+                const filters = getCurrentFilters();
+
+                try {
+                    const response = await authManager.apiRequest(`/api/profiles/${currentProfileId}`, {
+                        method: 'PUT',
+                        body: JSON.stringify({ name: profileName, filters, emails: profileEmails })
+                    });
+                    if (!response.ok) throw new Error(`Failed to update profile: ${response.statusText}`);
+                    const result = await response.json();
+                    // Update the local profile with the response data
+                    profiles[currentProfileId] = {
+                        id: currentProfileId,
+                        name: result.name,
+                        filters: result.filters,
+                        emails: result.emails || [],
+                        listings: result.listings || []
+                    };
+                    // Refresh the UI
+                    renderProfileSelect();
+                    updateProfileViewState(currentProfileId);
+                    closeEditProfileModal();
+                    showNotification(`Profile "${result.name}" updated successfully!`, 'success');
+                } catch (error) {
+                    console.error('Error updating profile:', error);
+                    showNotification('Could not update profile. Please try again.', 'error');
+                }
+            }
             
             fetchProfiles(); // Load profiles on page load
             fetchListings(null, false); // Fetch initial listings (none selected)
-
-            // Create New Search Profile Wizard Button
-            createNewProfileBtn.addEventListener('click', () => {
-                openWizard();
-            });
-
-            // Attach event listeners for update emails and overwrite profile
-            updateEmailsBtn.addEventListener('click', updateProfileEmails);
-            saveProfileBtn.addEventListener('click', saveNewProfile);
-            overwriteProfileBtn.addEventListener('click', overwriteSelectedProfile);
-
-            // Periodic scraping event listeners
-            if (updateIntervalBtn) {
-                updateIntervalBtn.addEventListener('click', updateScrapeInterval);
-            }
-            if (triggerScrapeBtn) {
-                triggerScrapeBtn.addEventListener('click', triggerProfileScrape);
-            }
-            if (scrapeIntervalInput) {
-                scrapeIntervalInput.addEventListener('input', () => {
-                    if (currentProfileId && updateIntervalBtn) {
-                        const currentInterval = profiles[currentProfileId]?.scrape_interval_hours || 4;
-                        const newInterval = parseInt(scrapeIntervalInput.value);
-                        updateIntervalBtn.disabled = !newInterval || newInterval === currentInterval;
-                    }
-                });
-            }
 
             // Fetch initial scraper status
             fetchScraperStatus();
@@ -1291,7 +1237,84 @@
                 }
             }, 300000); // 5 minutes
 
-            // Profile selection change
+            // Create New Search Profile Wizard Button
+            createNewProfileBtn.addEventListener('click', () => {
+                openWizard();
+            });
+
+            // Attach event listeners for the new save profile button
+            const saveProfileBtn = document.getElementById('save-profile-btn');
+            if (saveProfileBtn) {
+                saveProfileBtn.addEventListener('click', saveNewProfile);
+            }
+
+            // Edit profile modal event listeners
+            editSearchProfileBtn.addEventListener('click', openEditProfileModal);
+            editProfileClose.addEventListener('click', closeEditProfileModal);
+            editProfileCancel.addEventListener('click', closeEditProfileModal);
+            editProfileSave.addEventListener('click', saveProfileChanges);
+            editUpdateEmailsBtn.addEventListener('click', updateProfileEmailsFromModal);
+            editUpdateIntervalBtn.addEventListener('click', updateScrapeIntervalFromModal);
+            editProfileDeleteBtn.addEventListener('click', () => {
+                if (!currentProfileId) return;
+                
+                const profileName = profiles[currentProfileId]?.name || 'this profile';
+                showConfirmation(
+                    'Delete Profile',
+                    `Are you sure you want to delete "${profileName}"? This cannot be undone.`,
+                    async () => {
+                        try {
+                            const response = await authManager.apiRequest(`/api/profiles/${encodeURIComponent(currentProfileId)}`, { method: 'DELETE' });
+                            if (!response.ok && response.status !== 204) throw new Error('Failed to delete profile');
+                            // Remove from local profiles object
+                            delete profiles[currentProfileId];
+                            // Reset UI
+                            currentProfileId = null;
+                            profileSelect.value = '';
+                            form.reset();
+                            closeEditProfileModal();
+                            updateProfileViewState(null);
+                            await fetchProfiles();
+                            fetchListings(null, false);
+                            showNotification('Profile deleted successfully.', 'success');
+                        } catch (error) {
+                            showNotification('Failed to delete profile.', 'error');
+                        }
+                    }
+                );
+            });
+
+            // Enable/disable buttons based on input changes in modal
+            editProfileEmails.addEventListener('input', () => {
+                if (currentProfileId) {
+                    const currentEmails = profiles[currentProfileId].emails ? profiles[currentProfileId].emails.join(', ') : '';
+                    editUpdateEmailsBtn.disabled = editProfileEmails.value.trim() === currentEmails;
+                }
+            });
+
+            editScrapeInterval.addEventListener('input', () => {
+                if (currentProfileId && editUpdateIntervalBtn) {
+                    const currentInterval = profiles[currentProfileId]?.scrape_interval_hours || 4;
+                    const newInterval = parseInt(editScrapeInterval.value);
+                    editUpdateIntervalBtn.disabled = !newInterval || newInterval === currentInterval;
+                }
+            });
+
+            // Close modal when clicking outside
+            editSearchProfileModal.addEventListener('click', (e) => {
+                if (e.target === editSearchProfileModal) {
+                    closeEditProfileModal();
+                }
+            });
+
+            // Close modal with Escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && !editSearchProfileModal.classList.contains('hidden')) {
+                    closeEditProfileModal();
+                }
+            });
+
+            // Edit profile modal event listeners
             profileSelect.addEventListener('change', (event) => {
                 const selectedProfileId = event.target.value;
                 currentProfileId = selectedProfileId || null;
@@ -1302,21 +1325,13 @@
                 } else {
                     // If "Select a saved profile..." is chosen, reset everything
                     form.reset(); // Clear all form filters
-                    saveProfileNameInput.value = '';
                     updateProfileViewState(null); // Hide profile-specific sections
                     fetchListings(null, false); // Show initial/empty state
                 }
             });
 
-            // Edit profile button - toggles profile actions section
-            editProfileBtn.addEventListener('click', () => {
-                isProfileActionsExpanded = !isProfileActionsExpanded;
-                if (isProfileActionsExpanded) {
-                    profileActionsSection.classList.remove('hidden');
-                } else {
-                    profileActionsSection.classList.add('hidden');
-                }
-            });
+            // Edit profile button - now opens the modal
+            editProfileBtn.addEventListener('click', openEditProfileModal);
 
             // Delete profile button
             deleteProfileBtn.addEventListener('click', async () => {
@@ -1345,19 +1360,6 @@
                         }
                     }
                 );
-            });
-
-            // Enable/disable buttons based on input changes
-            profileEmailsInput.addEventListener('input', () => {
-                if (currentProfileId) {
-                    const currentEmails = profiles[currentProfileId].emails ? profiles[currentProfileId].emails.join(', ') : '';
-                    updateEmailsBtn.disabled = profileEmailsInput.value.trim() === currentEmails;
-                }
-            });
-
-            // Enable/disable the "Save New Profile" button
-            saveProfileNameInput.addEventListener('input', () => {
-                saveProfileBtn.disabled = saveProfileNameInput.value.trim() === '';
             });
 
             // Handle form submission for scraping updates
@@ -1396,28 +1398,47 @@
                     
                     showNotification('Scraping completed successfully!', 'success');
                     
+                    // Update the last scraped time in the profile
+                    if (profiles[currentProfileId]) {
+                        profiles[currentProfileId].last_scraped = new Date().toISOString();
+                        updateProfileViewState(currentProfileId);
+                    }
+                    
                     // Refresh listings for this profile
                     await fetchListings(currentProfileId, true);
                     
                     // Reset button after delay
                     setTimeout(() => {
+                        // Show last scraped time in the button text
+                        const lastScrapedTime = profiles[currentProfileId]?.last_scraped 
+                            ? new Date(profiles[currentProfileId].last_scraped).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                            : 'Never';
                         scrapeUpdatesBtn.innerHTML = `
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
                             </svg>
-                            Scrape for Updates
+                            <div class="flex flex-col items-start">
+                                <span>Scrape for Updates</span>
+                                <span class="text-xs opacity-75">Last: ${lastScrapedTime}</span>
+                            </div>
                         `;
                         scrapeUpdatesBtn.disabled = false;
                     }, 2000);
                 } catch (error) {
                     console.error('Error scraping for updates:', error);
                     showNotification('Could not scrape for updates. Please try again.', 'error');
-                    // Reset button
+                    // Reset button with last scraped time
+                    const lastScrapedTime = profiles[currentProfileId]?.last_scraped 
+                        ? new Date(profiles[currentProfileId].last_scraped).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                        : 'Never';
                     scrapeUpdatesBtn.innerHTML = `
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
                         </svg>
-                        Scrape for Updates
+                        <div class="flex flex-col items-start">
+                            <span>Scrape for Updates</span>
+                            <span class="text-xs opacity-75">Last: ${lastScrapedTime}</span>
+                        </div>
                     `;
                     scrapeUpdatesBtn.disabled = false;
                 }
@@ -1841,6 +1862,87 @@
             <div class="flex justify-end gap-2">
                 <button type="button" id="confirmation-cancel" class="px-4 py-2 rounded bg-gray-100 text-gray-700 hover:bg-gray-200">Cancel</button>
                 <button type="button" id="confirmation-confirm" class="px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600">Confirm</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Search Profile Modal -->
+    <div id="edit-search-profile-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 hidden">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between p-6 border-b border-gray-200">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-secondary">Edit Search Profile</h2>
+                        <p class="text-sm text-gray-500">Manage your search profile settings</p>
+                    </div>
+                </div>
+                <button id="edit-profile-close" class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                    <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Modal Content -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                <!-- Profile Name -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Profile Name</label>
+                    <input type="text" id="edit-profile-name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Enter profile name">
+                </div>
+
+                <!-- Email Notifications -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email Notifications</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="edit-profile-emails" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Enter emails, comma separated">
+                        <button id="edit-update-emails-btn" class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-600 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            Update
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Periodic Scraping -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Periodic Scraping</label>
+                    <div class="p-4 bg-blue-50 rounded-lg">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-sm font-medium text-gray-700">Status</span>
+                            <span id="edit-scraper-status" class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800">Active</span>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-2">
+                                <label class="text-sm text-gray-600">Interval (hours):</label>
+                                <input type="number" id="edit-scrape-interval" class="w-20 px-2 py-1 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" value="4" min="1" max="168">
+                                <button id="edit-update-interval-btn" class="px-3 py-1 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-200" disabled>Update</button>
+                            </div>
+                            <div class="text-xs text-gray-500">
+                                <span id="edit-last-scraped">Last scraped: Never</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal Footer -->
+            <div class="flex justify-between items-center p-6 border-t border-gray-200">
+                <button id="edit-profile-delete-btn" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Delete Profile
+                </button>
+                <div class="flex gap-2">
+                    <button id="edit-profile-cancel" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition duration-200">
+                        Cancel
+                    </button>
+                    <button id="edit-profile-save" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-600 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Save Changes
+                    </button>
+                </div>
             </div>
         </div>
     </div>
