@@ -1,3 +1,4 @@
+# Force clean build for Railway - 2025-07-06
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -21,8 +22,9 @@ RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add
 # Copy requirements.txt to the working directory
 COPY backend/requirements.txt ./requirements.txt
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies with explicit packages to ensure installation
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir undetected-chromedriver selenium fake-useragent pytz pydantic[email] email_validator
 
 # Copy application files
 COPY backend/ ./backend/
@@ -33,12 +35,16 @@ COPY search_profiles.json ./
 ENV PYTHONPATH=/app
 ENV DATABASE_FILE=/app/database.json
 ENV SEARCH_PROFILES_FILE=/app/search_profiles.json
+ENV TZ=Europe/Amsterdam
 
 # Create startup script
 RUN echo '#!/bin/bash\n\
 echo "Starting application..."\n\
+echo "Checking installed packages..."\n\
+pip list | grep -E "(undetected|selenium|fake)" || echo "Some packages may be missing"\n\
 cd /app/backend\n\
 python -c "import undetected_chromedriver as uc; print(\"Chrome driver test passed\")" || echo "Chrome driver may not be available"\n\
+echo "Starting uvicorn server..."\n\
 exec uvicorn api:app --host 0.0.0.0 --port 8000' > /app/start.sh && chmod +x /app/start.sh
 
 WORKDIR /app/backend
