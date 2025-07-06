@@ -17,8 +17,11 @@ RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add
     && apt-get install -y google-chrome-stable \
     && rm -rf /var/lib/apt/lists/*
 
+
+# Copy requirements.txt to the working directory
+COPY backend/requirements.txt ./requirements.txt
+
 # Install Python dependencies
-COPY backend/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application files
