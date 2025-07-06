@@ -5,6 +5,7 @@ import time
 import requests
 from datetime import datetime
 from fastapi import FastAPI, HTTPException, Query, Request, Body, status, Response, Depends
+from timezone_utils import now_cest_iso, get_timezone_info
 from fastapi.responses import JSONResponse, HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -88,7 +89,7 @@ def save_db(db):
 @app.get("/health")
 async def health_check():
     """Health check endpoint for Railway deployment"""
-    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+    return {"status": "healthy", "timestamp": now_cest_iso(), "timezone": get_timezone_info()}
 
 # Admin page endpoint
 @app.get("/admin-scraper.html", response_class=HTMLResponse)
@@ -352,7 +353,7 @@ async def create_user_profile(
         emails=profile["emails"],
         scrape_interval_hours=profile["scrape_interval_hours"],
         created_at=profile["created_at"],
-        last_scraped=profile.get("last_scraped"),
+        last_scraped=profile["last_scraped"],
         last_new_listings_count=profile["last_new_listings_count"],
         listings_count=len(profile["listings"]),
         new_today_count=calculate_new_today_count(profile["listings"])
@@ -830,10 +831,41 @@ async def update_current_user(
     if user_update.password is not None:
         db["users"][user_id]["password"] = AuthUtils.hash_password(user_update.password)
     
-    db["users"][user_id]["updated_at"] = datetime.now().isoformat()
+    db["users"][user_id]["updated_at"] = now_cest_iso()
     
     save_db(db)
     return UserResponse(**db["users"][user_id])
+
+@app.get("/api/admin/stats")
+async def get_admin_stats():
+    """Get admin statistics including latest scrape time across all profiles."""
+    db = load_db()
+    profiles = db.get("profiles", {})
+    
+    # Find the latest scrape across all profiles
+    latest_scrape = None
+    for profile in profiles.values():
+        if profile.get("last_scraped"):
+            try:
+                date = datetime.fromisoformat(profile["last_scraped"])
+                if not latest_scrape or date > latest_scrape:
+                    latest_scrape = date
+            except:
+                pass
+    
+    # Count total listings
+    total_listings = 0
+    new_listings = 0
+    for profile in profiles.values():
+        profile_listings = profile.get("listings", [])
+        total_listings += len(profile_listings)
+        new_listings += calculate_new_today_count(profile_listings)
+    
+    return {
+        "total_listings": total_listings,
+        "new_listings": new_listings,
+        "latest_scrape": latest_scrape.isoformat() if latest_scrape else None
+    }
 
 def calculate_new_today_count(listings: List[dict]) -> int:
     """Calculate how many listings were added in the last 24 hours."""
@@ -857,7 +889,8 @@ def calculate_new_today_count(listings: List[dict]) -> int:
 
 def update_listing_timestamps(listings: List[dict]) -> None:
     """Update is_new flags based on 24-hour rule and ensure all listings have timestamps."""
-    current_time = datetime.now()
+    from timezone_utils import now_cest
+    current_time = now_cest()
     
     for listing in listings:
         if not listing.get("added_timestamp"):

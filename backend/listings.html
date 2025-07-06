@@ -736,10 +736,12 @@
                     return;
                 }
 
-                const lastScrapedTime = profiles[currentProfileId].last_scraped 
-                    ? new Date(profiles[currentProfileId].last_scraped).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-                    : 'Never';
-                
+                let lastScrapedTime = 'Never';
+                const raw = profiles[currentProfileId].last_scraped;
+                if (raw && Number(raw) > 100000) {
+                    const d = new Date(raw);
+                    lastScrapedTime = `${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+                }
                 scrapeUpdatesBtn.innerHTML = `
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
@@ -862,7 +864,8 @@
 
                 // Update last scraped display
                 if (editLastScraped) {
-                    if (profile.last_scraped) {
+                    // Only show if last_scraped is a valid, non-zero, non-null timestamp
+                    if (profile.last_scraped && Number(profile.last_scraped) > 100000) {
                         const lastScraped = new Date(profile.last_scraped);
                         editLastScraped.textContent = `Last scraped: ${lastScraped.toLocaleDateString()} ${lastScraped.toLocaleTimeString()}`;
                     } else {
@@ -1274,9 +1277,12 @@
                     // Reset button after delay
                     setTimeout(() => {
                         // Show last scraped time in the button text
-                        const lastScrapedTime = profiles[currentProfileId]?.last_scraped 
-                            ? new Date(profiles[currentProfileId].last_scraped).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-                            : 'Never';
+                        let lastScrapedTime = 'Never';
+                        const raw = profiles[currentProfileId]?.last_scraped;
+                        if (raw && Number(raw) > 100000) {
+                            const d = new Date(raw);
+                            lastScrapedTime = `${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+                        }
                         scrapeUpdatesBtn.innerHTML = `
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />

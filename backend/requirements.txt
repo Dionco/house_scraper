@@ -13,3 +13,4 @@ email_validator
 undetected-chromedriver
 selenium
 fake-useragent
+pytz

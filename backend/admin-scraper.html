@@ -357,18 +357,14 @@
 
         async function fetchDatabaseStats() {
             try {
-                const response = await fetch('/api/listings');
+                const response = await fetch('/api/admin/stats');
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
+                
                 return {
-                    totalListings: data.listings?.length || 0,
-                    newListings: data.listings?.filter(l => l.is_new)?.length || 0,
-                    latestScrape: data.listings?.reduce((latest, listing) => {
-                        const scrapedAt = listing.scraped_at;
-                        if (!scrapedAt) return latest;
-                        const date = new Date(scrapedAt);
-                        return !latest || date > latest ? date : latest;
-                    }, null)
+                    totalListings: data.total_listings || 0,
+                    newListings: data.new_listings || 0,
+                    latestScrape: data.latest_scrape ? new Date(data.latest_scrape) : null
                 };
             } catch (error) {
                 console.error('Error fetching database stats:', error);

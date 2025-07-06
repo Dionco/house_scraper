@@ -207,7 +207,8 @@ def extract_simple_listings_from_html(html):
     # Add listed_days_ago field to each result
     import re
     from datetime import datetime
-    today = datetime.now()
+    from timezone_utils import now_cest
+    today = now_cest()
     month_map = {
         'januari': 1, 'februari': 2, 'maart': 3, 'april': 4, 'mei': 5, 'juni': 6,
         'juli': 7, 'augustus': 8, 'september': 9, 'oktober': 10, 'november': 11, 'december': 12
@@ -252,8 +253,9 @@ def main_simple():
         html = f.read()
     import re
     from datetime import datetime, timedelta
+    from timezone_utils import now_cest
     listings = extract_simple_listings_from_html(html)
-    today = datetime.now()
+    today = now_cest()
     month_map = {
         'januari': 1, 'februari': 2, 'maart': 3, 'april': 4, 'mei': 5, 'juni': 6,
         'juli': 7, 'augustus': 8, 'september': 9, 'oktober': 10, 'november': 11, 'december': 12

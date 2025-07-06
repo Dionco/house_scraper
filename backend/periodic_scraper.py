@@ -12,6 +12,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_EXECUTED
+from timezone_utils import now_cest_iso, now_cest, CEST
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -27,7 +28,7 @@ from email_utils import send_new_listings_email
 class PeriodicScraper:
     def __init__(self, database_file: str = None):
         self.database_file = database_file or os.path.join(os.path.dirname(__file__), "../database.json")
-        self.scheduler = BackgroundScheduler()
+        self.scheduler = BackgroundScheduler(timezone=CEST)
         self.scheduler.add_listener(self._job_listener, EVENT_JOB_ERROR | EVENT_JOB_EXECUTED)
         self.is_running = False
         
@@ -113,7 +114,7 @@ class PeriodicScraper:
                 logger.info(f"Scraping URL: {url}")
             except Exception as url_error:
                 logger.error(f"Failed to build URL for profile {profile_id}: {url_error}")
-                profile["last_scraped"] = datetime.now().isoformat()
+                profile["last_scraped"] = now_cest_iso()
                 profile["last_new_listings_count"] = 0
                 profile["last_scrape_error"] = f"URL building error: {url_error}"
                 self.save_database(db)
@@ -132,7 +133,7 @@ class PeriodicScraper:
                 logger.error(f"Failed to scrape HTML for profile {profile_id}: {scrape_error}")
                 
                 # Update profile with failed scrape info but don't crash
-                profile["last_scraped"] = datetime.now().isoformat()
+                profile["last_scraped"] = now_cest_iso()
                 profile["last_new_listings_count"] = 0
                 profile["last_scrape_error"] = str(scrape_error)
                 self.save_database(db)
@@ -142,7 +143,7 @@ class PeriodicScraper:
                 logger.error(f"No HTML content received for profile {profile_id}")
                 
                 # Update profile with empty result
-                profile["last_scraped"] = datetime.now().isoformat()
+                profile["last_scraped"] = now_cest_iso()
                 profile["last_new_listings_count"] = 0
                 profile["last_scrape_error"] = "No HTML content received"
                 self.save_database(db)
@@ -156,7 +157,7 @@ class PeriodicScraper:
                 logger.error(f"Failed to extract listings for profile {profile_id}: {extract_error}")
                 
                 # Update profile with extraction error
-                profile["last_scraped"] = datetime.now().isoformat()
+                profile["last_scraped"] = now_cest_iso()
                 profile["last_new_listings_count"] = 0
                 profile["last_scrape_error"] = f"Extraction error: {extract_error}"
                 self.save_database(db)
@@ -175,7 +176,7 @@ class PeriodicScraper:
             
             # Find new listings
             new_listings = []
-            current_time = datetime.now()
+            current_time = now_cest()
             
             for listing in listings:
                 url = listing.get("funda_url") or listing.get("object_detail_page_relative_url")
@@ -220,7 +221,7 @@ class PeriodicScraper:
                     current_listings = current_listings[:self.max_listings_per_profile]
                 
                 profile["listings"] = current_listings
-                profile["last_scraped"] = datetime.now().isoformat()
+                profile["last_scraped"] = now_cest_iso()
                 profile["last_new_listings_count"] = len(new_listings)
                 
                 # Save database
@@ -243,7 +244,7 @@ class PeriodicScraper:
                 logger.info(f"No new listings found for profile {profile_id}")
                 
                 # Update last scraped time even if no new listings
-                profile["last_scraped"] = datetime.now().isoformat()
+                profile["last_scraped"] = now_cest_iso()
                 profile["last_new_listings_count"] = 0
                 self.save_database(db)
                 
