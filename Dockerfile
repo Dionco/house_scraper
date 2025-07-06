@@ -1,37 +1,18 @@
 FROM python:3.11-slim
 
-# Set working directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    wget \
-    curl \
-    unzip \
-    chromium \
-    chromium-driver \
-    && rm -rf /var/lib/apt/lists/*
+# Install minimal dependencies
+RUN pip install fastapi uvicorn requests beautifulsoup4 APScheduler passlib[bcrypt] python-jose[cryptography] python-multipart
 
-# Set Chrome path for undetected-chromedriver
-ENV CHROME_DRIVER_PATH=/usr/bin/chromedriver
+# Copy only essential files
+COPY backend/ ./backend/
+COPY database.json ./
 
-# Copy requirements and install Python dependencies
-COPY backend/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy application code
-COPY . .
-
-# Create data directory
-RUN mkdir -p /app/data
-
-# Expose port
-EXPOSE 8000
-
-# Set environment variables
+# Set environment
 ENV PYTHONPATH=/app
 ENV DATABASE_FILE=/app/database.json
 
-# Start the application directly
+# Simple startup
 WORKDIR /app/backend
-CMD ["sh", "-c", "uvicorn api:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
