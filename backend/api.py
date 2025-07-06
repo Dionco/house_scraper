@@ -96,6 +96,7 @@ def save_db(db):
 @app.get("/health")
 async def health_check():
     """Health check endpoint for Railway deployment"""
+    print("Health check endpoint called!")  # Debug logging
     if TIMEZONE_UTILS_AVAILABLE:
         return {"status": "healthy", "timestamp": now_cest_iso(), "timezone": get_timezone_info()}
     else:

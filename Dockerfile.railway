@@ -1,4 +1,4 @@
-# Force clean build for Railway - 2025-07-06
+# Force clean build for Railway - 2025-07-06 - Fix PORT env var
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -52,8 +52,8 @@ python -c "from timezone_utils import now_cest_iso; print(f\"Timezone test: {now
 python -c "import undetected_chromedriver as uc; print(\"Chrome driver test passed\")" || echo "Chrome driver may not be available"\n\
 echo "Testing API import..."\n\
 python -c "from api import app; print(\"API import successful\")" || echo "API import failed"\n\
-echo "Starting uvicorn server..."\n\
-exec uvicorn api:app --host 0.0.0.0 --port 8000' > /app/start.sh && chmod +x /app/start.sh
+echo "Starting uvicorn server on port ${PORT:-8000}..."\n\
+exec uvicorn api:app --host 0.0.0.0 --port ${PORT:-8000}' > /app/start.sh && chmod +x /app/start.sh
 
 WORKDIR /app/backend
 
