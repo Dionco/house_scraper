@@ -1,9 +1,15 @@
 
 from fastapi import APIRouter, Query
-from funda_url_builder import build_rental_url
-from scrape_funda import scrape_funda_html
-from extract_funda_listings import extract_simple_listings_from_html
-from listing_mapping import map_listing_for_frontend
+try:
+    from .funda_url_builder import build_rental_url
+    from .scrape_funda import scrape_funda_html
+    from .extract_funda_listings import extract_simple_listings_from_html
+    from .listing_mapping import map_listing_for_frontend
+except ImportError:
+    from funda_url_builder import build_rental_url
+    from scrape_funda import scrape_funda_html
+    from extract_funda_listings import extract_simple_listings_from_html
+    from listing_mapping import map_listing_for_frontend
 
 router = APIRouter()
 

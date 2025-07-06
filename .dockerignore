@@ -1,0 +1,27 @@
+# Docker ignore file for House Scraper
+.git
+.gitignore
+.env.local
+.env.example
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.coverage
+htmlcov
+.tox
+.DS_Store
+.vscode
+*.md
+!README.md
+archived/
+temp/
+tests/
+monitoring/
+*.log
+test_functionality.py
+COMPREHENSIVE_TEST_RESULTS.md
+*.md
+!README.md

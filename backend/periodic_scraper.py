@@ -12,18 +12,42 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_EXECUTED
-from timezone_utils import now_cest_iso, now_cest, CEST
+try:
+    from .timezone_utils import now_cest_iso, now_cest, CEST
+except ImportError:
+    try:
+        from timezone_utils import now_cest_iso, now_cest, CEST
+    except ImportError:
+        # Fallback timezone handling
+        from datetime import datetime
+        import pytz
+        
+        def now_cest_iso():
+            return datetime.now(pytz.timezone('Europe/Amsterdam')).isoformat()
+        
+        def now_cest():
+            return datetime.now(pytz.timezone('Europe/Amsterdam'))
+        
+        CEST = pytz.timezone('Europe/Amsterdam')
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Import our existing scraping functions
-from funda_url_builder import build_rental_url
-from scrape_funda import scrape_funda_html
-from extract_funda_listings import extract_simple_listings_from_html
-from listing_mapping import map_listing_for_frontend
-from email_utils import send_new_listings_email
+# Import local modules
+try:
+    from .funda_url_builder import build_rental_url
+    from .scrape_funda import scrape_funda_html
+    from .extract_funda_listings import extract_simple_listings_from_html
+    from .listing_mapping import map_listing_for_frontend
+    from .email_utils import send_new_listings_email
+except ImportError:
+    from funda_url_builder import build_rental_url
+    from scrape_funda import scrape_funda_html
+    from extract_funda_listings import extract_simple_listings_from_html
+    from listing_mapping import map_listing_for_frontend
+    from email_utils import send_new_listings_email
 
 class PeriodicScraper:
     def __init__(self, database_file: str = None):
@@ -148,19 +172,10 @@ class PeriodicScraper:
                 profile["last_scrape_error"] = "No HTML content received"
                 self.save_database(db)
                 return
-                
-            # Extract listings using fast extractor
+                 # Extract listings 
             try:
-                # Try fast extraction first
-                try:
-                    from extract_funda_listings_fast import extract_listings_fast
-                    listings = extract_listings_fast(html)
-                    logger.info(f"Fast extracted {len(listings)} listings for profile {profile_id}")
-                except ImportError:
-                    # Fallback to original extractor
-                    listings = extract_simple_listings_from_html(html)
-                    logger.info(f"Extracted {len(listings)} listings for profile {profile_id}")
-                    
+                listings = extract_simple_listings_from_html(html)
+                logger.info(f"Extracted {len(listings)} listings for profile {profile_id}")
             except Exception as extract_error:
                 logger.error(f"Failed to extract listings for profile {profile_id}: {extract_error}")
                 

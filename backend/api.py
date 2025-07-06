@@ -13,43 +13,79 @@ from typing import Optional, List, Dict, Any
 
 # Try to import timezone utilities, fallback if not available
 try:
-    from timezone_utils import now_cest_iso, get_timezone_info
+    from .timezone_utils import now_cest_iso, get_timezone_info
     TIMEZONE_UTILS_AVAILABLE = True
 except ImportError:
-    TIMEZONE_UTILS_AVAILABLE = False
-    print("Warning: timezone_utils not available, using fallback timezone handling")
+    try:
+        from timezone_utils import now_cest_iso, get_timezone_info
+        TIMEZONE_UTILS_AVAILABLE = True
+    except ImportError:
+        TIMEZONE_UTILS_AVAILABLE = False
+        print("Warning: timezone_utils not available, using fallback timezone handling")
 
 # Import authentication utilities and models
-from auth_utils import (
-    get_current_user, 
-    get_optional_user, 
-    generate_tokens, 
-    generate_user_id, 
-    create_user_dict, 
-    AuthUtils,
-    blacklist_token,
-    is_token_blacklisted
-)
-from auth_models import (
-    UserRegister, 
-    UserLogin, 
-    UserResponse, 
-    UserUpdate, 
-    TokenResponse, 
-    TokenRefresh,
-    ProfileCreate, 
-    ProfileUpdate, 
-    ProfileResponse, 
-    EmailUpdate,
-    ScrapeIntervalUpdate,
-    UserProfileUpdate
-)
+try:
+    from .auth_utils import (
+        get_current_user, 
+        get_optional_user, 
+        generate_tokens, 
+        generate_user_id, 
+        create_user_dict, 
+        AuthUtils,
+        blacklist_token,
+        is_token_blacklisted
+    )
+    from .auth_models import (
+        UserRegister, 
+        UserLogin, 
+        UserResponse, 
+        UserUpdate, 
+        TokenResponse, 
+        TokenRefresh,
+        ProfileCreate, 
+        ProfileUpdate, 
+        ProfileResponse, 
+        EmailUpdate,
+        ScrapeIntervalUpdate,
+        UserProfileUpdate
+    )
+except ImportError:
+    from auth_utils import (
+        get_current_user, 
+        get_optional_user, 
+        generate_tokens, 
+        generate_user_id, 
+        create_user_dict, 
+        AuthUtils,
+        blacklist_token,
+        is_token_blacklisted
+    )
+    from auth_models import (
+        UserRegister, 
+        UserLogin, 
+        UserResponse, 
+        UserUpdate, 
+        TokenResponse, 
+        TokenRefresh,
+        ProfileCreate, 
+        ProfileUpdate, 
+        ProfileResponse, 
+        EmailUpdate,
+        ScrapeIntervalUpdate,
+        UserProfileUpdate
+    )
 
 # Import periodic scraper
-from periodic_scraper import periodic_scraper
+try:
+    from .periodic_scraper import periodic_scraper
+except ImportError:
+    from periodic_scraper import periodic_scraper
 
 # Import scraping API
-from scrape_api import router as scrape_router
+try:
+    from .scrape_api import router as scrape_router
+except ImportError:
+    from scrape_api import router as scrape_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -412,7 +448,10 @@ async def create_user_profile(
     save_db(db)
     
     # Add periodic job for this profile
-    from periodic_scraper import periodic_scraper
+    try:
+        from .periodic_scraper import periodic_scraper
+    except ImportError:
+        from periodic_scraper import periodic_scraper
     periodic_scraper.add_profile_job(profile_id, profile_data.scrape_interval_hours)
     
     # Convert last_scraped from ISO string to timestamp if needed
@@ -474,7 +513,10 @@ async def delete_user_profile(
     save_db(db)
     
     # Remove periodic job for this profile
-    from periodic_scraper import periodic_scraper
+    try:
+        from .periodic_scraper import periodic_scraper
+    except ImportError:
+        from periodic_scraper import periodic_scraper
     periodic_scraper.remove_profile_job(profile_id)
     
     return Response(status_code=204)
@@ -610,7 +652,10 @@ async def update_profile(
     if profile_update.scrape_interval_hours is not None:
         profile["scrape_interval_hours"] = profile_update.scrape_interval_hours
         # Update the periodic job with new interval
-        from periodic_scraper import periodic_scraper
+        try:
+            from .periodic_scraper import periodic_scraper
+        except ImportError:
+            from periodic_scraper import periodic_scraper
         periodic_scraper.add_profile_job(profile_id, profile_update.scrape_interval_hours)
     
     save_db(db)
@@ -702,7 +747,10 @@ async def trigger_profile_scrape(
         raise HTTPException(status_code=403, detail="Not authorized to scrape this profile")
     
     # Trigger scrape
-    from periodic_scraper import periodic_scraper
+    try:
+        from .periodic_scraper import periodic_scraper
+    except ImportError:
+        from periodic_scraper import periodic_scraper
     result = periodic_scraper.trigger_profile_scrape(profile_id)
     
     if result:
@@ -735,7 +783,10 @@ async def update_scrape_interval(
     save_db(db)
     
     # Update periodic job
-    from periodic_scraper import periodic_scraper
+    try:
+        from .periodic_scraper import periodic_scraper
+    except ImportError:
+        from periodic_scraper import periodic_scraper
     periodic_scraper.add_profile_job(profile_id, interval_update.scrape_interval_hours)
     
     return {"message": "Scrape interval updated successfully", "profile_id": profile_id, "interval_hours": interval_update.scrape_interval_hours}
@@ -1016,7 +1067,10 @@ def calculate_new_today_count(listings: List[dict]) -> int:
 def update_listing_timestamps(listings: List[dict]) -> None:
     """Update is_new flags based on 24-hour rule and ensure all listings have timestamps."""
     if TIMEZONE_UTILS_AVAILABLE:
-        from timezone_utils import now_cest
+        try:
+            from .timezone_utils import now_cest
+        except ImportError:
+            from timezone_utils import now_cest
         current_time = now_cest()
     else:
         current_time = datetime.now()
