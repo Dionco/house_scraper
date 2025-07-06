@@ -3,7 +3,7 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Install minimal dependencies
-RUN pip install fastapi uvicorn requests beautifulsoup4 APScheduler passlib[bcrypt] python-jose[cryptography] python-multipart pytz
+RUN pip install fastapi uvicorn requests beautifulsoup4 APScheduler passlib[bcrypt] python-jose[cryptography] python-multipart pytz pydantic[email] email_validator
 
 # Copy only essential files
 COPY backend/ ./backend/

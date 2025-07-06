@@ -9,6 +9,7 @@ APScheduler
 python-jose[cryptography]
 passlib[bcrypt]
 python-multipart
+pydantic[email]
 email_validator
 undetected-chromedriver
 selenium
