@@ -26,6 +26,9 @@ COPY backend/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir undetected-chromedriver selenium fake-useragent pytz pydantic[email] email_validator
 
+# Expose port 8000 for Railway health checks and external access
+EXPOSE 8000
+
 # Copy application files
 COPY backend/ ./backend/
 COPY database.json ./
