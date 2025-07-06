@@ -43,7 +43,12 @@ echo "Starting application..."\n\
 echo "Checking installed packages..."\n\
 pip list | grep -E "(undetected|selenium|fake)" || echo "Some packages may be missing"\n\
 cd /app/backend\n\
+echo "Testing Python imports..."\n\
+python -c "import sys; print(f\"Python path: {sys.path}\")" || echo "Python path check failed"\n\
+python -c "from timezone_utils import now_cest_iso; print(f\"Timezone test: {now_cest_iso()}\")" || echo "Timezone utils import failed"\n\
 python -c "import undetected_chromedriver as uc; print(\"Chrome driver test passed\")" || echo "Chrome driver may not be available"\n\
+echo "Testing API import..."\n\
+python -c "from api import app; print(\"API import successful\")" || echo "API import failed"\n\
 echo "Starting uvicorn server..."\n\
 exec uvicorn api:app --host 0.0.0.0 --port 8000' > /app/start.sh && chmod +x /app/start.sh
 

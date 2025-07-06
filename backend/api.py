@@ -5,12 +5,19 @@ import time
 import requests
 from datetime import datetime
 from fastapi import FastAPI, HTTPException, Query, Request, Body, status, Response, Depends
-from timezone_utils import now_cest_iso, get_timezone_info
 from fastapi.responses import JSONResponse, HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from typing import Optional, List, Dict, Any
+
+# Try to import timezone utilities, fallback if not available
+try:
+    from timezone_utils import now_cest_iso, get_timezone_info
+    TIMEZONE_UTILS_AVAILABLE = True
+except ImportError:
+    TIMEZONE_UTILS_AVAILABLE = False
+    print("Warning: timezone_utils not available, using fallback timezone handling")
 
 # Import authentication utilities and models
 from auth_utils import (
@@ -89,7 +96,11 @@ def save_db(db):
 @app.get("/health")
 async def health_check():
     """Health check endpoint for Railway deployment"""
-    return {"status": "healthy", "timestamp": now_cest_iso(), "timezone": get_timezone_info()}
+    if TIMEZONE_UTILS_AVAILABLE:
+        return {"status": "healthy", "timestamp": now_cest_iso(), "timezone": get_timezone_info()}
+    else:
+        # Fallback if timezone_utils import fails
+        return {"status": "healthy", "timestamp": datetime.now().isoformat(), "timezone": "fallback"}
 
 # Admin page endpoint
 @app.get("/admin-scraper.html", response_class=HTMLResponse)
@@ -831,7 +842,10 @@ async def update_current_user(
     if user_update.password is not None:
         db["users"][user_id]["password"] = AuthUtils.hash_password(user_update.password)
     
-    db["users"][user_id]["updated_at"] = now_cest_iso()
+    if TIMEZONE_UTILS_AVAILABLE:
+        db["users"][user_id]["updated_at"] = now_cest_iso()
+    else:
+        db["users"][user_id]["updated_at"] = datetime.now().isoformat()
     
     save_db(db)
     return UserResponse(**db["users"][user_id])
@@ -889,8 +903,11 @@ def calculate_new_today_count(listings: List[dict]) -> int:
 
 def update_listing_timestamps(listings: List[dict]) -> None:
     """Update is_new flags based on 24-hour rule and ensure all listings have timestamps."""
-    from timezone_utils import now_cest
-    current_time = now_cest()
+    if TIMEZONE_UTILS_AVAILABLE:
+        from timezone_utils import now_cest
+        current_time = now_cest()
+    else:
+        current_time = datetime.now()
     
     for listing in listings:
         if not listing.get("added_timestamp"):
