@@ -41,11 +41,15 @@ from auth_models import (
     ProfileUpdate, 
     ProfileResponse, 
     EmailUpdate,
-    ScrapeIntervalUpdate
+    ScrapeIntervalUpdate,
+    UserProfileUpdate
 )
 
 # Import periodic scraper
 from periodic_scraper import periodic_scraper
+
+# Import scraping API
+from scrape_api import router as scrape_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -65,6 +69,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include the scraping API router
+app.include_router(scrape_router, prefix="/api")
 
 # New unified database file
 DATABASE_FILE = os.path.join(os.path.dirname(__file__), "../database.json")
@@ -96,7 +103,6 @@ def save_db(db):
 @app.get("/health")
 async def health_check():
     """Health check endpoint for Railway deployment"""
-    print("Health check endpoint called!")  # Debug logging
     if TIMEZONE_UTILS_AVAILABLE:
         return {"status": "healthy", "timestamp": now_cest_iso(), "timezone": get_timezone_info()}
     else:
@@ -117,10 +123,58 @@ async def admin_scraper_page():
             status_code=404
         )
 
-# Root endpoint - Serve the main UI
+# Root endpoint - Serve the landing page with security headers
 @app.get("/", response_class=HTMLResponse)
-async def root():
-    """Root endpoint - Serve the main listings UI"""
+async def root(response: Response):
+    """Root endpoint - Serve the landing page with authentication"""
+    # Add security headers to prevent extension interference
+    response.headers["Content-Security-Policy"] = "script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://fonts.googleapis.com; object-src 'none'; frame-ancestors 'self';"
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    
+    index_html_path = os.path.join(os.path.dirname(__file__), "index.html")
+    if os.path.exists(index_html_path):
+        with open(index_html_path, 'r', encoding='utf-8') as f:
+            return f.read()
+    else:
+        # Fallback to API landing page
+        return """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>House Scraper</title>
+            <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 2em; background-color: #f5f5f5; }
+                .container { max-width: 800px; margin: 0 auto; background: white; padding: 2em; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                h1 { color: #2c3e50; text-align: center; }
+                .feature { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 5px; border-left: 4px solid #007bff; }
+                .api-link { display: inline-block; margin: 10px 10px 10px 0; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; }
+                .api-link:hover { background: #0056b3; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>🏠 House Scraper</h1>
+                <div class="feature">
+                    <h3>Landing Page Not Found</h3>
+                    <p>The landing page file is missing. Please check the deployment.</p>
+                    <a href="/api" class="api-link">API Documentation</a>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+
+# Dashboard endpoint - Serve the main dashboard after authentication with security headers
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard(response: Response):
+    """Dashboard endpoint - Serve the main listings UI"""
+    # Add security headers
+    response.headers["Content-Security-Policy"] = "script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://fonts.googleapis.com; object-src 'none'; frame-ancestors 'self';"
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    
     listings_html_path = os.path.join(os.path.dirname(__file__), "listings.html")
     if os.path.exists(listings_html_path):
         with open(listings_html_path, 'r', encoding='utf-8') as f:
@@ -137,7 +191,7 @@ async def root():
             <!DOCTYPE html>
             <html>
             <head>
-                <title>House Scraper</title>
+                <title>House Scraper Dashboard</title>
                 <style>
                     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 2em; background-color: #f5f5f5; }
                     .container { max-width: 800px; margin: 0 auto; background: white; padding: 2em; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
@@ -149,10 +203,10 @@ async def root():
             </head>
             <body>
                 <div class="container">
-                    <h1>🏠 House Scraper</h1>
+                    <h1>🏠 House Scraper Dashboard</h1>
                     <div class="feature">
-                        <h3>UI Not Found</h3>
-                        <p>The main UI file is missing. Please check the deployment.</p>
+                        <h3>Dashboard Not Found</h3>
+                        <p>The dashboard file is missing. Please check the deployment.</p>
                         <a href="/api" class="api-link">API Documentation</a>
                     </div>
                 </div>
@@ -285,9 +339,13 @@ async def get_user_profiles(current_user: Dict[str, Any] = Depends(get_current_u
             if last_scraped and isinstance(last_scraped, str):
                 try:
                     dt = datetime.fromisoformat(last_scraped.replace('Z', '+00:00'))
-                    last_scraped = dt.timestamp()
+                    # Convert to milliseconds for JavaScript Date() compatibility
+                    last_scraped = dt.timestamp() * 1000
                 except:
                     last_scraped = None
+            elif not last_scraped:
+                # Ensure null/None values stay as None (not 0 or other falsy values)
+                last_scraped = None
             
             profile_response = ProfileResponse(
                 id=profile_id,
@@ -357,6 +415,19 @@ async def create_user_profile(
     from periodic_scraper import periodic_scraper
     periodic_scraper.add_profile_job(profile_id, profile_data.scrape_interval_hours)
     
+    # Convert last_scraped from ISO string to timestamp if needed
+    last_scraped = profile.get("last_scraped")
+    if last_scraped and isinstance(last_scraped, str):
+        try:
+            dt = datetime.fromisoformat(last_scraped.replace('Z', '+00:00'))
+            # Convert to milliseconds for JavaScript Date() compatibility
+            last_scraped = dt.timestamp() * 1000
+        except:
+            last_scraped = None
+    elif not last_scraped:
+        # Ensure null/None values stay as None (not 0 or other falsy values)
+        last_scraped = None
+    
     return ProfileResponse(
         id=profile_id,
         user_id=user_id,
@@ -365,7 +436,7 @@ async def create_user_profile(
         emails=profile["emails"],
         scrape_interval_hours=profile["scrape_interval_hours"],
         created_at=profile["created_at"],
-        last_scraped=profile["last_scraped"],
+        last_scraped=last_scraped,
         last_new_listings_count=profile["last_new_listings_count"],
         listings_count=len(profile["listings"]),
         new_today_count=calculate_new_today_count(profile["listings"])
@@ -486,9 +557,13 @@ async def update_profile_email(
     if last_scraped and isinstance(last_scraped, str):
         try:
             dt = datetime.fromisoformat(last_scraped.replace('Z', '+00:00'))
-            last_scraped = dt.timestamp()
+            # Convert to milliseconds for JavaScript Date() compatibility
+            last_scraped = dt.timestamp() * 1000
         except:
             last_scraped = None
+    elif not last_scraped:
+        # Ensure null/None values stay as None (not 0 or other falsy values)
+        last_scraped = None
     
     return ProfileResponse(
         id=profile_id,
@@ -549,9 +624,13 @@ async def update_profile(
     if last_scraped and isinstance(last_scraped, str):
         try:
             dt = datetime.fromisoformat(last_scraped.replace('Z', '+00:00'))
-            last_scraped = dt.timestamp()
+            # Convert to milliseconds for JavaScript Date() compatibility
+            last_scraped = dt.timestamp() * 1000
         except:
             last_scraped = None
+    elif not last_scraped:
+        # Ensure null/None values stay as None (not 0 or other falsy values)
+        last_scraped = None
     
     return ProfileResponse(
         id=profile_id,
@@ -842,6 +921,38 @@ async def update_current_user(
         db["users"][user_id]["email"] = user_update.email
     if user_update.password is not None:
         db["users"][user_id]["password"] = AuthUtils.hash_password(user_update.password)
+    
+    if TIMEZONE_UTILS_AVAILABLE:
+        db["users"][user_id]["updated_at"] = now_cest_iso()
+    else:
+        db["users"][user_id]["updated_at"] = datetime.now().isoformat()
+    
+    save_db(db)
+    return UserResponse(**db["users"][user_id])
+
+@app.put("/api/auth/profile", response_model=UserResponse)
+async def update_user_profile(
+    profile_update: UserProfileUpdate,
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
+    """Update user profile settings."""
+    db = load_db()
+    
+    # Ensure users structure exists
+    if "users" not in db:
+        db["users"] = {}
+    
+    user_id = current_user["id"]
+    
+    # Update user fields
+    if profile_update.email is not None:
+        db["users"][user_id]["email"] = profile_update.email
+    if profile_update.email_notifications is not None:
+        db["users"][user_id]["email_notifications"] = profile_update.email_notifications
+    if profile_update.daily_summaries is not None:
+        db["users"][user_id]["daily_summaries"] = profile_update.daily_summaries
+    if profile_update.scrape_interval is not None:
+        db["users"][user_id]["scrape_interval"] = profile_update.scrape_interval
     
     if TIMEZONE_UTILS_AVAILABLE:
         db["users"][user_id]["updated_at"] = now_cest_iso()

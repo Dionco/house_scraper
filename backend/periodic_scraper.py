@@ -120,11 +120,11 @@ class PeriodicScraper:
                 self.save_database(db)
                 return
             
-            # Try scraping with Railway-optimized settings
+            # Try scraping with optimized settings
             html = None
             try:
-                # Use shorter timeout and fewer retries for Railway
-                html = scrape_funda_html(url, max_retries=1, timeout=30)  # Reduced further for Railway
+                # Use faster scraping with optimized settings
+                html = scrape_funda_html(url, max_retries=2, timeout=25)  # Optimized for speed
                 if html:
                     logger.info(f"Successfully scraped {len(html)} characters for profile {profile_id}")
                 else:
@@ -149,10 +149,18 @@ class PeriodicScraper:
                 self.save_database(db)
                 return
                 
-            # Extract listings
+            # Extract listings using fast extractor
             try:
-                listings = extract_simple_listings_from_html(html)
-                logger.info(f"Extracted {len(listings)} listings for profile {profile_id}")
+                # Try fast extraction first
+                try:
+                    from extract_funda_listings_fast import extract_listings_fast
+                    listings = extract_listings_fast(html)
+                    logger.info(f"Fast extracted {len(listings)} listings for profile {profile_id}")
+                except ImportError:
+                    # Fallback to original extractor
+                    listings = extract_simple_listings_from_html(html)
+                    logger.info(f"Extracted {len(listings)} listings for profile {profile_id}")
+                    
             except Exception as extract_error:
                 logger.error(f"Failed to extract listings for profile {profile_id}: {extract_error}")
                 

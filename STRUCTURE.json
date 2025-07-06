@@ -1,0 +1,52 @@
+{
+  "production_structure": {
+    "description": "Minimal production-ready structure",
+    "root_files": {
+      "database.json": "Main application database",
+      "search_profiles.json": "User search profiles",
+      "railway.toml": "Deployment configuration",
+      "Dockerfile": "Optimized container configuration",
+      ".env.example": "Environment variables template",
+      "README.md": "Project documentation"
+    },
+    "backend_files": {
+      "api.py": "Main FastAPI application",
+      "periodic_scraper.py": "Background scraping scheduler",
+      "scrape_api.py": "Scraping API endpoints",
+      "scrape_funda.py": "Core scraping logic",
+      "extract_funda_listings.py": "HTML parsing and extraction",
+      "funda_url_builder.py": "URL building utilities",
+      "listing_mapping.py": "Data mapping and transformation",
+      "email_utils.py": "Email notification system",
+      "auth_models.py": "Authentication data models",
+      "auth_utils.py": "Authentication utilities",
+      "timezone_utils.py": "Timezone handling",
+      "funda_simple_listings.json": "Scraped listings cache",
+      "listings.html": "Web interface",
+      "admin-scraper.html": "Admin interface",
+      "requirements.txt": "Python dependencies",
+      ".env.example": "Environment template",
+      "__init__.py": "Python package marker",
+      "favicon.ico": "Web icon"
+    },
+    "directories": {
+      "backend/": "Core application (FastAPI + scraping)",
+      "archived/": "All non-production files organized by category",
+      ".git/": "Version control",
+      ".venv/": "Python virtual environment"
+    }
+  },
+  "archived_categories": {
+    "archived/docs/": "Documentation files",
+    "archived/deployment/": "Alternative deployment configs",
+    "archived/utilities/": "Maintenance and migration scripts",
+    "archived/tests/": "Test files",
+    "archived/debug/": "Debug files and outputs",
+    "archived/monitoring/": "Monitoring scripts",
+    "archived/backend_redundant/": "Redundant backend files",
+    "archived/frontend_legacy/": "Legacy frontend files"
+  },
+  "cleanup_date": "2025-07-06T22:17:49.454614",
+  "purpose": "Ultra-minimal production structure",
+  "total_production_files": 25
+}

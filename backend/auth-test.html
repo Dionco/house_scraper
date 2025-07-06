@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Auth Test</title>
+</head>
+<body>
+    <h1>Authentication Test</h1>
+    <div id="result"></div>
+    
+    <script src="/static/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const result = document.getElementById('result');
+            
+            if (typeof AuthManager !== 'undefined') {
+                result.innerHTML = '<p style="color: green;">✓ AuthManager loaded successfully</p>';
+                
+                try {
+                    const authManager = new AuthManager();
+                    result.innerHTML += '<p style="color: green;">✓ AuthManager instance created</p>';
+                    
+                    // Test if methods exist
+                    if (typeof authManager.login === 'function') {
+                        result.innerHTML += '<p style="color: green;">✓ Login method exists</p>';
+                    }
+                    if (typeof authManager.register === 'function') {
+                        result.innerHTML += '<p style="color: green;">✓ Register method exists</p>';
+                    }
+                    if (typeof authManager.updateProfile === 'function') {
+                        result.innerHTML += '<p style="color: green;">✓ UpdateProfile method exists</p>';
+                    }
+                    
+                } catch (error) {
+                    result.innerHTML += '<p style="color: red;">✗ Failed to create AuthManager: ' + error.message + '</p>';
+                }
+            } else {
+                result.innerHTML = '<p style="color: red;">✗ AuthManager not loaded</p>';
+            }
+        });
+    </script>
+</body>
+</html>

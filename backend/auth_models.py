@@ -42,6 +42,9 @@ class UserResponse(BaseModel):
     last_login: Optional[float] = None
     is_active: bool
     profile_ids: List[str] = []
+    email_notifications: Optional[bool] = True
+    daily_summaries: Optional[bool] = False
+    scrape_interval: Optional[int] = 60  # Default to 60 minutes
 
 class UserUpdate(BaseModel):
     """User update request model."""
@@ -125,3 +128,10 @@ class EmailUpdate(BaseModel):
 class ScrapeIntervalUpdate(BaseModel):
     """Scrape interval update request model."""
     scrape_interval_hours: int = Field(..., ge=1, le=168)
+
+class UserProfileUpdate(BaseModel):
+    """User profile settings update model."""
+    email: Optional[EmailStr] = None
+    email_notifications: Optional[bool] = None
+    daily_summaries: Optional[bool] = None
+    scrape_interval: Optional[int] = Field(None, ge=30, le=1440)  # 30 minutes to 24 hours

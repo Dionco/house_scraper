@@ -1,0 +1,78 @@
+[
+  {
+    "test": "Leiden - Buying",
+    "success": true,
+    "listings_count": 15,
+    "quality_score": 1.0,
+    "sample_listing": {
+      "address": "Parmentierweg 105",
+      "area_code": "2316 ZN",
+      "city": "Leiden",
+      "price": 450000,
+      "area": "91",
+      "bedrooms": "2",
+      "energy_label": "B",
+      "listed_since": null,
+      "image_url": "https://cloud.funda.nl/valentina_media/208/192/095.jpg?options=width=228,height=228",
+      "funda_url": "https://www.funda.nl/detail/koop/leiden/appartement-parmentierweg-105/43083465/",
+      "listed_days_ago": null
+    }
+  },
+  {
+    "test": "Leiden - Rental",
+    "success": true,
+    "listings_count": 15,
+    "quality_score": 1.0,
+    "sample_listing": {
+      "address": "Perzikweg 36",
+      "area_code": "2321 DG",
+      "city": "Leiden",
+      "price": 1790,
+      "area": "97",
+      "bedrooms": "2",
+      "energy_label": null,
+      "listed_since": null,
+      "image_url": null,
+      "funda_url": "https://www.funda.nl/detail/huur/leiden/appartement-perzikweg-36/43082484/",
+      "listed_days_ago": null
+    }
+  },
+  {
+    "test": "Utrecht - Buying",
+    "success": true,
+    "listings_count": 15,
+    "quality_score": 1.0,
+    "sample_listing": {
+      "address": "Slotlaan 25",
+      "area_code": "3523 HB",
+      "city": "Utrecht",
+      "price": 525000,
+      "area": "149",
+      "bedrooms": "6",
+      "energy_label": "F",
+      "listed_since": null,
+      "image_url": null,
+      "funda_url": "https://www.funda.nl/detail/koop/utrecht/huis-slotlaan-25/43082274/",
+      "listed_days_ago": null
+    }
+  },
+  {
+    "test": "Amsterdam - Rental",
+    "success": true,
+    "listings_count": 15,
+    "quality_score": 0.8666666666666667,
+    "sample_listing": {
+      "address": "Ouborg 6",
+      "area_code": "1083 AE",
+      "city": "Amsterdam",
+      "price": null,
+      "area": "201",
+      "bedrooms": "4",
+      "energy_label": "B",
+      "listed_since": null,
+      "image_url": "https://cloud.funda.nl/valentina_media/167/549/775.jpg?options=width=228,height=228",
+      "funda_url": "https://www.funda.nl/detail/koop/amsterdam/huis-ouborg-6/43070621/",
+      "listed_days_ago": null
+    }
+  }
+]

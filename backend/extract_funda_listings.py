@@ -1,13 +1,136 @@
 def extract_simple_listings_from_html(html):
     """
     Extracts address, area code, city, price, area, number of bedrooms, image, and url from the HTML listing cards.
+    Updated to handle the new Funda HTML structure with data-testid attributes.
     """
     soup = BeautifulSoup(html, "html.parser")
     results = []
     # Track URLs to avoid duplicates
     found_urls = set()
+    import re
 
-    # First, extract from div.border-b.pb-3 (old logic)
+    # NEW: Extract from data-testid="listingDetailsAddress" listings (current structure)
+    for address_link in soup.find_all("a", attrs={"data-testid": "listingDetailsAddress"}):
+        url = address_link.get("href")
+        if url and url.startswith("/"):
+            url = "https://www.funda.nl" + url
+            
+        if url and url in found_urls:
+            continue
+            
+        # Extract address
+        address = None
+        address_span = address_link.find("span", class_="truncate")
+        if address_span:
+            address = address_span.get_text(strip=True)
+            
+        # Extract area code and city
+        area_code = city = None
+        area_city_div = address_link.find("div", class_="truncate text-neutral-80")
+        if area_city_div:
+            area_city = area_city_div.get_text(strip=True)
+            if area_city:
+                parts = area_city.split()
+                if len(parts) >= 2:
+                    area_code = " ".join(parts[:2])
+                    city = " ".join(parts[2:])
+                    
+        # Extract bedrooms from header (use the approach that works from debug)
+        bedrooms = None
+        header = address_link.find_previous("header", class_="bg-secondary-10")
+        if header:
+            header_text = header.get_text(strip=True)
+            bedroom_match = re.search(r"(\d+)\s*slaapkamers?", header_text, re.IGNORECASE)
+            if bedroom_match:
+                bedrooms = bedroom_match.group(1)
+                    
+        # Find the parent container to extract price and characteristics
+        parent = address_link.parent
+        while parent and parent.name != "div":
+            parent = parent.parent
+        
+        if parent:
+            # Go up to find the listing card container
+            card = parent
+            while card and not (card.name == "div" and card.find("h2")):
+                card = card.parent
+                
+            if card:
+                # Extract price
+                price = None
+                price_div = card.find("div", class_="font-semibold mt-2 mb-0")
+                if price_div:
+                    price_text = price_div.get_text(strip=True)
+                    match = re.search(r"€\s*([\d\.]+)", price_text)
+                    if match:
+                        price = int(match.group(1).replace('.', ''))
+                        
+                # Extract area, energy label, and bedrooms from characteristics
+                area = energy_label = None
+                characteristics = []
+                for li in card.find_all("li"):
+                    text = li.get_text(strip=True)
+                    characteristics.append(text)
+                    if "m²" in text and not area:
+                        area_match = re.search(r"(\d+)\s*m²", text)
+                        if area_match:
+                            area = area_match.group(1)
+                    elif not energy_label:
+                        # Check for energy labels - single letter (A-G) or extended (A+, A++, A+++)
+                        energy_match = re.search(r"^([A-G](?:\+{1,3})?)$", text.strip(), re.IGNORECASE)
+                        if energy_match:
+                            energy_label = energy_match.group(1).upper()
+                
+                # If bedrooms not found in header, try to extract from characteristics
+                if not bedrooms and characteristics:
+                    # Look for a standalone number that could be bedrooms
+                    # Usually appears as the second element after area
+                    for char in characteristics:
+                        if char.isdigit() and 1 <= int(char) <= 10:  # reasonable bedroom count
+                            bedrooms = char
+                            break
+                        
+                # Extract image - look more broadly for images
+                image_url = None
+                
+                # First try to find image in the card
+                img = card.find("img")
+                if img and img.get("src"):
+                    image_url = img["src"]
+                
+                # If no image found in card, try to find it in the broader container
+                if not image_url:
+                    # Look for images in the parent containers
+                    container = card.parent
+                    for _ in range(3):  # Look up to 3 levels up
+                        if container:
+                            img = container.find("img")
+                            if img and img.get("src") and "funda" in img.get("src", ""):
+                                image_url = img["src"]
+                                break
+                            container = container.parent
+                        else:
+                            break
+                    
+                # Listed since is not available in the search results anymore
+                listed_since = None
+                
+                if url and address:
+                    found_urls.add(url)
+                    results.append({
+                        "address": address,
+                        "area_code": area_code,
+                        "city": city,
+                        "price": price,
+                        "area": area,
+                        "bedrooms": bedrooms,
+                        "energy_label": energy_label,
+                        "listed_since": listed_since,
+                        "image_url": image_url,
+                        "funda_url": url
+                    })
+
+    # LEGACY: Extract from div.border-b.pb-3 (old logic) - keeping for backward compatibility
     for card in soup.find_all("div", class_="border-b pb-3"):
         h2 = card.find("h2")
         a = h2.find("a", href=True) if h2 else None
@@ -27,7 +150,6 @@ def extract_simple_listings_from_html(html):
                 parts = area_city.split()
                 area_code = " ".join(parts[:2])
                 city = " ".join(parts[2:])
-        import re
         price = None
         price_div = card.find("div", class_="font-semibold mt-2 mb-0")
         if price_div:

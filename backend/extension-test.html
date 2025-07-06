@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Extension Error Test</title>
+    <meta name="google" content="notranslate">
+    <meta name="browser-extension" content="disabled">
+</head>
+<body>
+    <h1>Extension Error Suppression Test</h1>
+    <div id="test-results"></div>
+    
+    <script>
+        // Test extension error suppression
+        const results = document.getElementById('test-results');
+        
+        // Mock extension errors
+        function triggerExtensionErrors() {
+            try {
+                console.error('Unchecked runtime.lastError: The message port closed before a response was received.');
+                console.error('Unchecked runtime.lastError: Could not establish connection. Receiving end does not exist.');
+                console.error('FrameDoesNotExistError: Frame 214 does not exist in tab 1676578825');
+                
+                results.innerHTML += '<p style="color: green;">✓ Extension errors triggered (should be suppressed)</p>';
+                
+                // Test normal errors (should still show)
+                console.log('Normal log message - should appear');
+                console.error('Normal error - should appear');
+                
+                results.innerHTML += '<p style="color: green;">✓ Normal console messages sent</p>';
+                
+            } catch (e) {
+                results.innerHTML += '<p style="color: red;">✗ Error during test: ' + e.message + '</p>';
+            }
+        }
+        
+        // Run test after page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            results.innerHTML = '<p>Running extension error suppression test...</p>';
+            setTimeout(triggerExtensionErrors, 1000);
+        });
+    </script>
+</body>
+</html>

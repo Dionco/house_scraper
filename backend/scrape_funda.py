@@ -8,14 +8,14 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def scrape_funda_html(url, max_retries=2, timeout=45):
+def scrape_funda_html(url, max_retries=2, timeout=30):
     """
-    Scrape Funda HTML with Railway-optimized settings
+    Scrape Funda HTML with performance optimizations
     
     Args:
         url: The URL to scrape
         max_retries: Maximum number of retry attempts
-        timeout: Timeout in seconds for page load
+        timeout: Timeout in seconds for page load (reduced for speed)
     
     Returns:
         str: HTML content or None if failed
@@ -34,7 +34,7 @@ def scrape_funda_html(url, max_retries=2, timeout=45):
             options.add_argument('--no-sandbox')
             options.add_argument('--disable-dev-shm-usage')
             options.add_argument('--disable-blink-features=AutomationControlled')
-            options.add_argument('--window-size=1280,720')  # Smaller window for Railway
+            options.add_argument('--window-size=1024,768')  # Smaller window for speed
             options.add_argument('--lang=nl-NL,nl')
             options.add_argument('--disable-gpu')
             options.add_argument('--disable-web-security')
@@ -50,28 +50,40 @@ def scrape_funda_html(url, max_retries=2, timeout=45):
             options.add_argument('--memory-pressure-off')
             options.add_argument('--max_old_space_size=4096')
             
-            # Railway-specific optimizations
-            options.add_argument('--single-process')  # Use single process to save memory
+            # Performance optimizations
+            options.add_argument('--aggressive-cache-discard')
             options.add_argument('--disable-background-networking')
             options.add_argument('--disable-default-apps')
             options.add_argument('--disable-sync')
+            options.add_argument('--disable-web-resources')
+            options.add_argument('--disable-client-side-phishing-detection')
+            options.add_argument('--disable-component-update')
+            options.add_argument('--disable-domain-reliability')
+            options.add_argument('--disable-features=AudioServiceOutOfProcess')
+            options.add_argument('--disable-hang-monitor')
+            options.add_argument('--disable-logging')
+            options.add_argument('--disable-notifications')
+            options.add_argument('--disable-permissions-api')
+            options.add_argument('--disable-popup-blocking')
+            options.add_argument('--disable-prompt-on-repost')
+            options.add_argument('--disable-renderer-backgrounding')
+            options.add_argument('--disable-backgrounding-occluded-windows')
+            options.add_argument('--disable-background-timer-throttling')
+            options.add_argument('--disable-features=VizDisplayCompositor')
             
-            # Don't disable JavaScript - Funda needs it!
-            # options.add_argument('--disable-javascript')  # REMOVED - Funda requires JS
-            
-            # Set page load strategy
-            options.add_argument('--page-load-strategy=normal')  # Changed from eager to normal
+            # Set page load strategy to eager for faster loading
+            options.add_argument('--page-load-strategy=eager')
             
             # Initialize driver with shorter timeout
             logger.info("Initializing Chrome driver...")
             driver = uc.Chrome(options=options, version_main=None, driver_executable_path=None)
             
-            # Set shorter timeouts for Railway
+            # Set shorter timeouts for speed
             driver.set_page_load_timeout(timeout)
-            driver.implicitly_wait(5)  # Reduced from 10 to 5
+            driver.implicitly_wait(3)  # Reduced from 5 to 3
             
-            # Add short random delay to avoid detection
-            time.sleep(random.uniform(0.5, 1.5))
+            # Add minimal delay to avoid detection
+            time.sleep(random.uniform(0.2, 0.8))  # Reduced delay
             
             # Navigate to URL
             logger.info(f"Navigating to URL: {url}")
@@ -81,124 +93,55 @@ def scrape_funda_html(url, max_retries=2, timeout=45):
             driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
             driver.execute_script("Object.defineProperty(navigator, 'languages', {get: () => ['nl-NL', 'nl']})")
             
-            # Handle cookie consent popup
+            # Fast cookie handling - try once and move on
             try:
-                # Wait for the cookie popup to appear and dismiss it
-                from selenium.webdriver.common.by import By
                 cookie_selectors = [
                     'button[data-test-id="didomi-notice-agree-button"]',
                     'button[id="didomi-notice-agree-button"]',
                     'button[class*="didomi-notice-agree-button"]',
                     'button[aria-label*="Akkoord"]',
-                    'button[aria-label*="Agree"]',
-                    'button:contains("Akkoord")',
-                    'button:contains("Agree")',
-                    '.didomi-popup-backdrop',
-                    '.didomi-notice-component-button--highlight'
+                    'button[aria-label*="Agree"]'
                 ]
                 
-                cookie_dismissed = False
                 for selector in cookie_selectors:
                     try:
-                        if ':contains(' in selector:
-                            # Skip CSS selectors with :contains for now
-                            continue
                         elements = driver.find_elements(By.CSS_SELECTOR, selector)
                         if elements:
                             elements[0].click()
                             logger.info(f"Clicked cookie consent button: {selector}")
-                            cookie_dismissed = True
-                            time.sleep(1)  # Wait for popup to disappear
+                            time.sleep(0.5)  # Minimal wait
                             break
-                    except Exception as e:
-                        logger.debug(f"Cookie button {selector} not found or not clickable: {e}")
+                    except:
                         continue
-                
-                if not cookie_dismissed:
-                    logger.info("No cookie consent popup found or already dismissed")
-                    
+                        
             except Exception as e:
-                logger.warning(f"Error handling cookie popup: {e}")
+                logger.debug(f"Cookie handling skipped: {e}")
             
-            # Wait for page to load with Railway-friendly timeout
+            # Minimal wait for page load
             from selenium.webdriver.support.ui import WebDriverWait
             from selenium.webdriver.support import expected_conditions as EC
             
             try:
-                # Wait for body to be present
-                WebDriverWait(driver, min(timeout, 20)).until(
+                # Wait for body to be present with shorter timeout
+                WebDriverWait(driver, min(timeout, 15)).until(
                     EC.presence_of_element_located((By.CSS_SELECTOR, 'body'))
                 )
-                logger.info("Page body loaded.")
                 
-                # Wait for content to load (but not too long)
-                time.sleep(random.uniform(1, 3))
-                
-                # Check if listings are present
-                listings_found = False
-                try:
-                    # Check for modern Funda listing selectors based on the site structure
-                    listing_selectors = [
-                        '[data-test-id="search-result-item"]',
-                        '.search-result',
-                        '.object-list-item',
-                        '.search-result-item',
-                        '[data-object-url-tracking]',  # Common Funda attribute
-                        'a[href*="/huur/"]',           # Rental links
-                        'div[data-test-id*="result"]', # Any result divs
-                        'div[class*="result"]',        # Any result divs
-                        'article',                     # Article elements (common for listings)
-                        'div[data-lazy-module]'        # Lazy-loaded modules
-                    ]
-                    
-                    for selector in listing_selectors:
-                        elements = driver.find_elements(By.CSS_SELECTOR, selector)
-                        if elements:
-                            listings_found = True
-                            logger.info(f"Found {len(elements)} listing elements with selector: {selector}")
-                            break
-                            
-                except Exception as e:
-                    logger.warning(f"Could not check for listings: {e}")
-                
-                # If no listings found, wait a bit more for dynamic content
-                if not listings_found:
-                    logger.info("No listings found immediately, waiting for dynamic content...")
-                    time.sleep(random.uniform(3, 6))  # Wait longer for JS to load
-                    
-                    # Try again after waiting
-                    try:
-                        for selector in listing_selectors:
-                            elements = driver.find_elements(By.CSS_SELECTOR, selector)
-                            if elements:
-                                listings_found = True
-                                logger.info(f"Found {len(elements)} listing elements after wait: {selector}")
-                                break
-                    except Exception as e:
-                        logger.warning(f"Could not check for listings after wait: {e}")
-                else:
-                    # Quick additional wait for content to fully load
-                    time.sleep(random.uniform(1, 2))
+                # Quick check for listings with minimal wait
+                time.sleep(random.uniform(0.5, 1.5))  # Reduced wait time
                 
             except Exception as e:
-                logger.warning(f"Page may not be fully loaded: {e}")
+                logger.warning(f"Page load timeout: {e}")
                 # Continue anyway, partial content might be available
             
             # Get the HTML
             html = driver.page_source
             
-            # Validate HTML content
-            if not html:
-                raise Exception("Empty HTML content received")
+            # Quick validation
+            if not html or len(html) < 3000:  # Reduced threshold
+                raise Exception(f"HTML too short or empty: {len(html) if html else 0} characters")
                 
-            if len(html) < 5000:  # Too short for a real Funda page
-                raise Exception(f"HTML too short: {len(html)} characters")
-                
-            # Check if page shows an error or has no results
-            if "geen resultaten" in html.lower() or "no results" in html.lower():
-                logger.warning("Page shows no results - this might be expected")
-                
-            # Check if page is properly loaded (has the expected structure)
+            # Quick check for Funda content
             if "funda.nl" not in html.lower():
                 raise Exception("HTML does not appear to be from Funda")
             

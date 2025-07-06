@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Funda Finder | Advanced Search</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <!-- NOTE: Tailwind CDN is used for development. For production, install Tailwind CSS locally -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -89,11 +91,26 @@
         /* Custom checkbox styles */
         .form-checkbox { appearance: none; -webkit-appearance: none; height: 1.25rem; width: 1.25rem; border: 1px solid #cbd5e1; border-radius: 0.25rem; background-color: #fff; transition: all 0.2s; cursor: pointer; }
         .form-checkbox:checked { background-color: #F97316; border-color: #F97316; background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e"); background-size: 100% 100%; background-position: center; background-repeat: no-repeat; }
+        
+        /* Hide header when loaded in iframe */
+        .iframe-mode .dashboard-header {
+            display: none !important;
+        }
+        
+        /* Adjust body padding when header is hidden */
+        .iframe-mode body {
+            padding-top: 0 !important;
+        }
+        
+        /* Adjust main content when header is hidden */
+        .iframe-mode .main-content {
+            padding-top: 1rem !important;
+        }
     </style>
 </head>
 <body class="font-sans bg-light">
     <!-- User Authentication Header -->
-    <div class="bg-white border-b border-gray-200 shadow-sm">
+    <div class="dashboard-header bg-white border-b border-gray-200 shadow-sm">
         <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center py-4">
                 <div class="flex items-center gap-2">
@@ -151,7 +168,7 @@
         </div>
     </div>
 
-    <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="main-content max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 py-8">
 
             <aside class="lg:col-span-3 sidebar-decorative">
@@ -261,6 +278,8 @@
     </div>
 
     <script>
+        // --- GLOBAL VARIABLES ---
+        
         // --- NOTIFICATION SYSTEM ---
         function showNotification(message, type = 'info', duration = 5000) {
             const notificationContainer = document.getElementById('notification-container');
@@ -442,10 +461,70 @@
                     </div>
                 </div>`;
         }
+        
+        // --- GLOBAL VARIABLES ---
+        // window.authManager will be initialized in the authentication script section
+        
         // --- EVENT LISTENERS ---
 
         document.addEventListener('DOMContentLoaded', () => {
             console.log('=== DOM Content Loaded ===');
+            
+            // --- IFRAME DETECTION AND AUTHENTICATION HANDLING ---
+            const isInIframe = window.self !== window.top;
+            console.log('Is in iframe:', isInIframe);
+            
+            if (isInIframe) {
+                // Add iframe mode class to hide header
+                document.documentElement.classList.add('iframe-mode');
+                console.log('Iframe mode enabled - header hidden');
+                
+                // Set up communication with parent page for authentication
+                window.addEventListener('message', function(event) {
+                    if (event.origin !== window.location.origin) return;
+                    
+                    if (event.data.type === 'AUTH_TOKEN') {
+                        console.log('Received auth token from parent:', event.data.token ? 'present' : 'missing');
+                        if (event.data.token) {
+                            localStorage.setItem('authToken', event.data.token);
+                            if (event.data.user) {
+                                localStorage.setItem('currentUser', JSON.stringify(event.data.user));
+                            }
+                            
+                            // Reinitialize AuthManager with the new token
+                            console.log('Reinitializing AuthManager with received token...');
+                            if (window.authManager) {
+                                // Recreate AuthManager to pick up the new token
+                                window.authManager = new AuthManager();
+                                console.log('AuthManager reinitialized');
+                            }
+                            
+                            // Load data after authentication is received
+                            console.log('Loading data after authentication...');
+                            fetchProfiles();
+                            fetchListings(null, false);
+                        }
+                    }
+                });
+                
+                // Request authentication from parent
+                window.parent.postMessage({
+                    type: 'REQUEST_AUTH',
+                    source: 'dashboard'
+                }, window.location.origin);
+                
+                // Also retry the request after a short delay in case parent wasn't ready
+                setTimeout(() => {
+                    window.parent.postMessage({
+                        type: 'REQUEST_AUTH',
+                        source: 'dashboard'
+                    }, window.location.origin);
+                }, 1000);
+                
+                // Hide authentication elements since parent handles it
+                const authElements = document.querySelectorAll('#auth-not-logged-in, #auth-logged-in');
+                authElements.forEach(el => el.style.display = 'none');
+            }
             
             // --- DOM ELEMENT REFERENCES ---
             console.log('Initializing DOM elements...');
@@ -493,6 +572,7 @@
             const editProfileEmails = document.getElementById('edit-profile-emails');
             const editUpdateEmailsBtn = document.getElementById('edit-update-emails-btn');
             const editScraperStatus = document.getElementById('edit-scraper-status');
+            const scraperStatus = document.getElementById('scraper-status'); // Add this for compatibility
             const editScrapeInterval = document.getElementById('edit-scrape-interval');
             const editUpdateIntervalBtn = document.getElementById('edit-update-interval-btn');
             const editLastScraped = document.getElementById('edit-last-scraped');
@@ -563,8 +643,8 @@
                     console.log('Fetching from URL:', url);
                     
                     // Use authenticated request if authManager is available and user is logged in
-                    const response = (typeof authManager !== 'undefined' && authManager.isAuthenticated()) 
-                        ? await authManager.apiRequest(url)
+                    const response = (typeof window.authManager !== 'undefined' && window.authManager.isAuthenticated()) 
+                        ? await window.authManager.apiRequest(url)
                         : await fetch(url);
                     
                     console.log('Response status:', response.status);
@@ -594,9 +674,9 @@
                     console.log('=== fetchProfiles() called ===');
                     
                     // Check if authManager is available and user is authenticated
-                    if (typeof authManager !== 'undefined' && authManager.isAuthenticated()) {
+                    if (typeof window.authManager !== 'undefined' && window.authManager.isAuthenticated()) {
                         console.log('User authenticated, fetching user profiles');
-                        const response = await authManager.apiRequest('/api/profiles');
+                        const response = await window.authManager.apiRequest('/api/profiles');
                         console.log('fetchProfiles response status:', response.status);
                         if (!response.ok) throw new Error(`Failed to fetch profiles: ${response.statusText}`);
                         const data = await response.json();
@@ -623,6 +703,24 @@
                     } else {
                         showNotification('Could not load search profiles. Please try refreshing the page.', 'error');
                     }
+                }
+            }
+
+            /**
+             * Load user data (profiles and listings) after authentication
+             */
+            async function loadUserData() {
+                console.log('Loading user data...');
+                try {
+                    // Load profiles
+                    await fetchProfiles();
+                    
+                    // Load listings
+                    await fetchListings(null, false);
+                    
+                    console.log('User data loaded successfully');
+                } catch (error) {
+                    console.error('Error loading user data:', error);
                 }
             }
 
@@ -738,9 +836,19 @@
 
                 let lastScrapedTime = 'Never';
                 const raw = profiles[currentProfileId].last_scraped;
-                if (raw && Number(raw) > 100000) {
-                    const d = new Date(raw);
-                    lastScrapedTime = `${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+                if (raw) {
+                    let lastScraped;
+                    if (typeof raw === 'string') {
+                        // ISO string format
+                        lastScraped = new Date(raw);
+                    } else if (typeof raw === 'number' && raw > 100000) {
+                        // Timestamp format (milliseconds since epoch)
+                        lastScraped = new Date(raw);
+                    }
+                    
+                    if (lastScraped && !isNaN(lastScraped.getTime())) {
+                        lastScrapedTime = `${lastScraped.toLocaleDateString()} ${lastScraped.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+                    }
                 }
                 scrapeUpdatesBtn.innerHTML = `
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -864,10 +972,22 @@
 
                 // Update last scraped display
                 if (editLastScraped) {
-                    // Only show if last_scraped is a valid, non-zero, non-null timestamp
-                    if (profile.last_scraped && Number(profile.last_scraped) > 100000) {
-                        const lastScraped = new Date(profile.last_scraped);
-                        editLastScraped.textContent = `Last scraped: ${lastScraped.toLocaleDateString()} ${lastScraped.toLocaleTimeString()}`;
+                    // Handle both timestamp numbers and ISO strings
+                    if (profile.last_scraped) {
+                        let lastScraped;
+                        if (typeof profile.last_scraped === 'string') {
+                            // ISO string format
+                            lastScraped = new Date(profile.last_scraped);
+                        } else if (typeof profile.last_scraped === 'number' && profile.last_scraped > 100000) {
+                            // Timestamp format (milliseconds since epoch)
+                            lastScraped = new Date(profile.last_scraped);
+                        }
+                        
+                        if (lastScraped && !isNaN(lastScraped.getTime())) {
+                            editLastScraped.textContent = `Last scraped: ${lastScraped.toLocaleDateString()} ${lastScraped.toLocaleTimeString()}`;
+                        } else {
+                            editLastScraped.textContent = 'Last scraped: Never';
+                        }
                     } else {
                         editLastScraped.textContent = 'Last scraped: Never';
                     }
@@ -1027,7 +1147,7 @@
                 const emails = editProfileEmails.value.split(',').map(email => email.trim()).filter(email => email);
 
                 try {
-                    const response = await authManager.apiRequest(`/api/profiles/${currentProfileId}/email`, {
+                    const response = await window.authManager.apiRequest(`/api/profiles/${currentProfileId}/email`, {
                         method: 'PUT',
                         body: JSON.stringify({ emails: emails })
                     });
@@ -1061,7 +1181,7 @@
                 }
 
                 try {
-                    const response = await authManager.apiRequest(`/api/profiles/${currentProfileId}/scrape-interval`, {
+                    const response = await window.authManager.apiRequest(`/api/profiles/${currentProfileId}/scrape-interval`, {
                         method: 'PUT',
                         body: JSON.stringify({ scrape_interval_hours: intervalHours })
                     });
@@ -1097,7 +1217,7 @@
                 const filters = collectModalFilters();
 
                 try {
-                    const response = await authManager.apiRequest(`/api/profiles/${currentProfileId}`, {
+                    const response = await window.authManager.apiRequest(`/api/profiles/${currentProfileId}`, {
                         method: 'PUT',
                         body: JSON.stringify({ name: profileName, filters, emails: profileEmails })
                     });
@@ -1122,8 +1242,15 @@
                 }
             }
             
-            fetchProfiles(); // Load profiles on page load
-            fetchListings(null, false); // Fetch initial listings (none selected)
+            // Initial data loading - defer for iframe mode to allow authentication
+            if (isInIframe) {
+                console.log('Iframe mode - waiting for authentication before loading data');
+                // Data will be loaded after authentication is received
+            } else {
+                // Normal mode - load data immediately
+                fetchProfiles(); // Load profiles on page load
+                fetchListings(null, false); // Fetch initial listings (none selected)
+            }
 
             // Fetch initial scraper status
             fetchScraperStatus();
@@ -1165,7 +1292,7 @@
                     `Are you sure you want to delete "${profileName}"? This cannot be undone.`,
                     async () => {
                         try {
-                            const response = await authManager.apiRequest(`/api/profiles/${encodeURIComponent(currentProfileId)}`, { method: 'DELETE' });
+                            const response = await window.authManager.apiRequest(`/api/profiles/${encodeURIComponent(currentProfileId)}`, { method: 'DELETE' });
                             if (!response.ok && response.status !== 204) throw new Error('Failed to delete profile');
                             // Remove from local profiles object
                             delete profiles[currentProfileId];
@@ -1249,7 +1376,7 @@
                     `;
                     
                     // POST filters to /api/profiles/{profile_id}/scrape
-                    const response = await authManager.apiRequest(`/api/profiles/${encodeURIComponent(currentProfileId)}/scrape`, {
+                    const response = await window.authManager.apiRequest(`/api/profiles/${encodeURIComponent(currentProfileId)}/scrape`, {
                         method: 'POST',
                         body: JSON.stringify({ filters })
                     });
@@ -1279,9 +1406,19 @@
                         // Show last scraped time in the button text
                         let lastScrapedTime = 'Never';
                         const raw = profiles[currentProfileId]?.last_scraped;
-                        if (raw && Number(raw) > 100000) {
-                            const d = new Date(raw);
-                            lastScrapedTime = `${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+                        if (raw) {
+                            let lastScraped;
+                            if (typeof raw === 'string') {
+                                // ISO string format
+                                lastScraped = new Date(raw);
+                            } else if (typeof raw === 'number' && raw > 100000) {
+                                // Timestamp format (milliseconds since epoch)
+                                lastScraped = new Date(raw);
+                            }
+                            
+                            if (lastScraped && !isNaN(lastScraped.getTime())) {
+                                lastScrapedTime = `${lastScraped.toLocaleDateString()} ${lastScraped.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+                            }
                         }
                         scrapeUpdatesBtn.innerHTML = `
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -1298,9 +1435,22 @@
                     console.error('Error scraping for updates:', error);
                     showNotification('Could not scrape for updates. Please try again.', 'error');
                     // Reset button with last scraped time
-                    const lastScrapedTime = profiles[currentProfileId]?.last_scraped 
-                        ? new Date(profiles[currentProfileId].last_scraped).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-                        : 'Never';
+                    let lastScrapedTime = 'Never';
+                    const raw = profiles[currentProfileId]?.last_scraped;
+                    if (raw) {
+                        let lastScraped;
+                        if (typeof raw === 'string') {
+                            // ISO string format
+                            lastScraped = new Date(raw);
+                        } else if (typeof raw === 'number' && raw > 100000) {
+                            // Timestamp format (milliseconds since epoch)
+                            lastScraped = new Date(raw);
+                        }
+                        
+                        if (lastScraped && !isNaN(lastScraped.getTime())) {
+                            lastScrapedTime = lastScraped.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        }
+                    }
                     scrapeUpdatesBtn.innerHTML = `
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
@@ -1587,7 +1737,7 @@
                     const profileData = convertWizardDataToProfile(wizardData);
                     
                     // Save the profile
-                    const response = await authManager.apiRequest('/api/profiles', {
+                    const response = await window.authManager.apiRequest('/api/profiles', {
                         method: 'POST',
                         body: JSON.stringify(profileData)
                     });
@@ -2374,21 +2524,93 @@
     <script src="/static/auth.js"></script>
     
     <script>
-        // Initialize authentication UI
+        // Initialize authentication
         document.addEventListener('DOMContentLoaded', () => {
             console.log('Initializing authentication...');
             
-            // Wait for auth.js to load
+            // Check if we're in iframe mode
+            const isIframe = window.self !== window.top;
+            console.log('Is iframe mode:', isIframe);
+            
+            // Wait for auth.js to load and use the global authManager
             function initializeAuth() {
-                if (typeof authManager === 'undefined' || typeof authUI === 'undefined') {
-                    console.log('Auth components not loaded yet, retrying...');
+                if (typeof window.authManager === 'undefined') {
+                    console.log('Global authManager not loaded yet, retrying...');
                     setTimeout(initializeAuth, 100);
                     return;
                 }
                 
-                console.log('Auth components loaded, setting up event listeners...');
+                console.log('Using global authManager instance');
                 
-                // Setup authentication event listeners
+                try {
+                    // Setup authentication event listeners
+                    setupAuthEventListeners();
+                    
+                    // Update UI based on auth state
+                    updateAuthUI();
+                    
+                    // Listen for auth state changes
+                    window.authManager.addListener(updateAuthUI);
+                    
+                    // If in iframe mode, listen for authentication from parent
+                    if (isIframe) {
+                        setupIframeAuthListener();
+                    }
+                    
+                    console.log('Authentication initialization complete');
+                } catch (error) {
+                    console.error('Failed to initialize authentication:', error);
+                    setTimeout(initializeAuth, 1000); // Retry after 1 second
+                }
+            }
+            
+            function setupIframeAuthListener() {
+                console.log('Setting up iframe auth listener...');
+                
+                window.addEventListener('message', async (event) => {
+                    if (event.origin !== window.location.origin) {
+                        console.log('Ignoring message from different origin:', event.origin);
+                        return;
+                    }
+                    
+                    console.log('Received message in dashboard:', event.data);
+                    
+                    if (event.data.type === 'AUTH_TOKEN' && event.data.token) {
+                        console.log('Received auth token in dashboard iframe');
+                        
+                        try {
+                            // Store the token in localStorage
+                            localStorage.setItem('accessToken', event.data.token);
+                            if (event.data.user) {
+                                localStorage.setItem('currentUser', JSON.stringify(event.data.user));
+                            }
+                            
+                            // Reload the authManager state from localStorage
+                            console.log('Reloading AuthManager state from localStorage...');
+                            window.authManager.loadFromStorage();
+                            
+                            // Update UI
+                            updateAuthUI();
+                            
+                            // Reload data
+                            await loadUserData();
+                            
+                            console.log('Dashboard authenticated successfully');
+                        } catch (error) {
+                            console.error('Error handling auth token in dashboard:', error);
+                        }
+                    }
+                });
+                
+                // Request authentication from parent
+                console.log('Requesting authentication from parent...');
+                window.parent.postMessage({
+                    type: 'REQUEST_AUTH',
+                    source: 'dashboard'
+                }, window.location.origin);
+            }
+            
+            function setupAuthEventListeners() {
                 const loginBtn = document.getElementById('login-btn');
                 const registerBtn = document.getElementById('register-btn');
                 const logoutBtn = document.getElementById('logout-btn');
@@ -2396,20 +2618,38 @@
                 
                 if (loginBtn) {
                     loginBtn.addEventListener('click', () => {
-                        authUI.showLogin();
+                        // In iframe mode, redirect to parent for authentication
+                        if (window.self !== window.top) {
+                            window.parent.postMessage({
+                                type: 'SHOW_LOGIN',
+                                source: 'dashboard'
+                            }, window.location.origin);
+                        } else {
+                            // Direct mode - redirect to landing page for authentication
+                            window.location.href = '/';
+                        }
                     });
                 }
                 
                 if (registerBtn) {
                     registerBtn.addEventListener('click', () => {
-                        authUI.showRegister();
+                        // In iframe mode, redirect to parent for authentication
+                        if (window.self !== window.top) {
+                            window.parent.postMessage({
+                                type: 'SHOW_REGISTER',
+                                source: 'dashboard'
+                            }, window.location.origin);
+                        } else {
+                            // Direct mode - redirect to landing page for authentication
+                            window.location.href = '/';
+                        }
                     });
                 }
                 
                 if (logoutBtn) {
                     logoutBtn.addEventListener('click', async () => {
                         try {
-                            await authManager.logout();
+                            await window.authManager.logout();
                             showNotification('Logged out successfully!', 'success');
                             setTimeout(() => {
                                 window.location.reload();
@@ -2438,40 +2678,34 @@
                         menu.classList.add('hidden');
                     }
                 });
+            }
+            
+            function updateAuthUI() {
+                const isAuthenticated = window.authManager && window.authManager.isAuthenticated();
+                const user = isAuthenticated ? window.authManager.getCurrentUser() : null;
+                const notLoggedIn = document.getElementById('auth-not-logged-in');
+                const loggedIn = document.getElementById('auth-logged-in');
+                const authNotice = document.getElementById('auth-notice');
                 
-                // Update UI based on authentication state
-                function updateAuthUI() {
-                    const user = authManager.getCurrentUser();
-                    const notLoggedIn = document.getElementById('auth-not-logged-in');
-                    const loggedIn = document.getElementById('auth-logged-in');
-                    const authNotice = document.getElementById('auth-notice');
+                console.log('Updating auth UI, authenticated:', isAuthenticated, 'user:', user);
+                
+                if (isAuthenticated && user) {
+                    // User is authenticated
+                    if (notLoggedIn) notLoggedIn.classList.add('hidden');
+                    if (loggedIn) loggedIn.classList.remove('hidden');
+                    if (authNotice) authNotice.classList.add('hidden');
                     
-                    if (user) {
-                        // User is authenticated
-                        if (notLoggedIn) notLoggedIn.classList.add('hidden');
-                        if (loggedIn) loggedIn.classList.remove('hidden');
-                        if (authNotice) authNotice.classList.add('hidden');
-                        
-                        // Update user display
-                        const userName = document.getElementById('user-name');
-                        const userInitial = document.getElementById('user-initial');
-                        if (userName) userName.textContent = user.username;
-                        if (userInitial) userInitial.textContent = user.username.charAt(0).toUpperCase();
-                    } else {
-                        // User is not authenticated
-                        if (notLoggedIn) notLoggedIn.classList.remove('hidden');
-                        if (loggedIn) loggedIn.classList.add('hidden');
-                        if (authNotice) authNotice.classList.remove('hidden');
-                    }
+                    // Update user display
+                    const userName = document.getElementById('user-name');
+                    const userInitial = document.getElementById('user-initial');
+                    if (userName) userName.textContent = user.username;
+                    if (userInitial) userInitial.textContent = user.username.charAt(0).toUpperCase();
+                } else {
+                    // User is not authenticated
+                    if (notLoggedIn) notLoggedIn.classList.remove('hidden');
+                    if (loggedIn) loggedIn.classList.add('hidden');
+                    if (authNotice) authNotice.classList.remove('hidden');
                 }
-                
-                // Listen for auth state changes
-                authManager.addListener(updateAuthUI);
-                
-                // Initial auth state update
-                updateAuthUI();
-                
-                console.log('Authentication initialization complete');
             }
             
             // Start initialization

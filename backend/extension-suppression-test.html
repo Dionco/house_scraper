@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extension Error Suppression Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-result {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        #console-output {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>Extension Error Suppression Test</h1>
+    
+    <div class="test-container">
+        <h2>Test Results</h2>
+        <div id="test-results"></div>
+    </div>
+    
+    <div class="test-container">
+        <h2>Console Output Monitor</h2>
+        <div id="console-output"></div>
+        <button onclick="clearConsoleOutput()">Clear Console</button>
+    </div>
+    
+    <div class="test-container">
+        <h2>Manual Tests</h2>
+        <button onclick="triggerExtensionError()">Trigger Extension Error</button>
+        <button onclick="triggerNormalError()">Trigger Normal Error</button>
+        <button onclick="triggerExtensionPromiseRejection()">Trigger Extension Promise Rejection</button>
+        <button onclick="triggerNormalPromiseRejection()">Trigger Normal Promise Rejection</button>
+        <button onclick="testChromeAPIs()">Test Chrome APIs</button>
+        <button onclick="testExtensionRequests()">Test Extension Requests</button>
+        <button onclick="injectExtensionScript()">Inject Extension Script</button>
+        <button onclick="runAllTests()">Run All Tests</button>
+    </div>
+
+    <script>
+        // Ultra-comprehensive Chrome extension error suppression
+        (function() {
+            'use strict';
+            
+            // Store original console methods before any potential extension interference
+            const originalConsole = {
+                error: console.error.bind(console),
+                warn: console.warn.bind(console),
+                log: console.log.bind(console),
+                info: console.info.bind(console),
+                debug: console.debug.bind(console)
+            };
+            
+            // Console output capture for display
+            const consoleOutput = [];
+            
+            // Comprehensive extension error patterns
+            const extensionErrorPatterns = [
+                /runtime\.lastError/i,
+                /extension/i,
+                /chrome-extension/i,
+                /FrameDoesNotExist/i,
+                /background\.js/i,
+                /DelayedMessageSender/i,
+                /back\/forward cache/i,
+                /message channel is closed/i,
+                /Receiving end does not exist/i,
+                /message port closed/i,
+                /utils\.js/i,
+                /extensionState\.js/i,
+                /heuristicsRedefinitions\.js/i,
+                /net::ERR_FILE_NOT_FOUND.*\.js/i,
+                /Failed to load resource.*\.js/i,
+                /Unchecked runtime\.lastError/i,
+                /The message port closed before a response was received/i,
+                /Could not establish connection\. Receiving end does not exist/i,
+                /response was undefined/i,
+                /Error in event handler/i,
+                /Context invalidated/i,
+                /Extension context invalidated/i,
+                /A frame with id \d+ was not found/i,
+                /Frame with id \d+ does not exist/i
+            ];
+            
+            function isExtensionError(message) {
+                if (!message) return false;
+                const str = typeof message === 'string' ? message : String(message);
+                return extensionErrorPatterns.some(pattern => pattern.test(str));
+            }
+            
+            function isExtensionErrorObject(error) {
+                if (!error) return false;
+                if (typeof error === 'string') return isExtensionError(error);
+                if (error.message && isExtensionError(error.message)) return true;
+                if (error.stack && isExtensionError(error.stack)) return true;
+                if (error.name && isExtensionError(error.name)) return true;
+                return false;
+            }
+            
+            function addToConsoleOutput(type, message, suppressed = false) {
+                const timestamp = new Date().toISOString().substr(11, 8);
+                const prefix = suppressed ? '[SUPPRESSED]' : '';
+                consoleOutput.push(`${timestamp} [${type.toUpperCase()}] ${prefix} ${message}`);
+                updateConsoleDisplay();
+            }
+            
+            function updateConsoleDisplay() {
+                const output = document.getElementById('console-output');
+                if (output) {
+                    output.textContent = consoleOutput.slice(-50).join('\n');
+                    output.scrollTop = output.scrollHeight;
+                }
+            }
+            
+            // Override console methods with logging
+            ['error', 'warn', 'log', 'info', 'debug'].forEach(method => {
+                console[method] = function(...args) {
+                    const message = args.map(arg => typeof arg === 'string' ? arg : String(arg)).join(' ');
+                    const hasExtensionError = args.some(arg => isExtensionErrorObject(arg));
+                    
+                    if (hasExtensionError) {
+                        addToConsoleOutput(method, message, true);
+                    } else {
+                        addToConsoleOutput(method, message, false);
+                        originalConsole[method](...args);
+                    }
+                };
+            });
+            
+            // Global error handler
+            window.addEventListener('error', function(e) {
+                const message = e.message || '';
+                const filename = e.filename || '';
+                const fullMessage = `${message} at ${filename}:${e.lineno}:${e.colno}`;
+                
+                if (isExtensionErrorObject(e.message) || 
+                    isExtensionErrorObject(e.error) ||
+                    isExtensionError(filename)) {
+                    addToConsoleOutput('error', fullMessage, true);
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    return false;
+                } else {
+                    addToConsoleOutput('error', fullMessage, false);
+                }
+            }, true);
+            
+            // Promise rejection handler
+            window.addEventListener('unhandledrejection', function(e) {
+                const message = e.reason ? String(e.reason) : 'Unknown rejection';
+                if (isExtensionErrorObject(e.reason)) {
+                    addToConsoleOutput('rejection', message, true);
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    return false;
+                } else {
+                    addToConsoleOutput('rejection', message, false);
+                }
+            }, true);
+            
+            // Mock Chrome APIs
+            if (typeof window.chrome === 'undefined') {
+                window.chrome = {};
+            }
+            
+            const chromeAPIMock = {
+                runtime: {
+                    lastError: null,
+                    id: 'mock-extension-id',
+                    sendMessage: function() { return Promise.resolve(); },
+                    connect: function() { 
+                        return { 
+                            postMessage: function() {}, 
+                            disconnect: function() {},
+                            onMessage: { addListener: function() {}, removeListener: function() {} },
+                            onDisconnect: { addListener: function() {}, removeListener: function() {} }
+                        }; 
+                    },
+                    onMessage: { addListener: function() {}, removeListener: function() {} }
+                },
+                tabs: {
+                    query: function() { return Promise.resolve([]); },
+                    sendMessage: function() { return Promise.resolve(); }
+                }
+            };
+            
+            Object.keys(chromeAPIMock).forEach(key => {
+                try {
+                    if (!window.chrome[key]) {
+                        Object.defineProperty(window.chrome, key, {
+                            value: chromeAPIMock[key],
+                            writable: false,
+                            configurable: false
+                        });
+                    }
+                } catch (e) {
+                    // Silently ignore
+                }
+            });
+            
+            // Test functions
+            window.triggerExtensionError = function() {
+                console.error('Unchecked runtime.lastError: The message port closed before a response was received.');
+            };
+            
+            window.triggerNormalError = function() {
+                console.error('This is a normal error that should appear.');
+            };
+            
+            window.triggerExtensionPromiseRejection = function() {
+                Promise.reject(new Error('Extension context invalidated'));
+            };
+            
+            window.triggerNormalPromiseRejection = function() {
+                Promise.reject(new Error('This is a normal promise rejection'));
+            };
+            
+            window.testChromeAPIs = function() {
+                try {
+                    chrome.runtime.sendMessage({test: 'message'});
+                    chrome.tabs.query({active: true});
+                    addToConsoleOutput('info', 'Chrome APIs tested successfully', false);
+                } catch (e) {
+                    addToConsoleOutput('error', 'Chrome API test failed: ' + e.message, false);
+                }
+            };
+            
+            window.testExtensionRequests = function() {
+                fetch('chrome-extension://test/utils.js').catch(e => {
+                    addToConsoleOutput('info', 'Extension request blocked as expected', false);
+                });
+            };
+            
+            window.injectExtensionScript = function() {
+                const script = document.createElement('script');
+                script.src = 'chrome-extension://test/utils.js';
+                document.head.appendChild(script);
+                addToConsoleOutput('info', 'Attempted to inject extension script', false);
+            };
+            
+            window.clearConsoleOutput = function() {
+                consoleOutput.length = 0;
+                updateConsoleDisplay();
+            };
+            
+            window.runAllTests = function() {
+                addToConsoleOutput('info', '=== Running all tests ===', false);
+                
+                setTimeout(() => triggerExtensionError(), 100);
+                setTimeout(() => triggerNormalError(), 200);
+                setTimeout(() => triggerExtensionPromiseRejection(), 300);
+                setTimeout(() => triggerNormalPromiseRejection(), 400);
+                setTimeout(() => testChromeAPIs(), 500);
+                setTimeout(() => testExtensionRequests(), 600);
+                setTimeout(() => injectExtensionScript(), 700);
+                
+                setTimeout(() => {
+                    addToConsoleOutput('info', '=== All tests completed ===', false);
+                    updateTestResults();
+                }, 1000);
+            };
+            
+            function updateTestResults() {
+                const resultsDiv = document.getElementById('test-results');
+                if (!resultsDiv) return;
+                
+                const suppressedCount = consoleOutput.filter(line => line.includes('[SUPPRESSED]')).length;
+                const normalCount = consoleOutput.filter(line => !line.includes('[SUPPRESSED]')).length;
+                
+                resultsDiv.innerHTML = `
+                    <div class="test-result info">
+                        <strong>Test Summary:</strong><br>
+                        Extension errors suppressed: ${suppressedCount}<br>
+                        Normal errors/messages: ${normalCount}<br>
+                        Total console outputs: ${consoleOutput.length}
+                    </div>
+                    <div class="test-result ${suppressedCount > 0 ? 'success' : 'error'}">
+                        <strong>Extension Error Suppression:</strong> ${suppressedCount > 0 ? 'WORKING' : 'NOT WORKING'}
+                    </div>
+                    <div class="test-result ${normalCount > 0 ? 'success' : 'error'}">
+                        <strong>Normal Error Display:</strong> ${normalCount > 0 ? 'WORKING' : 'NOT WORKING'}
+                    </div>
+                `;
+            }
+            
+            // Initialize
+            document.addEventListener('DOMContentLoaded', function() {
+                updateConsoleDisplay();
+                updateTestResults();
+                
+                // Add initial test message
+                addToConsoleOutput('info', 'Extension error suppression system initialized', false);
+            });
+            
+        })();
+    </script>
+</body>
+</html>

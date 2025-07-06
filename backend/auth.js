@@ -100,6 +100,13 @@ class AuthManager {
     }
     
     /**
+     * Get access token
+     */
+    getToken() {
+        return this.accessToken;
+    }
+    
+    /**
      * Get authorization header
      */
     getAuthHeader() {
@@ -120,8 +127,9 @@ class AuthManager {
             });
             
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.detail || 'Registration failed');
+                const errorData = await response.json();
+                const errorMessage = errorData.detail || errorData.message || 'Registration failed';
+                throw new Error(errorMessage);
             }
             
             const data = await response.json();
@@ -129,7 +137,11 @@ class AuthManager {
             return data;
         } catch (error) {
             console.error('Registration error:', error);
-            throw error;
+            if (error.message) {
+                throw error;
+            } else {
+                throw new Error('Registration failed. Please try again.');
+            }
         }
     }
     
@@ -147,8 +159,9 @@ class AuthManager {
             });
             
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.detail || 'Login failed');
+                const errorData = await response.json();
+                const errorMessage = errorData.detail || errorData.message || 'Login failed';
+                throw new Error(errorMessage);
             }
             
             const data = await response.json();
@@ -156,7 +169,11 @@ class AuthManager {
             return data;
         } catch (error) {
             console.error('Login error:', error);
-            throw error;
+            if (error.message) {
+                throw error;
+            } else {
+                throw new Error('Login failed. Please check your credentials.');
+            }
         }
     }
     
@@ -248,6 +265,33 @@ class AuthManager {
      */
     notifyListeners() {
         this.listeners.forEach(callback => callback(this.currentUser));
+    }
+    
+    /**
+     * Update user profile
+     */
+    async updateProfile(profileData) {
+        try {
+            const response = await this.apiRequest('/api/auth/profile', {
+                method: 'PUT',
+                body: JSON.stringify(profileData)
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || 'Profile update failed');
+            }
+            
+            const data = await response.json();
+            this.currentUser = { ...this.currentUser, ...data };
+            this.saveToStorage();
+            this.notifyListeners();
+            
+            return data;
+        } catch (error) {
+            console.error('Profile update error:', error);
+            throw error;
+        }
     }
     
     /**
@@ -563,5 +607,6 @@ class AuthUI {
 const authUI = new AuthUI();
 
 // Export for global use
+window.AuthManager = AuthManager;
 window.authManager = authManager;
 window.authUI = authUI;

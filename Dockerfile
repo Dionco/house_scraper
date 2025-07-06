@@ -1,19 +1,32 @@
+# Production Dockerfile for House Scraper
 FROM python:3.11-slim
 
+# Set working directory
 WORKDIR /app
 
-# Install minimal dependencies
-RUN pip install fastapi uvicorn requests beautifulsoup4 APScheduler passlib[bcrypt] python-jose[cryptography] python-multipart pytz pydantic[email] email_validator
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy only essential files
+# Copy requirements first for better caching
+COPY backend/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
 COPY backend/ ./backend/
-COPY database.json ./
+COPY database.json search_profiles.json ./
 
-# Set environment
-ENV PYTHONPATH=/app
-ENV DATABASE_FILE=/app/database.json
-ENV TZ=Europe/Amsterdam
+# Create non-root user
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+USER appuser
 
-# Simple startup
-WORKDIR /app/backend
-CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
+# Expose port
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/api/health || exit 1
+
+# Run application
+CMD ["python", "-m", "uvicorn", "backend.api:app", "--host", "0.0.0.0", "--port", "8000"]

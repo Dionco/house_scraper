@@ -279,7 +279,9 @@ def _build_modern_url(**kwargs) -> str:
         params['page'] = kwargs['page']
     
     if kwargs.get('per_page'):
-        params['per_page'] = kwargs['per_page']
+        params['per_page'] = min(kwargs['per_page'], 50)  # Limit to 50 max per page
+    else:
+        params['per_page'] = 50  # Default to maximum for efficiency
     
     # Construction filters
     if kwargs.get('construction_type'):
