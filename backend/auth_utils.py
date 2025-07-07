@@ -160,7 +160,7 @@ async def get_current_user(
             )
         
         # Load user from database
-        from api import load_db  # Import here to avoid circular imports
+        from .api import load_db  # Import here to avoid circular imports
         db = load_db()
         users = db.get("users", {})
         user = users.get(user_id)

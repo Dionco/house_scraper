@@ -85,6 +85,40 @@ Updated `loadUserData()` to call the correct existing functions:
 ## Files Modified
 - `/backend/listings.html` - Updated authentication initialization and all AuthManager references
 
+## Additional Fix - Function Declaration Order
+
+### Issue
+After the main AuthManager fix, there was still an error:
+```
+Error loading user data: ReferenceError: fetchProfiles is not defined
+```
+
+### Root Cause
+The `loadUserData` function was defined after the point where it was called, and JavaScript was trying to execute it before the function was defined.
+
+### Solution
+Moved the `loadUserData` function definition to be placed right after `fetchProfiles` and before it's called:
+
+```javascript
+// Moved from authentication section to data loading section
+async function loadUserData() {
+    console.log('Loading user data...');
+    try {
+        // Load profiles
+        await fetchProfiles();
+        
+        // Load listings
+        await fetchListings(null, false);
+        
+        console.log('User data loaded successfully');
+    } catch (error) {
+        console.error('Error loading user data:', error);
+    }
+}
+```
+
+This ensures all functions are defined before they're called, preventing the ReferenceError.
+
 ## Result
 - ✅ No more duplicate AuthManager declaration errors
 - ✅ No more infinite retry loops  
