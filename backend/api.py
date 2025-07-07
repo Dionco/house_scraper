@@ -75,11 +75,29 @@ except ImportError:
         UserProfileUpdate
     )
 
-# Import periodic scraper
+# Import periodic scraper with Railway optimization
+import logging
+logger = logging.getLogger(__name__)
+
 try:
-    from .periodic_scraper import periodic_scraper
+    # Try Railway-optimized scraper first
+    if os.getenv('RAILWAY_ENVIRONMENT'):
+        from .railway_periodic_scraper import periodic_scraper
+        logger.info("Using Railway-optimized periodic scraper")
+    else:
+        from .periodic_scraper import periodic_scraper
+        logger.info("Using standard periodic scraper")
 except ImportError:
-    from periodic_scraper import periodic_scraper
+    try:
+        if os.getenv('RAILWAY_ENVIRONMENT'):
+            from railway_periodic_scraper import periodic_scraper
+            logger.info("Using Railway-optimized periodic scraper")
+        else:
+            from periodic_scraper import periodic_scraper
+            logger.info("Using standard periodic scraper")
+    except ImportError:
+        logger.error("Could not import periodic scraper")
+        periodic_scraper = None
 
 # Import scraping API
 try:
@@ -90,10 +108,24 @@ except ImportError:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    periodic_scraper.start()
+    if periodic_scraper:
+        try:
+            periodic_scraper.start()
+            logger.info("Application started with periodic scraper")
+        except Exception as e:
+            logger.error(f"Failed to start periodic scraper: {e}")
+    else:
+        logger.warning("Periodic scraper not available")
+    
     yield
+    
     # Shutdown
-    periodic_scraper.stop()
+    if periodic_scraper:
+        try:
+            periodic_scraper.stop()
+            logger.info("Application shutdown with periodic scraper stopped")
+        except Exception as e:
+            logger.error(f"Error stopping periodic scraper: {e}")
 
 app = FastAPI(lifespan=lifespan)
 
@@ -1092,3 +1124,26 @@ def update_listing_timestamps(listings: List[dict]) -> None:
         # Update is_new flag based on 24-hour rule
         time_diff = current_time.timestamp() - listing.get("added_timestamp", 0)
         listing["is_new"] = time_diff < 86400  # 24 hours = 86400 seconds
+
+# --- SCRAPER MONITORING ENDPOINTS ---
+
+@app.get("/api/scraper/status")
+async def get_scraper_status():
+    """Get periodic scraper status for monitoring."""
+    if periodic_scraper:
+        return periodic_scraper.get_status()
+    else:
+        return {"is_running": False, "error": "Periodic scraper not available"}
+
+@app.post("/api/scraper/restart")
+async def restart_scraper():
+    """Restart the periodic scraper (admin only)."""
+    if periodic_scraper:
+        try:
+            periodic_scraper.stop()
+            periodic_scraper.start()
+            return {"message": "Scraper restarted successfully"}
+        except Exception as e:
+            return {"error": f"Failed to restart scraper: {e}"}
+    else:
+        return {"error": "Periodic scraper not available"}

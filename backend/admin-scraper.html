@@ -75,7 +75,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center py-4">
                 <div class="flex items-center gap-4">
-                    <a href="/" class="flex items-center gap-2 text-gray-600 hover:text-primary transition-colors">
+                    <a href="#" id="back-to-app" class="flex items-center gap-2 text-gray-600 hover:text-primary transition-colors">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                         </svg>
@@ -705,6 +705,19 @@
                 activityLog = [];
                 updateActivityLogDisplay();
                 addToActivityLog('Activity log cleared', 'info');
+            });
+
+            // Smart back navigation
+            document.getElementById('back-to-app').addEventListener('click', (e) => {
+                e.preventDefault();
+                
+                // Check if we can go back in history (and it's likely our app)
+                if (window.history.length > 1 && document.referrer.includes(window.location.origin)) {
+                    window.history.back();
+                } else {
+                    // Navigate to dashboard directly to avoid landing page flash
+                    window.location.href = '/?direct=dashboard';
+                }
             });
         });
     </script>

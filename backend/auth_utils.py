@@ -160,7 +160,10 @@ async def get_current_user(
             )
         
         # Load user from database
-        from .api import load_db  # Import here to avoid circular imports
+        if os.getenv("RAILWAY_ENVIRONMENT"):
+            from .api import load_db  # Railway (production/deployment)
+        else:
+            from api import load_db   # Local development
         db = load_db()
         users = db.get("users", {})
         user = users.get(user_id)

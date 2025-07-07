@@ -7,4 +7,11 @@ healthcheckPath = "/health"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
-# Railway deployment fix
+# Ensure the service stays running for periodic scraping
+startCommand = "uvicorn backend.api:app --host 0.0.0.0 --port $PORT"
+
+[variables]
+# Railway environment marker
+RAILWAY_ENVIRONMENT = "production"
+# Database path
+DB_PATH = "database.json"

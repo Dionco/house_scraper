@@ -113,6 +113,16 @@
             pointer-events: none;
         }
         
+        /* Smooth transitions for UI elements */
+        #landing-page, #dashboard, #loading-overlay {
+            transition: opacity 0.3s ease-in-out;
+        }
+        
+        #loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
         /* Disable extension content injection completely */
         html::before,
         html::after,
@@ -174,6 +184,14 @@
 
         <!-- Main Content -->
         <main class="flex-1">
+            <!-- Loading Overlay -->
+            <div id="loading-overlay" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+                <div class="text-center">
+                    <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p class="text-gray-600">Loading...</p>
+                </div>
+            </div>
+            
             <!-- Landing Page (shown when not authenticated) -->
             <div id="landing-page" class="min-h-screen">
                 <!-- Hero Section -->
@@ -1122,7 +1140,7 @@
             const profileForm = document.getElementById('profile-form');
             
             // Initial UI update
-            updateUI();
+            initializeUI();
             
             // Event listeners
             showLoginBtn.addEventListener('click', () => showAuthModal('login'));
@@ -1193,8 +1211,42 @@
                 }
             });
             
+            function initializeUI() {
+                // Check URL parameters for direct navigation
+                const urlParams = new URLSearchParams(window.location.search);
+                const directMode = urlParams.get('direct');
+                
+                const isAuthenticated = authManager.isAuthenticated();
+                const loadingOverlay = document.getElementById('loading-overlay');
+                
+                if (directMode === 'dashboard' && isAuthenticated) {
+                    // User is coming from admin panel and is authenticated
+                    // Skip landing page and go directly to dashboard
+                    landingPage.classList.add('hidden');
+                    dashboard.classList.remove('hidden');
+                    userMenu.classList.remove('hidden');
+                    
+                    // Clean up URL
+                    const newUrl = window.location.origin + window.location.pathname;
+                    window.history.replaceState({}, document.title, newUrl);
+                    
+                    updateUI(); // Update user display
+                } else {
+                    // Normal initialization
+                    updateUI();
+                }
+                
+                // Hide loading overlay
+                if (loadingOverlay) {
+                    setTimeout(() => {
+                        loadingOverlay.classList.add('hidden');
+                    }, 100); // Small delay to ensure smooth transition
+                }
+            }
+            
             function updateUI() {
                 const isAuthenticated = authManager.isAuthenticated();
+                const loadingOverlay = document.getElementById('loading-overlay');
                 
                 if (isAuthenticated) {
                     landingPage.classList.add('hidden');
@@ -1226,6 +1278,11 @@
                     landingPage.classList.remove('hidden');
                     dashboard.classList.add('hidden');
                     userMenu.classList.add('hidden');
+                }
+                
+                // Hide loading overlay after UI update
+                if (loadingOverlay) {
+                    loadingOverlay.classList.add('hidden');
                 }
             }
             
