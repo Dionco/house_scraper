@@ -101,7 +101,7 @@ class EmailSender:
             return f"{area_str} m²"
         return area_str
     
-    def send_new_listings_email(self, to_email, profile_name, new_listings, template_name='new_listings.html'):
+    def send_new_listings_email(self, to_email, profile_name, new_listings, template_name='mail_new_listings.html'):
         """Send new listings email using template. Accepts to_email as string or list."""
         if not to_email:
             return False

@@ -138,13 +138,33 @@
                     <div class="flex items-center space-x-4">
                         <div id="user-menu" class="hidden">
                             <div class="flex items-center space-x-4">
-                                <span id="user-welcome" class="text-gray-600"></span>
-                                <button id="profile-btn" class="text-primary hover:text-primary-600 font-medium">
-                                    Profile
-                                </button>
-                                <button id="logout-btn" class="text-gray-600 hover:text-gray-900">
-                                    Logout
-                                </button>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                                        <span class="text-white font-medium text-sm" id="user-initial">U</span>
+                                    </div>
+                                    <span class="text-sm font-medium text-gray-700" id="user-name">User</span>
+                                </div>
+                                <div class="relative">
+                                    <button id="user-menu-btn" class="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        </svg>
+                                    </button>
+                                    <div id="user-dropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10 hidden">
+                                        <div class="py-1">
+                                            <a href="#" id="profile-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile Settings</a>
+                                            <a href="admin-scraper.html" id="admin-panel-link" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                </svg>
+                                                Admin Panel
+                                            </a>
+                                            <div class="border-t border-gray-100"></div>
+                                            <a href="#" id="logout-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1080,7 +1100,6 @@
             const landingPage = document.getElementById('landing-page');
             const dashboard = document.getElementById('dashboard');
             const userMenu = document.getElementById('user-menu');
-            const userWelcome = document.getElementById('user-welcome');
             const authModal = document.getElementById('auth-modal');
             const profileModal = document.getElementById('profile-modal');
             
@@ -1092,6 +1111,10 @@
             const profileBtn = document.getElementById('profile-btn');
             const logoutBtn = document.getElementById('logout-btn');
             const closeProfileModalBtn = document.getElementById('close-profile-modal');
+            
+            // User menu elements
+            const userMenuBtn = document.getElementById('user-menu-btn');
+            const userDropdown = document.getElementById('user-dropdown');
             
             // Forms
             const loginForm = document.getElementById('login-form');
@@ -1109,6 +1132,22 @@
             profileBtn.addEventListener('click', showProfileModal);
             logoutBtn.addEventListener('click', logout);
             closeProfileModalBtn.addEventListener('click', hideProfileModal);
+            
+            // User menu dropdown
+            if (userMenuBtn) {
+                userMenuBtn.addEventListener('click', () => {
+                    if (userDropdown) {
+                        userDropdown.classList.toggle('hidden');
+                    }
+                });
+            }
+            
+            // Close user menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (userDropdown && userMenuBtn && !userDropdown.contains(e.target) && !userMenuBtn.contains(e.target)) {
+                    userDropdown.classList.add('hidden');
+                }
+            });
             
             // Form submissions
             loginForm.addEventListener('submit', handleLogin);
@@ -1163,7 +1202,12 @@
                     userMenu.classList.remove('hidden');
                     
                     const user = authManager.getCurrentUser();
-                    userWelcome.textContent = `Welcome, ${user.username}`;
+                    
+                    // Update user display
+                    const userName = document.getElementById('user-name');
+                    const userInitial = document.getElementById('user-initial');
+                    if (userName) userName.textContent = user.username;
+                    if (userInitial) userInitial.textContent = user.username.charAt(0).toUpperCase();
                     
                     // Send authentication to dashboard iframe if it exists
                     setTimeout(() => {

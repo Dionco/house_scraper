@@ -2593,7 +2593,13 @@
                             updateAuthUI();
                             
                             // Reload data
-                            await loadUserData();
+                            if (typeof loadUserData === 'function') {
+                                await loadUserData();
+                            } else {
+                                console.log('loadUserData function not available, calling individual fetch functions');
+                                if (typeof fetchProfiles === 'function') await fetchProfiles();
+                                if (typeof fetchListings === 'function') await fetchListings(null, false);
+                            }
                             
                             console.log('Dashboard authenticated successfully');
                         } catch (error) {
@@ -2625,8 +2631,8 @@
                                 source: 'dashboard'
                             }, window.location.origin);
                         } else {
-                            // Direct mode - redirect to landing page for authentication
-                            window.location.href = '/';
+                            // Direct mode - show authentication modal
+                            showAuthModal('login');
                         }
                     });
                 }
@@ -2640,8 +2646,8 @@
                                 source: 'dashboard'
                             }, window.location.origin);
                         } else {
-                            // Direct mode - redirect to landing page for authentication
-                            window.location.href = '/';
+                            // Direct mode - show authentication modal
+                            showAuthModal('register');
                         }
                     });
                 }
@@ -2708,9 +2714,281 @@
                 }
             }
             
+            // Authentication modal functions (for direct mode)
+            function showAuthModal(mode) {
+                // Only show modal if not in iframe mode
+                if (window.self !== window.top) {
+                    return;
+                }
+                
+                const authModal = document.getElementById('auth-modal');
+                const modalTitle = document.getElementById('modal-title');
+                const loginForm = document.getElementById('login-form');
+                const registerForm = document.getElementById('register-form');
+                const toggleText = document.getElementById('toggle-text');
+                
+                if (mode === 'login') {
+                    modalTitle.textContent = 'Sign In';
+                    loginForm.classList.remove('hidden');
+                    registerForm.classList.add('hidden');
+                    toggleText.textContent = "Don't have an account? Sign up";
+                } else {
+                    modalTitle.textContent = 'Create Account';
+                    loginForm.classList.add('hidden');
+                    registerForm.classList.remove('hidden');
+                    toggleText.textContent = "Already have an account? Sign in";
+                }
+                
+                authModal.classList.remove('hidden');
+                clearAuthError();
+            }
+            
+            function hideAuthModal() {
+                const authModal = document.getElementById('auth-modal');
+                const loginForm = document.getElementById('login-form');
+                const registerForm = document.getElementById('register-form');
+                
+                authModal.classList.add('hidden');
+                loginForm.reset();
+                registerForm.reset();
+                clearAuthError();
+            }
+            
+            function setupAuthModal() {
+                // Only setup modal if not in iframe mode
+                if (window.self !== window.top) {
+                    return;
+                }
+                
+                const closeModalBtn = document.getElementById('close-modal');
+                const toggleAuthBtn = document.getElementById('toggle-auth');
+                const loginForm = document.getElementById('login-form');
+                const registerForm = document.getElementById('register-form');
+                const authModal = document.getElementById('auth-modal');
+                
+                if (closeModalBtn) {
+                    closeModalBtn.addEventListener('click', hideAuthModal);
+                }
+                
+                if (toggleAuthBtn) {
+                    toggleAuthBtn.addEventListener('click', () => {
+                        const isLoginVisible = !loginForm.classList.contains('hidden');
+                        showAuthModal(isLoginVisible ? 'register' : 'login');
+                    });
+                }
+                
+                if (loginForm) {
+                    loginForm.addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        
+                        const username = document.getElementById('login-username').value;
+                        const password = document.getElementById('login-password').value;
+                        
+                        if (!username || !password) {
+                            showAuthError('Please fill in all fields');
+                            return;
+                        }
+                        
+                        setLoginLoading(true);
+                        clearAuthError();
+                        
+                        try {
+                            console.log('Attempting login with credentials:', { username, password: '***' });
+                            await window.authManager.login({
+                                username: username,
+                                password: password
+                            });
+                            console.log('Login successful');
+                            hideAuthModal();
+                        } catch (error) {
+                            console.error('Login error:', error);
+                            let errorMessage = 'Login failed. Please try again.';
+                            
+                            if (error.message && error.message !== '[object Object]') {
+                                errorMessage = error.message;
+                            } else if (error.detail) {
+                                errorMessage = error.detail;
+                            }
+                            
+                            showAuthError(errorMessage);
+                        } finally {
+                            setLoginLoading(false);
+                        }
+                    });
+                }
+                
+                if (registerForm) {
+                    registerForm.addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        
+                        const username = document.getElementById('register-username').value;
+                        const email = document.getElementById('register-email').value;
+                        const password = document.getElementById('register-password').value;
+                        
+                        if (!username || !email || !password) {
+                            showAuthError('Please fill in all fields');
+                            return;
+                        }
+                        
+                        setRegisterLoading(true);
+                        clearAuthError();
+                        
+                        try {
+                            await window.authManager.register({
+                                username: username,
+                                email: email,
+                                password: password
+                            });
+                            hideAuthModal();
+                        } catch (error) {
+                            console.error('Registration error:', error);
+                            let errorMessage = 'Registration failed. Please try again.';
+                            
+                            if (error.message && error.message !== '[object Object]') {
+                                errorMessage = error.message;
+                            } else if (error.detail) {
+                                errorMessage = error.detail;
+                            }
+                            
+                            showAuthError(errorMessage);
+                        } finally {
+                            setRegisterLoading(false);
+                        }
+                    });
+                }
+                
+                // Close modal on backdrop click
+                if (authModal) {
+                    authModal.addEventListener('click', (e) => {
+                        if (e.target === authModal) hideAuthModal();
+                    });
+                }
+            }
+            
+            function setLoginLoading(loading) {
+                const loginLoading = document.getElementById('login-loading');
+                const loginText = document.getElementById('login-text');
+                const loginButton = document.querySelector('#login-form button');
+                
+                if (loginLoading) loginLoading.classList.toggle('hidden', !loading);
+                if (loginText) loginText.classList.toggle('hidden', loading);
+                if (loginButton) loginButton.disabled = loading;
+            }
+            
+            function setRegisterLoading(loading) {
+                const registerLoading = document.getElementById('register-loading');
+                const registerText = document.getElementById('register-text');
+                const registerButton = document.querySelector('#register-form button');
+                
+                if (registerLoading) registerLoading.classList.toggle('hidden', !loading);
+                if (registerText) registerText.classList.toggle('hidden', loading);
+                if (registerButton) registerButton.disabled = loading;
+            }
+            
+            function showAuthError(message) {
+                const errorDiv = document.getElementById('auth-error');
+                const errorText = document.getElementById('error-text');
+                
+                if (errorDiv && errorText) {
+                    errorText.textContent = message;
+                    errorDiv.classList.remove('hidden');
+                } else {
+                    // Fallback: show in console and alert
+                    console.error('Auth error:', message);
+                    alert('Authentication Error: ' + message);
+                }
+            }
+            
+            function clearAuthError() {
+                const errorDiv = document.getElementById('auth-error');
+                if (errorDiv) {
+                    errorDiv.classList.add('hidden');
+                }
+            }
+            
             // Start initialization
             initializeAuth();
+            
+            // Setup auth modal after initialization
+            setTimeout(() => {
+                setupAuthModal();
+            }, 100);
         });
     </script>
+    
+    <!-- Authentication Modal (only shown in direct mode) -->
+    <div id="auth-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="modal-title" class="text-2xl font-bold text-gray-900">Sign In</h2>
+                <button id="close-modal" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Username or Email</label>
+                    <input type="text" id="login-username" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="login-password" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" required>
+                </div>
+                <button type="submit" class="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary-600 transition duration-200">
+                    <span id="login-loading" class="hidden">
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Signing in...
+                    </span>
+                    <span id="login-text">Sign In</span>
+                </button>
+            </form>
+
+            <!-- Register Form -->
+            <form id="register-form" class="hidden space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                    <input type="text" id="register-username" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="register-email" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="register-password" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" required>
+                    <p class="text-xs text-gray-500 mt-1">At least 8 characters with letters and numbers</p>
+                </div>
+                <button type="submit" class="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary-600 transition duration-200">
+                    <span id="register-loading" class="hidden">
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Creating account...
+                    </span>
+                    <span id="register-text">Create Account</span>
+                </button>
+            </form>
+
+            <!-- Form Toggle -->
+            <div class="mt-6 text-center">
+                <button id="toggle-auth" class="text-primary hover:text-primary-600 font-medium">
+                    <span id="toggle-text">Don't have an account? Sign up</span>
+                </button>
+            </div>
+
+            <!-- Error Message -->
+            <div id="auth-error" class="hidden mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                <p id="error-text"></p>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
