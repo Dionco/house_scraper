@@ -11,13 +11,18 @@ import sys
 import threading
 import time
 import random
-from datetime import datetime, timedelta
+import traceback
+import ctypes
+import importlib
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
 import pytz
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.cron import CronTrigger
+from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_EXECUTED
+from apscheduler.jobstores.memory import MemoryJobStore
 from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_EXECUTED
 from apscheduler.jobstores.memory import MemoryJobStore
 
@@ -848,20 +853,42 @@ class RailwayPeriodicScraper:
             
             # Update profile with better error handling and guaranteed safe timestamp
             profile['listings'] = existing_listings + new_listings
+            
+            # Add enhanced debugging for timestamp updates
+            old_timestamp = profile.get('last_scraped', 'None')
+            logger.info(f"Previous last_scraped timestamp for profile {profile_id}: {old_timestamp}")
+            
             try:
                 # First try to use the safe_iso_timestamp which tries multiple methods
-                profile['last_scraped'] = safe_iso_timestamp()
-                logger.debug(f"Using safe_iso_timestamp for profile {profile_id}")
+                new_timestamp = safe_iso_timestamp()
+                profile['last_scraped'] = new_timestamp
+                logger.info(f"Updated last_scraped timestamp for profile {profile_id} to: {new_timestamp}")
             except Exception as ts_error:
                 # Ultimate fallback - guaranteed to work
-                profile['last_scraped'] = datetime.now().isoformat()
-                logger.warning(f"Had to use basic ISO timestamp due to error: {ts_error}")
+                new_timestamp = datetime.now().isoformat()
+                profile['last_scraped'] = new_timestamp
+                logger.warning(f"Had to use basic ISO timestamp due to error: {ts_error}. Set to: {new_timestamp}")
+            
             profile['last_new_listings_count'] = len(new_listings)
             
-            # Save updated profile back to the database
-            db['profiles'][profile_id] = profile
-            with open(db_path, 'w') as f:
-                json.dump(db, f)
+            # Save updated profile back to the database with enhanced error handling
+            try:
+                db['profiles'][profile_id] = profile
+                logger.info(f"Saving updated profile {profile_id} to database at {db_path}")
+                
+                # Use atomic write pattern for better reliability
+                temp_path = f"{db_path}.tmp"
+                with open(temp_path, 'w') as f:
+                    json.dump(db, f)
+                    f.flush()
+                    os.fsync(f.fileno())  # Ensure data is written to disk
+                
+                # Rename temp file to actual file (atomic operation)
+                os.replace(temp_path, db_path)
+                logger.info(f"Successfully saved database with updated timestamp for profile {profile_id}")
+            except Exception as db_error:
+                logger.error(f"Failed to save database: {db_error}")
+                logger.error(f"Database path: {db_path}, writable: {os.access(os.path.dirname(db_path), os.W_OK)}")
                 
             # Send email notifications with better error handling
             if new_listings and profile.get('emails'):
