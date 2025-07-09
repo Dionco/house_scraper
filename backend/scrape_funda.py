@@ -8,6 +8,52 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+def is_running_on_railway():
+    """Check if the application is running on Railway."""
+    import os
+    return any([
+        os.getenv("RAILWAY_ENVIRONMENT"),
+        os.getenv("RAILWAY_PROJECT_ID"),
+        os.getenv("RAILWAY_SERVICE_ID"),
+        os.getenv("PORT")  # Railway sets this automatically
+    ])
+
+def is_running_in_container():
+    """Check if running in a Docker container."""
+    try:
+        with open('/proc/1/cgroup', 'rt') as f:
+            return 'docker' in f.read() or 'kubepods' in f.read()
+    except:
+        try:
+            import os
+            return os.path.exists('/.dockerenv')
+        except:
+            return False
+
+def get_chrome_binary_path():
+    """Get the appropriate Chrome binary path for the environment."""
+    import os
+    import platform
+    
+    if is_running_on_railway() or is_running_in_container():
+        # Standard locations in Linux-based containers
+        possible_paths = [
+            '/usr/bin/google-chrome',
+            '/usr/bin/google-chrome-stable',
+            '/usr/bin/chromium',
+            '/usr/bin/chromium-browser',
+            # Add Railway-specific paths if they differ
+        ]
+        
+        for path in possible_paths:
+            if os.path.exists(path):
+                return path
+                
+        return None  # Let the driver try to find it
+    else:
+        # For local development, let undetected_chromedriver find the binary
+        return None
+
 def scrape_funda_html(url, max_retries=2, timeout=30):
     """
     Scrape Funda HTML with performance optimizations
@@ -74,6 +120,20 @@ def scrape_funda_html(url, max_retries=2, timeout=30):
             # Set page load strategy to eager for faster loading
             options.add_argument('--page-load-strategy=eager')
             
+            # Configure Chrome binary path for containerized environments
+            chrome_binary = get_chrome_binary_path()
+            if chrome_binary:
+                logger.info(f"Using Chrome binary path: {chrome_binary}")
+                options.binary_location = chrome_binary
+                
+            # Handle Railway/container environments
+            if is_running_on_railway() or is_running_in_container():
+                logger.info("Running in Railway/Container environment, using container-specific settings")
+                options.add_argument('--disable-setuid-sandbox')
+                options.add_argument('--disable-dev-shm-usage')
+                options.add_argument('--single-process')
+                options.add_argument('--remote-debugging-port=9222')
+                
             # Initialize driver with shorter timeout
             logger.info("Initializing Chrome driver...")
             driver = uc.Chrome(options=options, version_main=None, driver_executable_path=None)
@@ -149,7 +209,30 @@ def scrape_funda_html(url, max_retries=2, timeout=30):
             return html
                 
         except Exception as e:
-            logger.error(f"Scraping attempt {attempt + 1} failed: {e}")
+            error_msg = str(e)
+            logger.error(f"Scraping attempt {attempt + 1} failed: {error_msg}")
+            
+            # Better error diagnosis for Chrome binary issues
+            if "binary location" in error_msg.lower():
+                import os
+                # Log available Chrome binaries
+                chrome_paths = [
+                    '/usr/bin/google-chrome',
+                    '/usr/bin/google-chrome-stable',
+                    '/usr/bin/chromium',
+                    '/usr/bin/chromium-browser'
+                ]
+                for path in chrome_paths:
+                    logger.info(f"Chrome path {path} exists: {os.path.exists(path)}")
+                
+                # Try to get Chrome version
+                try:
+                    import subprocess
+                    chrome_version = subprocess.check_output(['google-chrome', '--version']).decode('utf-8').strip()
+                    logger.info(f"Chrome version: {chrome_version}")
+                except Exception as chrome_err:
+                    logger.error(f"Failed to get Chrome version: {chrome_err}")
+            
             if attempt < max_retries - 1:
                 wait_time = 5 + (attempt * 5)  # Shorter backoff for Railway
                 logger.info(f"Waiting {wait_time} seconds before retry...")
