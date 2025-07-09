@@ -3,6 +3,8 @@ import os
 import json
 import time
 import requests
+import logging
+import subprocess
 from datetime import datetime
 from fastapi import FastAPI, HTTPException, Query, Request, Body, status, Response, Depends
 from fastapi.responses import JSONResponse, HTMLResponse, Response
@@ -19,6 +21,16 @@ def is_running_on_railway() -> bool:
         os.getenv("RAILWAY_SERVICE_ID"),
         os.getenv("PORT")  # Railway sets this automatically
     ])
+
+# Run diagnostic script if on Railway
+if is_running_on_railway():
+    try:
+        logging.info("Running on Railway - executing diagnostic script")
+        import railway_diagnostic
+        railway_diagnostic.run_diagnostics()
+        logging.info("Railway diagnostic script completed")
+    except Exception as e:
+        logging.error(f"Error running Railway diagnostic script: {e}")
 
 # Try to import timezone utilities, fallback if not available
 try:
@@ -85,7 +97,6 @@ except ImportError:
     )
 
 # Import periodic scraper with Railway optimization
-import logging
 logger = logging.getLogger(__name__)
 
 try:
@@ -1458,3 +1469,122 @@ async def chrome_diagnostics():
         diagnostics["chrome"]["selenium_test"]["error"] = str(e)
     
     return diagnostics
+
+# --- DIAGNOSTIC ENDPOINTS ---
+
+@app.get("/api/diagnostic/verify-imports")
+async def verify_imports():
+    """
+    Run the import verification script to diagnose issues with imports
+    This is particularly useful for diagnosing Railway deployment issues
+    """
+    import sys
+    import io
+    import traceback
+    from contextlib import redirect_stdout, redirect_stderr
+    
+    # Capture stdout and stderr
+    stdout_buffer = io.StringIO()
+    stderr_buffer = io.StringIO()
+    
+    try:
+        # Import the verification module
+        try:
+            import verify_imports
+        except ImportError as e:
+            return {
+                "status": "ERROR",
+                "error": f"Could not import verify_imports module: {str(e)}",
+                "traceback": traceback.format_exc()
+            }
+            
+        # Run verification with captured output
+        with redirect_stdout(stdout_buffer), redirect_stderr(stderr_buffer):
+            success = verify_imports.verify_imports()
+            
+        # Get the captured output
+        stdout = stdout_buffer.getvalue()
+        stderr = stderr_buffer.getvalue()
+        
+        return {
+            "status": "SUCCESS" if success else "FAILED",
+            "output": stdout,
+            "errors": stderr,
+            "is_railway": verify_imports.is_railway(),
+            "python_version": sys.version,
+            "current_directory": os.getcwd()
+        }
+    except Exception as e:
+        return {
+            "status": "ERROR",
+            "error": str(e),
+            "traceback": traceback.format_exc(),
+            "output": stdout_buffer.getvalue(),
+            "errors": stderr_buffer.getvalue()
+        }
+
+@app.get("/api/diagnostic/timezone")
+async def timezone_diagnostic():
+    """
+    Run diagnostics on the timezone_utils module to verify it works
+    This addresses the specific error with timezone_utils imports on Railway
+    """
+    result = {
+        "status": "CHECKING",
+        "timezone_utils_available": TIMEZONE_UTILS_AVAILABLE,
+        "checks": {}
+    }
+    
+    try:
+        # Check direct import
+        try:
+            import timezone_utils as tu
+            result["checks"]["direct_import"] = "SUCCESS"
+            result["checks"]["module_path"] = getattr(tu, "__file__", "unknown")
+        except ImportError as e:
+            result["checks"]["direct_import"] = f"FAILED: {str(e)}"
+        except Exception as e:
+            result["checks"]["direct_import"] = f"ERROR: {str(e)}"
+            
+        # Check relative import
+        try:
+            from . import timezone_utils as tu_rel
+            result["checks"]["relative_import"] = "SUCCESS"
+            result["checks"]["relative_module_path"] = getattr(tu_rel, "__file__", "unknown")
+        except ImportError as e:
+            result["checks"]["relative_import"] = f"FAILED: {str(e)}"
+        except Exception as e:
+            result["checks"]["relative_import"] = f"ERROR: {str(e)}"
+            
+        # Check if file exists
+        try:
+            import os
+            paths = [
+                os.path.join(os.getcwd(), "timezone_utils.py"),
+                os.path.join(os.getcwd(), "backend", "timezone_utils.py")
+            ]
+            result["checks"]["file_paths"] = {}
+            for path in paths:
+                result["checks"]["file_paths"][path] = os.path.exists(path)
+        except Exception as e:
+            result["checks"]["file_paths"] = f"ERROR: {str(e)}"
+            
+        # Test functions if available
+        if TIMEZONE_UTILS_AVAILABLE:
+            try:
+                result["checks"]["now_cest_iso"] = now_cest_iso()
+                result["checks"]["timezone_info"] = get_timezone_info()
+                result["status"] = "SUCCESS"
+            except Exception as e:
+                result["checks"]["function_test"] = f"ERROR: {str(e)}"
+                result["status"] = "FAILED"
+        else:
+            result["status"] = "NOT_AVAILABLE"
+            
+    except Exception as e:
+        import traceback
+        result["status"] = "ERROR"
+        result["error"] = str(e)
+        result["traceback"] = traceback.format_exc()
+        
+    return result

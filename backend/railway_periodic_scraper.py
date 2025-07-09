@@ -30,8 +30,9 @@ def is_running_on_railway() -> bool:
         os.getenv("PORT")  # Railway sets this automatically
     ])
 
-# Setup timezone utilities with robust fallbacks
+# Global import status flags
 TIMEZONE_UTILS_IMPORTED = False
+EMAIL_UTILS_IMPORTED = False
 logger = logging.getLogger(__name__)
 
 # Define fallback implementations first, so they're always available
@@ -59,47 +60,88 @@ def fallback_now_cest():
 # Use Amsterdam timezone as fallback for CEST
 FALLBACK_CEST = pytz.timezone('Europe/Amsterdam')
 
-# Try to import, but use fallbacks regardless of outcome
+# Try to import timezone_utils with comprehensive error handling
 try:
+    # First try relative import
     from .timezone_utils import now_cest_iso, now_cest, CEST
     TIMEZONE_UTILS_IMPORTED = True
     logger.info("Successfully imported timezone_utils from relative import")
-except ImportError:
+except ImportError as e:
+    logger.info(f"Relative import of timezone_utils failed: {e}")
     try:
+        # Then try direct import
         from timezone_utils import now_cest_iso, now_cest, CEST
         TIMEZONE_UTILS_IMPORTED = True
         logger.info("Successfully imported timezone_utils from direct import")
-    except ImportError:
-        # Use our fallback implementations
-        logger.warning("timezone_utils module not found, using fallback timezone handling")
+    except ImportError as e:
+        # Use our fallback implementations with detailed logging
+        logger.warning(f"timezone_utils module not found: {e}. Using fallback timezone handling.")
+        # In case the function was defined previously in a failed import attempt
+        if 'now_cest' in globals():
+            del globals()['now_cest']
+        if 'now_cest_iso' in globals():
+            del globals()['now_cest_iso']
+            
         now_cest_iso = fallback_now_cest_iso
         now_cest = fallback_now_cest
         CEST = FALLBACK_CEST
+        TIMEZONE_UTILS_IMPORTED = False
         
-        def now_cest():
-            """Return current time in CEST timezone"""
-            return datetime.now(pytz.timezone('Europe/Amsterdam'))
+        # Print debug info about the Python path
+        logger.warning(f"Python path: {sys.path}")
+        logger.warning(f"Current directory: {os.getcwd()}")
         
-        # Define CEST timezone
-        CEST = pytz.timezone('Europe/Amsterdam')
+        # Check if the file exists
+        timezone_paths = [
+            os.path.join(os.getcwd(), "timezone_utils.py"),
+            os.path.join(os.getcwd(), "backend", "timezone_utils.py")
+        ]
+        for path in timezone_paths:
+            logger.info(f"Checking for timezone_utils at: {path} - Exists: {os.path.exists(path)}")
+            
+        # No return statement here, we're not in a function!
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Import scraping functions
+# Import scraping functions with better error handling
+
 try:
+    # Try relative imports first
     from .funda_url_builder import build_rental_url
     from .scrape_funda import scrape_funda_html
     from .extract_funda_listings import extract_simple_listings_from_html
     from .listing_mapping import map_listing_for_frontend
-    from .email_utils import send_new_listings_email
-except ImportError:
-    from funda_url_builder import build_rental_url
-    from scrape_funda import scrape_funda_html
-    from extract_funda_listings import extract_simple_listings_from_html
-    from listing_mapping import map_listing_for_frontend
-    from email_utils import send_new_listings_email
+    logger.info("Successfully imported core scraping modules with relative imports")
+    
+    try:
+        from .email_utils import send_new_listings_email
+        EMAIL_UTILS_IMPORTED = True
+        logger.info("Successfully imported email_utils with relative import")
+    except ImportError as e:
+        logger.warning(f"Relative import of email_utils failed: {e}")
+        
+except ImportError as e:
+    # Fall back to direct imports
+    logger.info(f"Relative import failed: {e}. Trying direct imports...")
+    try:
+        from funda_url_builder import build_rental_url
+        from scrape_funda import scrape_funda_html
+        from extract_funda_listings import extract_simple_listings_from_html
+        from listing_mapping import map_listing_for_frontend
+        logger.info("Successfully imported core scraping modules with direct imports")
+        
+        try:
+            from email_utils import send_new_listings_email
+            EMAIL_UTILS_IMPORTED = True
+            logger.info("Successfully imported email_utils with direct import")
+        except ImportError as e:
+            logger.warning(f"Direct import of email_utils failed: {e}")
+            
+    except ImportError as e:
+        logger.error(f"Failed to import required modules: {e}")
+        raise
 
 # Add helper function that's guaranteed to work for timestamps
 def safe_iso_timestamp():
@@ -582,22 +624,31 @@ class RailwayPeriodicScraper:
                             existing['is_new'] = False
                             break
             
-            # Update profile
+            # Update profile with better error handling
             profile['listings'] = existing_listings + new_listings
             profile['last_scraped'] = safe_iso_timestamp()
             profile['last_new_listings_count'] = len(new_listings)
             
-            # Send email notifications
+            # Save updated profile back to the database
+            db['profiles'][profile_id] = profile
+            with open(db_path, 'w') as f:
+                json.dump(db, f)
+                
+            # Send email notifications with better error handling
             if new_listings and profile.get('emails'):
-                try:
-                    send_new_listings_email(
-                        profile.get('emails', []),
-                        new_listings,
-                        profile.get('name', 'Unknown Profile')
-                    )
-                    logger.info(f"Sent email notification for {len(new_listings)} new listings")
-                except Exception as e:
-                    logger.error(f"Failed to send email notification: {e}")
+                if EMAIL_UTILS_IMPORTED:
+                    try:
+                        send_new_listings_email(
+                            profile.get('emails', []),
+                            profile.get('name', 'Unknown Profile'),
+                            new_listings
+                        )
+                        logger.info(f"Sent email notification for {len(new_listings)} new listings")
+                    except Exception as e:
+                        logger.error(f"Failed to send email notification: {e}")
+                else:
+                    logger.warning(f"Email sending skipped: email_utils not available")
+                    logger.info(f"Would have sent {len(new_listings)} new listings to {profile.get('emails')} for profile {profile.get('name', 'Unknown Profile')}")
             
             # Log results
             duration = time.time() - start_time
@@ -770,3 +821,13 @@ def ensure_scraper_running():
 if is_running_on_railway():
     logger.info("Railway environment detected, auto-starting scraper")
     ensure_scraper_running()
+
+# Add fallback email function if import fails
+if not EMAIL_UTILS_IMPORTED:
+    logger.warning("Creating fallback email function since email_utils import failed")
+    
+    def send_new_listings_email(to_email, new_listings, profile_name):
+        """Fallback email function that logs but doesn't send emails"""
+        logger.warning(f"Email sending skipped: email_utils not available")
+        logger.info(f"Would have sent {len(new_listings)} new listings to {to_email} for profile {profile_name}")
+        return False
