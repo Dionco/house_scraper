@@ -6,47 +6,20 @@ import os
 import json
 import logging
 import gc
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.trigge            # Add staggered start delay to prevent all jobs starting at once
-            import random
-            start_delay_minutes = 2 + random.randint(0, 5)  # 2-7 minutes staggered delay
-            next_run_time = datetime.now(pytz.UTC) + timedelta(minutes=start_delay_minutes)
-            
-            # Schedule new job with appropriate trigger
-            try:
-                # First remove job if it exists to avoid conflicts
-                try:
-                    if self.scheduler.get_job(job_id):
-                        self.scheduler.remove_job(job_id)
-                        logger.info(f"Removed existing job {job_id} before rescheduling")
-                except Exception as e:
-                    logger.debug(f"No existing job to remove: {e}")
-                
-                # Schedule new job with appropriate trigger
-                self.scheduler.add_job(
-                    func=self._scrape_profile_wrapper,
-                    trigger=IntervalTrigger(hours=combined_hours, minutes=combined_minutes),
-                    id=job_id,
-                    args=[profile_id],
-                    name=f"Scrape {profile.get('name', 'Unknown')} ({profile_id})",
-                    max_instances=1,
-                    coalesce=True,
-                    next_run_time=next_run_time,
-                    misfire_grace_time=3600,  # Allow jobs to run up to 1 hour late
-                    replace_existing=True     # Ensure only one job exists
-                )
-                logger.info(f"Successfully scheduled job {job_id} with trigger interval[{combined_hours}:{combined_minutes:02d}:00]")
-            except Exception as e:
-                logger.error(f"Failed to schedule job {job_id}: {e}")t IntervalTrigger
-from apscheduler.triggers.cron import CronTrigger
-from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_EXECUTED
-from apscheduler.jobstores.memory import MemoryJobStore
 import signal
 import sys
 import threading
 import time
+import random
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional
+import pytz
+
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.interval import IntervalTrigger
+from apscheduler.triggers.cron import CronTrigger
+from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_EXECUTED
+from apscheduler.jobstores.memory import MemoryJobStore
 
 def is_running_on_railway() -> bool:
     """Check if the application is running on Railway."""
@@ -56,8 +29,6 @@ def is_running_on_railway() -> bool:
         os.getenv("RAILWAY_SERVICE_ID"),
         os.getenv("PORT")  # Railway sets this automatically
     ])
-
-import pytz
 
 try:
     from .timezone_utils import now_cest_iso, now_cest, CEST
