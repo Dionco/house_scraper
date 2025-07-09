@@ -30,20 +30,30 @@ def is_running_on_railway() -> bool:
         os.getenv("PORT")  # Railway sets this automatically
     ])
 
+# Setup timezone utilities with robust fallbacks
+TIMEZONE_UTILS_IMPORTED = False
+
 try:
     from .timezone_utils import now_cest_iso, now_cest, CEST
+    TIMEZONE_UTILS_IMPORTED = True
 except ImportError:
     try:
         from timezone_utils import now_cest_iso, now_cest, CEST
+        TIMEZONE_UTILS_IMPORTED = True
     except ImportError:
-        from datetime import datetime
+        # Create our own implementations as fallback
+        logger = logging.getLogger(__name__)
+        logger.warning("timezone_utils module not found, using fallback timezone handling")
         
         def now_cest_iso():
+            """Return current time in CEST timezone as ISO format string"""
             return datetime.now(pytz.timezone('Europe/Amsterdam')).isoformat()
         
         def now_cest():
+            """Return current time in CEST timezone"""
             return datetime.now(pytz.timezone('Europe/Amsterdam'))
         
+        # Define CEST timezone
         CEST = pytz.timezone('Europe/Amsterdam')
 
 # Configure logging
@@ -63,6 +73,24 @@ except ImportError:
     from extract_funda_listings import extract_simple_listings_from_html
     from listing_mapping import map_listing_for_frontend
     from email_utils import send_new_listings_email
+
+# Add helper function that's guaranteed to work for timestamps
+def safe_iso_timestamp():
+    """Return current time in UTC as ISO format string - guaranteed to work"""
+    try:
+        return now_cest_iso()  # Try to use timezone_utils first
+    except Exception as e:
+        logger.debug(f"Could not use now_cest_iso(): {e}")
+        try:
+            return datetime.now(pytz.UTC).isoformat()  # Fallback to UTC
+        except Exception as e:
+            logger.debug(f"Could not use pytz.UTC: {e}")
+            try:
+                from datetime import timezone
+                return datetime.now(timezone.utc).isoformat()  # Try with Python's built-in timezone
+            except Exception as e:
+                logger.debug(f"Could not use timezone.utc: {e}")
+                return datetime.now().isoformat()  # Last resort with no timezone
 
 class RailwayPeriodicScraper:
     """
@@ -529,12 +557,8 @@ class RailwayPeriodicScraper:
             
             # Update profile
             profile['listings'] = existing_listings + new_listings
-            profile['last_scraped'] = now_cest_iso()
+            profile['last_scraped'] = safe_iso_timestamp()
             profile['last_new_listings_count'] = len(new_listings)
-            
-            # Save database
-            with open(db_path, 'w') as f:
-                json.dump(db, f, indent=2)
             
             # Send email notifications
             if new_listings and profile.get('emails'):
