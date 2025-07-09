@@ -54,14 +54,14 @@ def get_chrome_binary_path():
         # For local development, let undetected_chromedriver find the binary
         return None
 
-def scrape_funda_html(url, max_retries=2, timeout=30):
+def scrape_funda_html(url, max_retries=3, timeout=60):
     """
-    Scrape Funda HTML with performance optimizations
+    Scrape Funda HTML with improved stability for Railway deployment
     
     Args:
         url: The URL to scrape
-        max_retries: Maximum number of retry attempts
-        timeout: Timeout in seconds for page load (reduced for speed)
+        max_retries: Maximum number of retry attempts (increased from 2 to 3)
+        timeout: Timeout in seconds for page load (increased for reliability)
     
     Returns:
         str: HTML content or None if failed
@@ -69,6 +69,16 @@ def scrape_funda_html(url, max_retries=2, timeout=30):
     for attempt in range(max_retries):
         driver = None
         try:
+            # Explicitly free memory before each attempt
+            import gc
+            gc.collect()
+            
+            # Introduce increasing delay between retries to reduce resource contention
+            if attempt > 0:
+                wait_time = 5 * attempt
+                logger.info(f"Waiting {wait_time}s before retry {attempt+1}")
+                time.sleep(wait_time)
+                
             logger.info(f"Scraping attempt {attempt + 1}/{max_retries} for URL: {url}")
             
             # Use a fixed, reliable user agent instead of random
@@ -79,22 +89,15 @@ def scrape_funda_html(url, max_retries=2, timeout=30):
             options.add_argument('--headless=new')
             options.add_argument('--no-sandbox')
             options.add_argument('--disable-dev-shm-usage')
-            options.add_argument('--disable-blink-features=AutomationControlled')
-            options.add_argument('--window-size=1024,768')  # Smaller window for speed
+            
+            # More conservative settings to reduce resource usage
+            options.add_argument('--window-size=800,600')  # Even smaller window
             options.add_argument('--lang=nl-NL,nl')
             options.add_argument('--disable-gpu')
-            options.add_argument('--disable-web-security')
-            options.add_argument('--disable-features=VizDisplayCompositor')
             options.add_argument('--disable-extensions')
-            options.add_argument('--disable-plugins')
             options.add_argument('--disable-images')  # Speed up loading
-            options.add_argument('--disable-background-timer-throttling')
-            options.add_argument('--disable-backgrounding-occluded-windows')
-            options.add_argument('--disable-renderer-backgrounding')
-            options.add_argument('--disable-features=TranslateUI')
-            options.add_argument('--disable-ipc-flooding-protection')
-            options.add_argument('--memory-pressure-off')
-            options.add_argument('--max_old_space_size=4096')
+            options.add_argument('--disable-background-networking')
+            options.add_argument('--disable-default-apps')
             
             # Performance optimizations
             options.add_argument('--aggressive-cache-discard')
@@ -173,18 +176,46 @@ def scrape_funda_html(url, max_retries=2, timeout=30):
                 except Exception as e:
                     logger.warning(f"Could not detect Chrome version: {e}")
             
-            # Initialize with error handling
+            # Use a temporary directory for Chrome data
+            import tempfile
+            import os
+            
+            # Create temporary user data directory
+            temp_dir = tempfile.mkdtemp()
+            user_data_dir = os.path.join(temp_dir, "chrome-data")
+            os.makedirs(user_data_dir, exist_ok=True)
+            logger.info(f"Using temporary user data directory: {user_data_dir}")
+            options.add_argument(f"--user-data-dir={user_data_dir}")
+            
+            # Add more connection stability options
+            options.add_argument("--disable-application-cache")
+            options.add_argument("--disable-session-crashed-bubble")
+            options.add_argument("--disable-site-isolation-trials")
+            
+            # Increase connection timeouts
+            options.add_argument("--host-resolver-timeout=60000")
+            options.add_argument("--dns-prefetch-timeout=60000")
+            
+            # Specify log file location to avoid filling container logs
+            if is_running_on_railway() or is_running_in_container():
+                log_path = os.path.join(temp_dir, "chrome.log")
+                options.add_argument(f"--log-file={log_path}")
+                options.add_argument("--v=0")  # Minimal logging
+            
+            # Initialize with error handling and more resilient settings
             driver = uc.Chrome(
                 options=options,
                 version_main=chrome_version,
                 driver_executable_path=None,
-                headless=True,  # Ensure headless is set explicitly
-                use_subprocess=True  # Use subprocess for better isolation
+                headless=True,
+                use_subprocess=True,
+                browser_executable_path=chrome_binary if chrome_binary else None
             )
             
-            # Set shorter timeouts for speed
+            # Set proper timeouts for reliability
             driver.set_page_load_timeout(timeout)
-            driver.implicitly_wait(3)  # Reduced from 5 to 3
+            driver.set_script_timeout(timeout)
+            driver.implicitly_wait(5)
             
             # Add minimal delay to avoid detection
             time.sleep(random.uniform(0.2, 0.8))  # Reduced delay
@@ -283,17 +314,47 @@ def scrape_funda_html(url, max_retries=2, timeout=30):
                 time.sleep(wait_time)
             
         finally:
-            # Always close the driver and free resources
+            # Always close the driver and free resources with enhanced cleanup
             if driver:
                 try:
+                    # First try to close all windows
+                    try:
+                        for handle in driver.window_handles:
+                            driver.switch_to.window(handle)
+                            driver.close()
+                    except:
+                        pass
+                    
+                    # Then quit the driver
                     driver.quit()
                 except Exception as e:
-                    logger.debug(f"Error closing driver: {e}")
+                    logger.warning(f"Error closing driver: {e}")
+                    
+                    # If normal quit fails, try to kill Chrome processes
+                    if is_running_on_railway() or is_running_in_container():
+                        try:
+                            import subprocess
+                            # Try to kill orphaned Chrome processes
+                            logger.info("Attempting to kill orphaned Chrome processes")
+                            subprocess.call("pkill -f chrome", shell=True)
+                        except Exception as kill_err:
+                            logger.warning(f"Failed to kill Chrome processes: {kill_err}")
+                
+                # Clean up temporary directory
+                try:
+                    if 'temp_dir' in locals() and os.path.exists(temp_dir):
+                        import shutil
+                        shutil.rmtree(temp_dir, ignore_errors=True)
+                except Exception as e:
+                    logger.debug(f"Error cleaning temp directory: {e}")
                 
                 # Force garbage collection
                 import gc
                 driver = None
                 gc.collect()
+                
+                # Sleep briefly to allow system to reclaim resources
+                time.sleep(1)
                     
     logger.error(f"All {max_retries} scraping attempts failed for URL: {url}")
     return None

@@ -16,3 +16,4 @@ undetected-chromedriver
 selenium
 fake-useragent
 pytz
+psutil

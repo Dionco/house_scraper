@@ -38,9 +38,15 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --d
     && apt-get install -y google-chrome-stable \
     && rm -rf /var/lib/apt/lists/*
 
-# Create Chrome directories for non-root user
+# Create Chrome directories with better permissions and structure
 RUN mkdir -p /tmp/chrome-user-data \
-    && chmod 777 /tmp/chrome-user-data
+    && mkdir -p /tmp/chrome-downloads \
+    && mkdir -p /tmp/chrome-cache \
+    && mkdir -p /tmp/chrome-tmp \
+    && chmod -R 777 /tmp/chrome-user-data \
+    && chmod -R 777 /tmp/chrome-downloads \
+    && chmod -R 777 /tmp/chrome-cache \
+    && chmod -R 777 /tmp/chrome-tmp
 
 # Copy requirements first for better caching
 COPY backend/requirements.txt .
@@ -62,10 +68,18 @@ RUN mkdir -p /home/appuser/.cache/undetected_chromedriver \
     && chown -R appuser:appuser /tmp/chrome_tmp \
     && chmod -R 777 /tmp/chrome_tmp
 
-# Set environment variables for Chrome
+# Set environment variables for Chrome with improved memory settings
 ENV CHROME_USER_DATA_DIR=/tmp/chrome-user-data
-ENV CHROME_CACHE_DIR=/tmp/chrome_tmp
+ENV CHROME_CACHE_DIR=/tmp/chrome-cache
+ENV CHROME_TMP_DIR=/tmp/chrome-tmp
+ENV CHROME_DOWNLOADS_DIR=/tmp/chrome-downloads
 ENV PYTHONUNBUFFERED=1
+
+# Limit Chrome's resource usage
+ENV CHROMIUM_FLAGS="--disable-dev-shm-usage --disable-gpu --no-sandbox --disable-software-rasterizer --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-breakpad --disable-component-extensions-with-background-pages --disable-features=TranslateUI,BlinkGenPropertyTrees --disable-ipc-flooding-protection --disable-renderer-backgrounding"
+
+# Set lower limits for chrome processes to prevent OOM
+ENV NODE_OPTIONS="--max-old-space-size=512"
 
 USER appuser
 # Verify Chrome installation and path

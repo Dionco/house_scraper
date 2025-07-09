@@ -1344,3 +1344,117 @@ async def force_scrape_profile(profile_id: str):
     except Exception as e:
         logger.error(f"Error in force scrape: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/scraper/chrome_debug")
+async def chrome_diagnostics():
+    """Advanced diagnostic endpoint to test Chrome in the environment"""
+    import os
+    import sys
+    import platform
+    import subprocess
+    import tempfile
+    from pathlib import Path
+    import shutil
+    
+    diagnostics = {
+        "timestamp": datetime.now().isoformat(),
+        "environment": {
+            "on_railway": is_running_on_railway(),
+            "python_version": sys.version,
+            "platform": platform.platform(),
+            "container": False,
+            "memory_usage_mb": None,
+            "disk_space_mb": None
+        },
+        "chrome": {
+            "detected": False,
+            "version": None,
+            "binary_path": None,
+            "selenium_test": {
+                "success": False,
+                "error": None,
+                "html_length": 0,
+                "duration_ms": 0
+            }
+        }
+    }
+    
+    # Check if running in container
+    try:
+        diagnostics["environment"]["container"] = os.path.exists('/.dockerenv') or os.path.exists('/.containerenv')
+        
+        # Try to get container info from /proc/1/cgroup
+        try:
+            with open('/proc/1/cgroup', 'r') as f:
+                cgroup_content = f.read()
+                diagnostics["environment"]["cgroup_info"] = cgroup_content.split('\n')[0:3]
+                if 'docker' in cgroup_content or 'kubepods' in cgroup_content:
+                    diagnostics["environment"]["container"] = True
+        except Exception as e:
+            diagnostics["environment"]["cgroup_error"] = str(e)
+    except Exception as e:
+        diagnostics["environment"]["container_check_error"] = str(e)
+    
+    # Try to get system resources
+    try:
+        import psutil
+        memory = psutil.virtual_memory()
+        disk = psutil.disk_usage('/')
+        
+        diagnostics["environment"]["memory_usage_mb"] = {
+            "total": memory.total / (1024 * 1024),
+            "used": memory.used / (1024 * 1024),
+            "percent": memory.percent
+        }
+        
+        diagnostics["environment"]["disk_space_mb"] = {
+            "total": disk.total / (1024 * 1024),
+            "used": disk.used / (1024 * 1024),
+            "free": disk.free / (1024 * 1024),
+            "percent": disk.percent
+        }
+    except Exception as e:
+        diagnostics["environment"]["resource_check_error"] = str(e)
+    
+    # Check for Chrome binary
+    chrome_paths = [
+        '/usr/bin/google-chrome',
+        '/usr/bin/google-chrome-stable',
+        '/usr/bin/chromium',
+        '/usr/bin/chromium-browser'
+    ]
+    
+    for path in chrome_paths:
+        if os.path.exists(path):
+            diagnostics["chrome"]["binary_path"] = path
+            diagnostics["chrome"]["detected"] = True
+            break
+    
+    # Try to get Chrome version
+    if diagnostics["chrome"]["detected"]:
+        try:
+            version_cmd = f"{diagnostics['chrome']['binary_path']} --version"
+            chrome_version = subprocess.check_output(version_cmd, shell=True, stderr=subprocess.STDOUT).decode('utf-8').strip()
+            diagnostics["chrome"]["version"] = chrome_version
+        except Exception as e:
+            diagnostics["chrome"]["version_error"] = str(e)
+    
+    # Try a quick Chrome test
+    try:
+        from .scrape_funda import scrape_funda_html
+        
+        start_time = time.time()
+        html = scrape_funda_html('https://www.funda.nl', max_retries=1, timeout=20)
+        end_time = time.time()
+        
+        diagnostics["chrome"]["selenium_test"]["duration_ms"] = int((end_time - start_time) * 1000)
+        
+        if html:
+            diagnostics["chrome"]["selenium_test"]["success"] = True
+            diagnostics["chrome"]["selenium_test"]["html_length"] = len(html)
+        else:
+            diagnostics["chrome"]["selenium_test"]["error"] = "Empty HTML returned"
+    except Exception as e:
+        diagnostics["chrome"]["selenium_test"]["error"] = str(e)
+    
+    return diagnostics

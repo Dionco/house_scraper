@@ -32,22 +32,49 @@ def is_running_on_railway() -> bool:
 
 # Setup timezone utilities with robust fallbacks
 TIMEZONE_UTILS_IMPORTED = False
+logger = logging.getLogger(__name__)
 
+# Define fallback implementations first, so they're always available
+def safe_iso_timestamp():
+    """Safely format current time in ISO format with timezone info"""
+    try:
+        return datetime.now(pytz.timezone('Europe/Amsterdam')).isoformat()
+    except Exception as e:
+        logger.error(f"Error formatting timestamp: {e}")
+        return datetime.now().isoformat() + "+02:00"  # Approximate CEST offset
+
+def fallback_now_cest_iso():
+    """Return current time in CEST timezone as ISO format string"""
+    return safe_iso_timestamp()
+
+def fallback_now_cest():
+    """Return current time in CEST timezone"""
+    try:
+        return datetime.now(pytz.timezone('Europe/Amsterdam'))
+    except Exception as e:
+        logger.error(f"Error creating CEST time: {e}")
+        # Add 2 hours to UTC as a fallback for CEST
+        return datetime.now() + timedelta(hours=2)
+
+# Use Amsterdam timezone as fallback for CEST
+FALLBACK_CEST = pytz.timezone('Europe/Amsterdam')
+
+# Try to import, but use fallbacks regardless of outcome
 try:
     from .timezone_utils import now_cest_iso, now_cest, CEST
     TIMEZONE_UTILS_IMPORTED = True
+    logger.info("Successfully imported timezone_utils from relative import")
 except ImportError:
     try:
         from timezone_utils import now_cest_iso, now_cest, CEST
         TIMEZONE_UTILS_IMPORTED = True
+        logger.info("Successfully imported timezone_utils from direct import")
     except ImportError:
-        # Create our own implementations as fallback
-        logger = logging.getLogger(__name__)
+        # Use our fallback implementations
         logger.warning("timezone_utils module not found, using fallback timezone handling")
-        
-        def now_cest_iso():
-            """Return current time in CEST timezone as ISO format string"""
-            return datetime.now(pytz.timezone('Europe/Amsterdam')).isoformat()
+        now_cest_iso = fallback_now_cest_iso
+        now_cest = fallback_now_cest
+        CEST = FALLBACK_CEST
         
         def now_cest():
             """Return current time in CEST timezone"""
