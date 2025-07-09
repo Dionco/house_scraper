@@ -403,7 +403,7 @@
             statusText.className = `font-medium ${isRunning ? 'text-green-600' : 'text-red-600'}`;
             
             // Update job counts
-            totalJobs.textContent = status.total_jobs || 0;
+            totalJobs.textContent = status.scheduled_jobs || status.total_jobs || 0;
             const profileJobs = status.jobs?.filter(job => job.id?.startsWith('scrape_profile_')) || [];
             activeJobs.textContent = profileJobs.length;
             
@@ -451,9 +451,11 @@
             let nextRunTime = null;
 
             for (const job of profileJobs) {
-                if (job.next_run) {
+                // Handle both next_run and next_run_time (from API)
+                const nextRunValue = job.next_run_time || job.next_run;
+                if (nextRunValue) {
                     try {
-                        const jobTime = new Date(job.next_run);
+                        const jobTime = new Date(nextRunValue);
                         if (!nextRunTime || jobTime < nextRunTime) {
                             nextRunTime = jobTime;
                             nextJob = job;
@@ -514,7 +516,9 @@
             // Add sync job if exists
             if (syncJobs.length > 0) {
                 const syncJob = syncJobs[0];
-                const nextRun = syncJob.next_run ? new Date(syncJob.next_run) : null;
+                // Handle both next_run and next_run_time (from API)
+                const nextRun = syncJob.next_run_time ? new Date(syncJob.next_run_time) : 
+                               (syncJob.next_run ? new Date(syncJob.next_run) : null);
                 const timeDiff = nextRun ? nextRun - now : null;
                 
                 html += `
@@ -542,15 +546,19 @@
 
             // Add profile jobs
             profileJobs.sort((a, b) => {
-                const timeA = a.next_run ? new Date(a.next_run) : new Date(0);
-                const timeB = b.next_run ? new Date(b.next_run) : new Date(0);
+                const timeA = a.next_run_time ? new Date(a.next_run_time) : 
+                             (a.next_run ? new Date(a.next_run) : new Date(0));
+                const timeB = b.next_run_time ? new Date(b.next_run_time) : 
+                             (b.next_run ? new Date(b.next_run) : new Date(0));
                 return timeA - timeB;
             });
 
             profileJobs.forEach(job => {
                 const profileName = job.name?.replace('Scrape Profile ', '') || 'Unknown Profile';
                 const profileId = job.id?.replace('scrape_profile_', '') || '';
-                const nextRun = job.next_run ? new Date(job.next_run) : null;
+                // Handle both next_run and next_run_time (from API)
+                const nextRun = job.next_run_time ? new Date(job.next_run_time) : 
+                               (job.next_run ? new Date(job.next_run) : null);
                 const timeDiff = nextRun ? nextRun - now : null;
                 
                 let statusClass = 'bg-gray-100 text-gray-800';
