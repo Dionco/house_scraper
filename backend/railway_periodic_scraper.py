@@ -269,7 +269,7 @@ class RailwayPeriodicScraper:
             
             # Build URL and scrape
             filters = profile.get('filters', {})
-            url = build_rental_url(filters)
+            url = build_rental_url(**filters)
             
             logger.info(f"Scraping URL: {url}")
             html_content = scrape_funda_html(url)
