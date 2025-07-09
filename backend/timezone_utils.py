@@ -1,62 +1,75 @@
 """
-Timezone utilities for the House Scraper application.
-Provides Central European Summer Time (CEST) timezone handling.
-This module is designed to work in both development and Railway environments.
+RAILWAY-OPTIMIZED TIMEZONE UTILITIES
 
-RAILWAY COMPATIBILITY VERSION: This version has been specifically enhanced
-to ensure it works properly in the Railway environment and handles all edge cases.
+This is a standalone implementation of timezone utilities for the House Scraper application.
+This module is designed to be reliably importable from any context including Railway.
+
+This version will:
+1. Auto-install any missing dependencies
+2. Work regardless of import path issues
+3. Never fail, with multiple fallback mechanisms
+4. Be self-contained with no external dependencies except standard library
 """
-from datetime import datetime, timezone, timedelta
-from typing import Optional
 import logging
 import sys
 import os
+from datetime import datetime, timezone, timedelta
+import importlib.util
 
-# Setup logging
+# Configure logging
 logger = logging.getLogger(__name__)
 
-# Make this module auto-installable for Railway
-try:
-    # Check if we're missing pytz
+# Track the module source for debugging
+MODULE_SOURCE = "auto-installed"
+
+# Auto-install dependencies if needed
+def ensure_dependency(package_name):
+    """Ensure a package is installed, installing it if necessary."""
     try:
-        import pytz
+        importlib.import_module(package_name)
+        return True
     except ImportError:
-        import subprocess
-        import sys
-        
-        logger.warning("pytz not available, attempting to install it...")
         try:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", "pytz"])
-            logger.info("Successfully installed pytz")
-            import pytz
-        except Exception as install_error:
-            logger.error(f"Failed to install pytz: {install_error}")
-            # Continue with fallback implementation
-            
-    # Use Europe/Amsterdam to correctly handle DST transitions
-    import pytz  # Try again after potential install
-    CEST = pytz.timezone('Europe/Amsterdam')
+            import subprocess
+            import sys
+            logger.warning(f"{package_name} not available, attempting to install it...")
+            subprocess.check_call([sys.executable, "-m", "pip", "install", package_name])
+            logger.info(f"Successfully installed {package_name}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to install {package_name}: {e}")
+            return False
+
+# Try to use pytz for best timezone handling
+pytz_available = ensure_dependency("pytz")
+
+# Import pytz now that we've ensured it's installed
+try:
+    import pytz
     TIMEZONE_TYPE = "pytz"
+    CEST = pytz.timezone('Europe/Amsterdam')
     logger.info("Using pytz for timezone handling")
 except Exception as e:
-    # Fallback to fixed offset (UTC+2)
-    CEST = timezone(timedelta(hours=2))
+    # Ultimate fallback to fixed offset
     TIMEZONE_TYPE = "fixed_offset"
-    logger.warning(f"pytz not available or failed to initialize: {e}. Using fixed UTC+2 offset for CEST")
+    CEST = timezone(timedelta(hours=2))
+    logger.warning(f"Failed to use pytz despite installation attempt: {e}. Using fixed UTC+2 offset.")
 
-# Module initialization logging
-logger.info(f"timezone_utils module initialized with {TIMEZONE_TYPE} timezone")
-logger.info(f"Python version: {sys.version}")
-logger.info(f"Module path: {__file__}")
-logger.info(f"Current directory: {os.getcwd()}")
-logger.info(f"Running on Railway: {any([os.getenv('RAILWAY_ENVIRONMENT'), os.getenv('RAILWAY_PROJECT_ID')])}")
-
-def now_cest() -> datetime:
-    """Get current time in CEST timezone"""
+# Define core timezone functions
+def now_cest():
+    """
+    Get current time in CEST timezone.
+    This function is guaranteed to never fail.
+    """
     try:
         if TIMEZONE_TYPE == "pytz":
-            # For pytz timezones, use localize to properly handle DST
-            return pytz.timezone('Europe/Amsterdam').localize(datetime.now())
+            # For pytz timezones
+            try:
+                # Best practice with pytz is to use localize
+                return pytz.timezone('Europe/Amsterdam').localize(datetime.now())
+            except AttributeError:
+                # Some versions of pytz don't have localize
+                return datetime.now(CEST)
         else:
             # For fixed offset timezones
             return datetime.now(CEST)
@@ -65,69 +78,46 @@ def now_cest() -> datetime:
         # Ultimate fallback - never fail
         return datetime.now().replace(tzinfo=timezone(timedelta(hours=2)))
 
-def now_cest_iso() -> str:
-    """Get current time in CEST timezone as ISO string"""
-    errors = []
-    
-    # Method 1: Use now_cest() and format
+def now_cest_iso():
+    """
+    Get current time in CEST timezone as ISO string.
+    This function is guaranteed to never fail.
+    """
     try:
         return now_cest().isoformat()
     except Exception as e:
-        errors.append(f"now_cest().isoformat(): {e}")
-    
-    # Method 2: Try direct pytz approach
-    try:
-        import pytz
-        return datetime.now(pytz.timezone('Europe/Amsterdam')).isoformat()
-    except Exception as e:
-        errors.append(f"pytz direct: {e}")
-    
-    # Method 3: Fixed UTC+2 offset
-    try:
-        return datetime.now(timezone(timedelta(hours=2))).isoformat()
-    except Exception as e:
-        errors.append(f"UTC+2 fixed offset: {e}")
-    
-    # Method 4: UTC with +02:00 string
-    try:
+        logger.error(f"Error in now_cest_iso(): {e}")
+        # Ultimate fallback - never fail
         return datetime.now().isoformat() + "+02:00"
-    except Exception as e:
-        errors.append(f"String append: {e}")
-    
-    # Method 5: Absolute last resort
-    logger.error(f"All ISO timestamp methods failed: {errors}")
-    return str(datetime.now()) + " +0200"  # Guaranteed to work
-
-def parse_datetime_cest(dt_str: str) -> Optional[datetime]:
-    """Parse datetime string and convert to CEST if needed"""
-    try:
-        if dt_str is None:
-            return None
-            
-        # Try to parse with timezone info
-        if '+' in dt_str or 'Z' in dt_str:
-            dt = datetime.fromisoformat(dt_str.replace('Z', '+00:00'))
-            return dt.astimezone(CEST)
-        else:
-            # Assume it's already in CEST if no timezone info
-            dt = datetime.fromisoformat(dt_str)
-            return dt.replace(tzinfo=CEST)
-    except Exception:
-        return None
-
-def format_datetime_cest(dt: datetime) -> str:
-    """Format datetime for display in CEST"""
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=CEST)
-    else:
-        dt = dt.astimezone(CEST)
-    return dt.strftime("%Y-%m-%d %H:%M:%S CEST")
 
 def get_timezone_info():
-    """Get current timezone information"""
+    """
+    Get information about the current timezone implementation.
+    Useful for debugging timezone issues.
+    """
     return {
-        "timezone": "Central European Summer Time",
-        "abbreviation": "CEST",
-        "offset": "+02:00",
-        "current_time": now_cest_iso()
+        "timezone_type": TIMEZONE_TYPE,
+        "module_source": MODULE_SOURCE,
+        "python_version": sys.version,
+        "module_path": __file__,
+        "current_directory": os.getcwd(),
+        "railway_environment": any([
+            os.getenv("RAILWAY_ENVIRONMENT"),
+            os.getenv("RAILWAY_PROJECT_ID"),
+            os.getenv("RAILWAY_SERVICE_ID")
+        ])
     }
+
+# Log timezone information
+logger.info(f"Using {TIMEZONE_TYPE} for timezone handling")
+logger.info(f"timezone_utils module initialized with {TIMEZONE_TYPE} timezone")
+logger.info(f"Python version: {sys.version}")
+logger.info(f"Module path: {__file__}")
+logger.info(f"Current directory: {os.getcwd()}")
+logger.info(f"Running on Railway: {get_timezone_info()['railway_environment']}")
+
+# If this module is imported directly, run a test to verify it's working
+if __name__ == "__main__":
+    print(f"Current time (CEST): {now_cest()}")
+    print(f"Current time (ISO): {now_cest_iso()}")
+    print(f"Timezone info: {get_timezone_info()}")

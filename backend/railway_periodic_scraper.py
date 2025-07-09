@@ -35,11 +35,42 @@ TIMEZONE_UTILS_IMPORTED = False
 EMAIL_UTILS_IMPORTED = False
 logger = logging.getLogger(__name__)
 
-# Define fallback implementations first, so they're always available
+# Create timezone utilities that are guaranteed to work
+# These definitions are included directly in this file to ensure they're always available
+# even if the timezone_utils.py module can't be imported
+
+# Define default timezone - use Amsterdam for proper DST handling
+try:
+    # First try pytz which is the most accurate
+    CEST = pytz.timezone('Europe/Amsterdam')
+except Exception:
+    # Fall back to fixed offset if pytz isn't available or fails
+    CEST = timezone(timedelta(hours=2))
+
+def now_cest():
+    """Get current time in CEST timezone - inline implementation"""
+    try:
+        # Try using the CEST timezone defined above
+        return datetime.now(CEST)
+    except Exception as e:
+        logger.error(f"Error in inline now_cest(): {e}")
+        # Ultimate fallback - use UTC+2
+        return datetime.now().replace(tzinfo=timezone(timedelta(hours=2)))
+
+def now_cest_iso():
+    """Get current time in CEST timezone as ISO string - inline implementation"""
+    try:
+        return now_cest().isoformat()
+    except Exception as e:
+        logger.error(f"Error in inline now_cest_iso(): {e}")
+        # Ultimate fallback - use a basic timestamp with +02:00
+        return datetime.now().isoformat() + "+02:00"
+
+# Original fallback implementations for backward compatibility
 def safe_iso_timestamp():
     """Safely format current time in ISO format with timezone info"""
     try:
-        return datetime.now(pytz.timezone('Europe/Amsterdam')).isoformat()
+        return now_cest_iso()  # Use our inline implementation
     except Exception as e:
         logger.error(f"Error formatting timestamp: {e}")
         return datetime.now().isoformat() + "+02:00"  # Approximate CEST offset
@@ -50,12 +81,7 @@ def fallback_now_cest_iso():
 
 def fallback_now_cest():
     """Return current time in CEST timezone"""
-    try:
-        return datetime.now(pytz.timezone('Europe/Amsterdam'))
-    except Exception as e:
-        logger.error(f"Error creating CEST time: {e}")
-        # Add 2 hours to UTC as a fallback for CEST
-        return datetime.now() + timedelta(hours=2)
+    return now_cest()  # Use our inline implementation
 
 # Use Amsterdam timezone as fallback for CEST
 FALLBACK_CEST = pytz.timezone('Europe/Amsterdam')
@@ -674,36 +700,102 @@ class RailwayPeriodicScraper:
         logger.info(f"Starting scrape for profile {profile_id}")
         
         # Import timezone_utils again here to handle any edge cases
-        global TIMEZONE_UTILS_IMPORTED
+        global TIMEZONE_UTILS_IMPORTED, now_cest_iso, now_cest, CEST
         
-        # Import these at the method level to ensure they're available
+        # Import these at the method level to ensure they're always available
         import sys
         import os
+        import importlib
         
-        if not TIMEZONE_UTILS_IMPORTED:
+        # Force create timezone utilities if imports fail
+        def _create_timezone_fallbacks():
+            """Create local timezone functions that are guaranteed to work"""
+            import pytz
+            from datetime import datetime, timezone, timedelta
+            
+            _local_cest = pytz.timezone('Europe/Amsterdam')
+            
+            def _local_now_cest():
+                """Get current time in CEST timezone"""
+                try:
+                    return datetime.now(_local_cest)
+                except Exception:
+                    # Ultimate fallback - never fail
+                    return datetime.now(timezone(timedelta(hours=2)))
+            
+            def _local_now_cest_iso():
+                """Get current time in CEST timezone as ISO string"""
+                try:
+                    return _local_now_cest().isoformat()
+                except Exception:
+                    # Ultimate fallback - never fail
+                    return datetime.now().isoformat() + "+02:00"
+                
+            return _local_now_cest_iso, _local_now_cest, _local_cest
+        
+        # First try: Check if we've already successfully imported the module
+        if TIMEZONE_UTILS_IMPORTED:
+            # Module should already be available, but let's make double sure
             try:
-                # Add possible paths to sys.path
+                # Test the function to ensure it's working
+                _ = now_cest_iso()
+            except Exception:
+                # Something went wrong, so we need to re-import
+                TIMEZONE_UTILS_IMPORTED = False
+        
+        # Second try: Direct import from various locations
+        if not TIMEZONE_UTILS_IMPORTED:
+            # Try multiple import methods with robust error handling
+            try:
+                # Add every possible path to sys.path
                 possible_paths = [
                     os.getcwd(),
                     os.path.join(os.getcwd(), "backend"),
                     os.path.dirname(os.path.abspath(__file__)),
-                    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                    # Add more potential locations
+                    "/app",
+                    "/app/backend",
+                    os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."),
                 ]
                 
                 for path in possible_paths:
-                    if path not in sys.path:
+                    if os.path.exists(path) and path not in sys.path:
                         sys.path.append(path)
                         logger.info(f"Added {path} to sys.path")
                 
-                # Try imports again
-                try:
-                    from timezone_utils import now_cest_iso
-                    TIMEZONE_UTILS_IMPORTED = True
-                    logger.info("Successfully imported timezone_utils in _scrape_profile")
-                except ImportError as e:
-                    logger.warning(f"Still unable to import timezone_utils in _scrape_profile: {e}")
+                # Try multiple import strategies
+                import_strategies = [
+                    lambda: importlib.import_module("timezone_utils"),
+                    lambda: importlib.import_module("backend.timezone_utils"),
+                    lambda: __import__("timezone_utils"),
+                    lambda: __import__("backend.timezone_utils")
+                ]
+                
+                for i, strategy in enumerate(import_strategies):
+                    try:
+                        module = strategy()
+                        now_cest_iso = getattr(module, "now_cest_iso")
+                        now_cest = getattr(module, "now_cest")
+                        CEST = getattr(module, "CEST")
+                        TIMEZONE_UTILS_IMPORTED = True
+                        logger.info(f"Successfully imported timezone_utils with strategy {i+1}")
+                        break
+                    except (ImportError, AttributeError) as e:
+                        logger.debug(f"Import strategy {i+1} failed: {e}")
+                        continue
             except Exception as path_error:
-                logger.error(f"Error adjusting Python path: {path_error}")
+                logger.error(f"Error during import attempts: {path_error}")
+        
+        # Third try: Create inline functions if all imports failed
+        if not TIMEZONE_UTILS_IMPORTED:
+            try:
+                logger.warning("All import attempts failed. Creating guaranteed inline timezone functions...")
+                now_cest_iso, now_cest, CEST = _create_timezone_fallbacks()
+                logger.info("Successfully created guaranteed inline timezone functions")
+            except Exception as e:
+                logger.error(f"Failed to create guaranteed timezone functions: {e}")
+                # If this happens, we'll use safe_iso_timestamp from the module level
         
         try:
             # Load current database

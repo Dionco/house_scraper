@@ -88,9 +88,23 @@ RUN google-chrome --version
 # Expose port (Railway will set PORT environment variable)
 EXPOSE $PORT
 
+# Copy startup script and fix_timezone_utils script
+COPY railway_startup.sh /app/railway_startup.sh
+COPY fix_timezone_utils.py /app/fix_timezone_utils.py
+
+# Ensure the scripts are executable
+RUN chmod +x /app/railway_startup.sh
+
+# Set proper environment for timezone handling
+ENV PYTHONPATH="${PYTHONPATH}:/app:/app/backend"
+
+# Fix timezone_utils at build time for railway
+RUN echo "Running timezone_utils fixer during build..." && \
+    python /app/fix_timezone_utils.py
+
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
 
-# Run application with Railway port handling
-CMD python -m uvicorn backend.api:app --host 0.0.0.0 --port ${PORT:-8000}
+# Run application with our startup script
+CMD ["/app/railway_startup.sh"]

@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google" content="notranslate">
+    <meta name="browser-extension" content="disabled">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' https://fonts.googleapis.com; object-src 'none';">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Funda Finder | House Scraper</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <link rel="stylesheet" href="/static/tailwind.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Theme customization - moved from tailwind.config */
+        :root {
+            --color-primary: #F97316;
+            --color-primary-600: #EA580C;
+            --color-secondary: #1E293B;
+            --color-light: #F8FAFC;
+            --color-gray-100: #F1F5F9;
+            --color-gray-200: #E2E8F0;
+            --color-gray-300: #CBD5E1;
+            --color-gray-400: #94A3B8;
+            --color-gray-500: #64748B;
+            --color-gray-700: #334155;
+        }
+        
+        /* Prevent extension interference */
+        * {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        input, textarea {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+        
+        body { 
+            -webkit-font-smoothing: antialiased; 
+            -moz-osx-font-smoothing: grayscale; 
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Hide all extension-injected elements */
+        [data-extension-id],
+        [data-extension],
+        [class*="extension"],
+        [id*="extension"],
+        [class*="chrome"],
+        [id*="chrome"],
+        div[style*="z-index: 2147483647"],
+        iframe[src*="chrome-extension"],
+        script[src*="chrome-extension"],
+        script[src*="extension"] {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            position: absolute !important;
+            left: -9999px !important;
+            top: -9999px !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
+        
+        /* Animation keyframes */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fadeIn { animation: fadeIn 0.6s ease-out; }
+        .animate-fadeIn-delayed { animation: fadeIn 0.6s ease-out 0.3s both; }
+        .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+        
+        /* Form styling */
+        .form-input:focus { outline: 2px solid #F97316; outline-offset: 2px; }
+        .hero-gradient { background: linear-gradient(135deg, #F97316 0%, #EA580C 100%); }
+        .glass-effect { backdrop-filter: blur(10px); background: rgba(255, 255, 255, 0.95); }
+        
+        /* Error message styling */
+        .error-message {
+            background: #FEF2F2;
+            border: 1px solid #FECACA;
+            color: #DC2626;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 16px;
+            font-size: 14px;
+        }
+        
+        /* Loading state */
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        
+        /* Smooth transitions for UI elements */
+        #landing-page, #dashboard, #loading-overlay {
+            transition: opacity 0.3s ease-in-out;
+        }
+        
+        #loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        /* Disable extension content injection completely */
+        html::before,
+        html::after,
+        body::before,
+        body::after {
+            content: none !important;
+        }
+    </style>
+</head>
+<body class="font-sans bg-light">
+    <!-- Main Container -->
+    <div class="min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b border-gray-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center space-x-2">
+                        <svg class="h-8 w-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                        </svg>
+                        <h1 class="text-xl font-bold text-gray-900">Funda Finder</h1>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div id="user-menu" class="hidden">
+                            <div class="flex items-center space-x-4">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                                        <span class="text-white font-medium text-sm" id="user-initial">U</span>
+                                    </div>
+                                    <span class="text-sm font-medium text-gray-700" id="user-name">User</span>
+                                </div>
+                                <div class="relative">
+                                    <button id="user-menu-btn" class="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                        </svg>
+                                    </button>
+                                    <div id="user-dropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10 hidden">
+                                        <div class="py-1">
+                                            <a href="#" id="profile-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile Settings</a>
+                                            <a href="admin-scraper.html" id="admin-panel-link" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                </svg>
+                                                Admin Panel
+                                            </a>
+                                            <div class="border-t border-gray-100"></div>
+                                            <a href="#" id="logout-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-1">
+            <!-- Loading Overlay -->
+            <div id="loading-overlay" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+                <div class="text-center">
+                    <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p class="text-gray-600">Loading...</p>
+                </div>
+            </div>
+            
+            <!-- Landing Page (shown when not authenticated) -->
+            <div id="landing-page" class="min-h-screen">
+                <!-- Hero Section -->
+                <div class="hero-gradient">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+                        <div class="text-center text-white">
+                            <div class="animate-fadeIn">
+                                <h1 class="text-4xl md:text-6xl font-bold mb-6">
+                                    Find Your Perfect Home
+                                </h1>
+                                <p class="text-xl md:text-2xl mb-8 text-orange-100">
+                                    Automated house hunting with smart search profiles and instant notifications
+                                </p>
+                                <div class="flex justify-center space-x-4">
+                                    <button id="show-login" class="bg-white text-primary px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition duration-200">
+                                        Sign In
+                                    </button>
+                                    <button id="show-register" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-primary transition duration-200">
+                                        Get Started
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Features Section -->
+                <div class="py-16 bg-white">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div class="text-center mb-12">
+                            <h2 class="text-3xl font-bold text-gray-900 mb-4">Why Choose Funda Finder?</h2>
+                            <p class="text-gray-600 max-w-2xl mx-auto">
+                                Stop manually checking listings. Let our smart automation find your dream home while you focus on what matters.
+                            </p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            <div class="animate-fadeIn text-center">
+                                <div class="bg-primary/10 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                                    <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                    </svg>
+                                </div>
+                                <h3 class="text-xl font-semibold text-gray-900 mb-2">Smart Search</h3>
+                                <p class="text-gray-600">Create custom search profiles with specific criteria for location, price, and property type.</p>
+                            </div>
+                            <div class="animate-fadeIn-delayed text-center">
+                                <div class="bg-primary/10 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                                    <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5zM4 12h16M4 7h16M4 17h5"></path>
+                                    </svg>
+                                </div>
+                                <h3 class="text-xl font-semibold text-gray-900 mb-2">Auto Updates</h3>
+                                <p class="text-gray-600">Get notified instantly when new properties match your criteria. Never miss an opportunity.</p>
+                            </div>
+                            <div class="animate-fadeIn text-center">
+                                <div class="bg-primary/10 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                                    <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                    </svg>
+                                </div>
+                                <h3 class="text-xl font-semibold text-gray-900 mb-2">Analytics</h3>
+                                <p class="text-gray-600">Track market trends and analyze property data to make informed decisions.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Authentication Modal -->
+            <div id="auth-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div class="glass-effect rounded-lg shadow-xl max-w-md w-full p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 id="modal-title" class="text-2xl font-bold text-gray-900">Sign In</h2>
+                        <button id="close-modal" class="text-gray-400 hover:text-gray-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Login Form -->
+                    <form id="login-form" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Username or Email</label>
+                            <input type="text" id="login-username" class="w-full px-3 py-2 border border-gray-300 rounded-md form-input" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                            <input type="password" id="login-password" class="w-full px-3 py-2 border border-gray-300 rounded-md form-input" required>
+                        </div>
+                        <button type="submit" class="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary-600 transition duration-200">
+                            <span id="login-loading" class="hidden">
+                                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Signing in...
+                            </span>
+                            <span id="login-text">Sign In</span>
+                        </button>
+                    </form>
+
+                    <!-- Register Form -->
+                    <form id="register-form" class="hidden space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                            <input type="text" id="register-username" class="w-full px-3 py-2 border border-gray-300 rounded-md form-input" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <input type="email" id="register-email" class="w-full px-3 py-2 border border-gray-300 rounded-md form-input" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                            <input type="password" id="register-password" class="w-full px-3 py-2 border border-gray-300 rounded-md form-input" required>
+                            <p class="text-xs text-gray-500 mt-1">At least 8 characters with letters and numbers</p>
+                        </div>
+                        <button type="submit" class="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary-600 transition duration-200">
+                            <span id="register-loading" class="hidden">
+                                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Creating account...
+                            </span>
+                            <span id="register-text">Create Account</span>
+                        </button>
+                    </form>
+
+                    <!-- Form Toggle -->
+                    <div class="mt-6 text-center">
+                        <button id="toggle-auth" class="text-primary hover:text-primary-600 font-medium">
+                            <span id="toggle-text">Don't have an account? Sign up</span>
+                        </button>
+                    </div>
+
+                    <!-- Error Message -->
+                    <div id="auth-error" class="hidden mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                        <p id="error-text"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard (shown when authenticated) -->
+            <div id="dashboard" class="hidden">
+                <iframe id="dashboard-frame" src="/dashboard" class="w-full h-screen border-none"></iframe>
+            </div>
+
+            <!-- Profile Settings Modal -->
+            <div id="profile-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div class="glass-effect rounded-lg shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-900">Profile Settings</h2>
+                        <button id="close-profile-modal" class="text-gray-400 hover:text-gray-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Profile Form -->
+                    <form id="profile-form" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                                <input type="text" id="profile-username" class="w-full px-3 py-2 border border-gray-300 rounded-md form-input bg-gray-50" readonly>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                <input type="email" id="profile-email" class="w-full px-3 py-2 border border-gray-300 rounded-md form-input" required>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Notification Settings</label>
+                            <div class="space-y-2">
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="email-notifications" class="mr-2">
+                                    <label for="email-notifications" class="text-sm text-gray-700">Email notifications for new listings</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="daily-summaries" class="mr-2">
+                                    <label for="daily-summaries" class="text-sm text-gray-700">Daily summary emails</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Scraping Interval</label>
+                            <select id="scrape-interval" class="w-full px-3 py-2 border border-gray-300 rounded-md form-input">
+                                <option value="30">Every 30 minutes</option>
+                                <option value="60">Every hour</option>
+                                <option value="120">Every 2 hours</option>
+                                <option value="240">Every 4 hours</option>
+                                <option value="480">Every 8 hours</option>
+                                <option value="720">Every 12 hours</option>
+                                <option value="1440">Daily</option>
+                            </select>
+                        </div>
+
+                        <div class="flex justify-end space-x-3">
+                            <button type="button" id="cancel-profile" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition duration-200">
+                                Cancel
+                            </button>
+                            <button type="submit" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-600 transition duration-200">
+                                <span id="profile-loading" class="hidden">
+                                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Saving...
+                                </span>
+                                <span id="profile-text">Save Changes</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Authentication Script -->
+    <script src="/static/auth.js"></script>
+    <script>
+        // Ultra-comprehensive Chrome extension error suppression
+        (function() {
+            'use strict';
+            
+            // Store original console methods before any potential extension interference
+            const originalConsole = {
+                error: console.error.bind(console),
+                warn: console.warn.bind(console),
+                log: console.log.bind(console),
+                info: console.info.bind(console),
+                debug: console.debug.bind(console)
+            };
+            
+            // Comprehensive extension error patterns
+            const extensionErrorPatterns = [
+                /runtime\.lastError/i,
+                /extension/i,
+                /chrome-extension/i,
+                /FrameDoesNotExist/i,
+                /background\.js/i,
+                /DelayedMessageSender/i,
+                /back\/forward cache/i,
+                /message channel is closed/i,
+                /Receiving end does not exist/i,
+                /message port closed/i,
+                /utils\.js/i,
+                /extensionState\.js/i,
+                /heuristicsRedefinitions\.js/i,
+                /net::ERR_FILE_NOT_FOUND.*\.js/i,
+                /Failed to load resource.*\.js/i,
+                /Unchecked runtime\.lastError/i,
+                /The message port closed before a response was received/i,
+                /Could not establish connection\. Receiving end does not exist/i,
+                /response was undefined/i,
+                /Error in event handler/i,
+                /Context invalidated/i,
+                /Extension context invalidated/i,
+                /A frame with id \d+ was not found/i,
+                /Frame with id \d+ does not exist/i,
+                /Permission denied/i,
+                /Invalid tab id/i,
+                /Tab not found/i,
+                /No tab with id/i,
+                /The tab was closed/i,
+                /The extensions gallery cannot be scripted/i,
+                /Cannot access contents of url/i,
+                /Cannot access a chrome/i,
+                /Manifest version 2 is deprecated/i,
+                /service_worker.*background\.js/i,
+                /content_scripts.*utils\.js/i,
+                /web_accessible_resources/i,
+                /activeTab/i,
+                /host_permissions/i,
+                /permissions/i,
+                /chrome\.tabs/i,
+                /chrome\.runtime/i,
+                /chrome\.storage/i,
+                /chrome\.webNavigation/i,
+                /chrome\.webRequest/i,
+                /chrome\.declarativeNetRequest/i,
+                /chrome\.cookies/i,
+                /chrome\.history/i,
+                /chrome\.bookmarks/i,
+                /chrome\.downloads/i,
+                /chrome\.notifications/i,
+                /chrome\.contextMenus/i,
+                /chrome\.alarms/i,
+                /chrome\.idle/i,
+                /chrome\.power/i,
+                /chrome\.system/i,
+                /chrome\.management/i,
+                /chrome\.identity/i,
+                /chrome\.omnibox/i,
+                /chrome\.pageAction/i,
+                /chrome\.browserAction/i,
+                /chrome\.action/i,
+                /chrome\.scripting/i,
+                /chrome\.sidePanel/i,
+                /chrome\.commands/i,
+                /chrome\.topSites/i,
+                /chrome\.windows/i,
+                /chrome\.sessions/i,
+                /chrome\.devtools/i,
+                /chrome\.proxy/i,
+                /chrome\.privacy/i,
+                /chrome\.contentSettings/i,
+                /chrome\.desktopCapture/i,
+                /chrome\.tabCapture/i,
+                /chrome\.pageCapture/i,
+                /chrome\.fontSettings/i,
+                /chrome\.types/i,
+                /chrome\.events/i,
+                /chrome\.extension/i,
+                /chrome\.i18n/i,
+                /chrome\.permissions/i,
+                /chrome\.certificateProvider/i,
+                /chrome\.documentScan/i,
+                /chrome\.enterprise/i,
+                /chrome\.fileBrowserHandler/i,
+                /chrome\.fileSystemProvider/i,
+                /chrome\.gcm/i,
+                /chrome\.instanceID/i,
+                /chrome\.loginState/i,
+                /chrome\.mdns/i,
+                /chrome\.networking/i,
+                /chrome\.offscreen/i,
+                /chrome\.platformKeys/i,
+                /chrome\.printing/i,
+                /chrome\.printingMetrics/i,
+                /chrome\.search/i,
+                /chrome\.signedInState/i,
+                /chrome\.tts/i,
+                /chrome\.ttsEngine/i,
+                /chrome\.vpnProvider/i,
+                /chrome\.wallpaper/i,
+                /chrome\.webstore/i
+            ];
+            
+            // Function to check if an error is extension-related
+            function isExtensionError(message) {
+                if (!message) return false;
+                const str = typeof message === 'string' ? message : String(message);
+                return extensionErrorPatterns.some(pattern => pattern.test(str));
+            }
+            
+            // Function to check if an error object is extension-related
+            function isExtensionErrorObject(error) {
+                if (!error) return false;
+                if (typeof error === 'string') return isExtensionError(error);
+                if (error.message && isExtensionError(error.message)) return true;
+                if (error.stack && isExtensionError(error.stack)) return true;
+                if (error.name && isExtensionError(error.name)) return true;
+                return false;
+            }
+            
+            // Override all console methods
+            ['error', 'warn', 'log', 'info', 'debug'].forEach(method => {
+                console[method] = function(...args) {
+                    // Check if any argument is extension-related
+                    const hasExtensionError = args.some(arg => isExtensionErrorObject(arg));
+                    if (!hasExtensionError) {
+                        originalConsole[method](...args);
+                    }
+                };
+            });
+            
+            // Global error handler with comprehensive filtering
+            window.addEventListener('error', function(e) {
+                if (isExtensionErrorObject(e.message) || 
+                    isExtensionErrorObject(e.error) ||
+                    (e.filename && isExtensionError(e.filename)) ||
+                    (e.source && isExtensionError(e.source))) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    return false;
+                }
+            }, true);
+            
+            // Promise rejection handler
+            window.addEventListener('unhandledrejection', function(e) {
+                if (isExtensionErrorObject(e.reason)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    return false;
+                }
+            }, true);
+            
+            // Mock Chrome APIs comprehensively
+            if (typeof window.chrome === 'undefined') {
+                window.chrome = {};
+            }
+            
+            // Create comprehensive chrome API mock
+            const chromeAPIMock = {
+                runtime: {
+                    lastError: null,
+                    id: 'mock-extension-id',
+                    sendMessage: function() { return Promise.resolve(); },
+                    connect: function() { 
+                        return { 
+                            postMessage: function() {}, 
+                            disconnect: function() {},
+                            onMessage: { addListener: function() {}, removeListener: function() {} },
+                            onDisconnect: { addListener: function() {}, removeListener: function() {} }
+                        }; 
+                    },
+                    onMessage: { addListener: function() {}, removeListener: function() {}, hasListeners: function() { return false; } },
+                    onConnect: { addListener: function() {}, removeListener: function() {}, hasListeners: function() { return false; } },
+                    onInstalled: { addListener: function() {}, removeListener: function() {}, hasListeners: function() { return false; } },
+                    onStartup: { addListener: function() {}, removeListener: function() {}, hasListeners: function() { return false; } },
+                    onUpdateAvailable: { addListener: function() {}, removeListener: function() {}, hasListeners: function() { return false; } },
+                    onSuspend: { addListener: function() {}, removeListener: function() {}, hasListeners: function() { return false; } },
+                    onSuspendCanceled: { addListener: function() {}, removeListener: function() {}, hasListeners: function() { return false; } },
+                    getManifest: function() { return {}; },
+                    getURL: function() { return ''; },
+                    reload: function() {},
+                    requestUpdateCheck: function() { return Promise.resolve(); },
+                    restart: function() {},
+                    restartAfterDelay: function() { return Promise.resolve(); },
+                    setUninstallURL: function() {},
+                    openOptionsPage: function() { return Promise.resolve(); },
+                    getPlatformInfo: function() { return Promise.resolve({}); },
+                    getPackageDirectoryEntry: function() { return Promise.resolve(); }
+                },
+                tabs: {
+                    query: function() { return Promise.resolve([]); },
+                    get: function() { return Promise.resolve({}); },
+                    getCurrent: function() { return Promise.resolve({}); },
+                    create: function() { return Promise.resolve({}); },
+                    update: function() { return Promise.resolve({}); },
+                    remove: function() { return Promise.resolve(); },
+                    sendMessage: function() { return Promise.resolve(); },
+                    executeScript: function() { return Promise.resolve(); },
+                    insertCSS: function() { return Promise.resolve(); },
+                    removeCSS: function() { return Promise.resolve(); },
+                    onCreated: { addListener: function() {}, removeListener: function() {} },
+                    onUpdated: { addListener: function() {}, removeListener: function() {} },
+                    onRemoved: { addListener: function() {}, removeListener: function() {} },
+                    onActivated: { addListener: function() {}, removeListener: function() {} },
+                    onActiveChanged: { addListener: function() {}, removeListener: function() {} },
+                    onSelectionChanged: { addListener: function() {}, removeListener: function() {} },
+                    onAttached: { addListener: function() {}, removeListener: function() {} },
+                    onDetached: { addListener: function() {}, removeListener: function() {} },
+                    onMoved: { addListener: function() {}, removeListener: function() {} },
+                    onReplaced: { addListener: function() {}, removeListener: function() {} },
+                    onZoomChange: { addListener: function() {}, removeListener: function() {} }
+                },
+                storage: {
+                    sync: {
+                        get: function() { return Promise.resolve({}); },
+                        set: function() { return Promise.resolve(); },
+                        remove: function() { return Promise.resolve(); },
+                        clear: function() { return Promise.resolve(); },
+                        onChanged: { addListener: function() {}, removeListener: function() {} }
+                    },
+                    local: {
+                        get: function() { return Promise.resolve({}); },
+                        set: function() { return Promise.resolve(); },
+                        remove: function() { return Promise.resolve(); },
+                        clear: function() { return Promise.resolve(); },
+                        onChanged: { addListener: function() {}, removeListener: function() {} }
+                    }
+                },
+                action: {
+                    setTitle: function() { return Promise.resolve(); },
+                    getTitle: function() { return Promise.resolve(''); },
+                    setIcon: function() { return Promise.resolve(); },
+                    setPopup: function() { return Promise.resolve(); },
+                    getPopup: function() { return Promise.resolve(''); },
+                    setBadgeText: function() { return Promise.resolve(); },
+                    getBadgeText: function() { return Promise.resolve(''); },
+                    setBadgeBackgroundColor: function() { return Promise.resolve(); },
+                    getBadgeBackgroundColor: function() { return Promise.resolve(''); },
+                    enable: function() { return Promise.resolve(); },
+                    disable: function() { return Promise.resolve(); },
+                    onClicked: { addListener: function() {}, removeListener: function() {} }
+                },
+                scripting: {
+                    executeScript: function() { return Promise.resolve([]); },
+                    insertCSS: function() { return Promise.resolve(); },
+                    removeCSS: function() { return Promise.resolve(); },
+                    registerContentScripts: function() { return Promise.resolve(); },
+                    unregisterContentScripts: function() { return Promise.resolve(); },
+                    updateContentScripts: function() { return Promise.resolve(); },
+                    getRegisteredContentScripts: function() { return Promise.resolve([]); }
+                }
+            };
+            
+            // Apply mock to window.chrome
+            Object.keys(chromeAPIMock).forEach(key => {
+                try {
+                    if (!window.chrome[key]) {
+                        Object.defineProperty(window.chrome, key, {
+                            value: chromeAPIMock[key],
+                            writable: false,
+                            configurable: false
+                        });
+                    }
+                } catch (e) {
+                    // Silently ignore any errors
+                }
+            });
+            
+            // Override XMLHttpRequest to block extension requests
+            const originalXMLHttpRequest = window.XMLHttpRequest;
+            window.XMLHttpRequest = function() {
+                const xhr = new originalXMLHttpRequest();
+                const originalOpen = xhr.open;
+                const originalSend = xhr.send;
+                
+                xhr.open = function(method, url, ...args) {
+                    if (typeof url === 'string' && isExtensionError(url)) {
+                        // Create a fake successful response for extension requests
+                        setTimeout(() => {
+                            if (xhr.onload) xhr.onload();
+                            if (xhr.onreadystatechange) xhr.onreadystatechange();
+                        }, 0);
+                        return;
+                    }
+                    return originalOpen.apply(this, [method, url, ...args]);
+                };
+                
+                xhr.send = function(data) {
+                    if (this.url && isExtensionError(this.url)) {
+                        return;
+                    }
+                    return originalSend.apply(this, arguments);
+                };
+                
+                return xhr;
+            };
+            
+            // Override fetch to block extension requests
+            const originalFetch = window.fetch;
+            window.fetch = function(url, options) {
+                const urlStr = typeof url === 'string' ? url : (url && url.toString ? url.toString() : '');
+                if (isExtensionError(urlStr)) {
+                    return Promise.resolve(new Response('', { status: 200, statusText: 'OK' }));
+                }
+                return originalFetch.apply(this, arguments);
+            };
+            
+            // Override document.createElement to prevent extension script injection
+            const originalCreateElement = document.createElement;
+            document.createElement = function(tagName) {
+                const element = originalCreateElement.apply(this, arguments);
+                
+                if (tagName.toLowerCase() === 'script') {
+                    const originalSrcSetter = Object.getOwnPropertyDescriptor(HTMLScriptElement.prototype, 'src').set;
+                    Object.defineProperty(element, 'src', {
+                        set: function(value) {
+                            if (isExtensionError(value)) {
+                                return;
+                            }
+                            originalSrcSetter.call(this, value);
+                        },
+                        get: function() {
+                            return this.getAttribute('src') || '';
+                        }
+                    });
+                }
+                
+                return element;
+            };
+            
+            // Prevent extension scripts from being added to DOM
+            const originalAppendChild = Node.prototype.appendChild;
+            const originalInsertBefore = Node.prototype.insertBefore;
+            const originalReplaceChild = Node.prototype.replaceChild;
+            
+            Node.prototype.appendChild = function(newChild) {
+                if (newChild && newChild.tagName === 'SCRIPT' && newChild.src && isExtensionError(newChild.src)) {
+                    return newChild;
+                }
+                return originalAppendChild.call(this, newChild);
+            };
+            
+            Node.prototype.insertBefore = function(newChild, referenceChild) {
+                if (newChild && newChild.tagName === 'SCRIPT' && newChild.src && isExtensionError(newChild.src)) {
+                    return newChild;
+                }
+                return originalInsertBefore.call(this, newChild, referenceChild);
+            };
+            
+            Node.prototype.replaceChild = function(newChild, oldChild) {
+                if (newChild && newChild.tagName === 'SCRIPT' && newChild.src && isExtensionError(newChild.src)) {
+                    return oldChild;
+                }
+                return originalReplaceChild.call(this, newChild, oldChild);
+            };
+            
+        })();
+        
+        // Comprehensive extension element removal and monitoring system
+        (function() {
+            'use strict';
+            
+            // Use the same pattern matching as the error suppression
+            const extensionErrorPatterns = [
+                /runtime\.lastError/i,
+                /extension/i,
+                /chrome-extension/i,
+                /FrameDoesNotExist/i,
+                /background\.js/i,
+                /DelayedMessageSender/i,
+                /back\/forward cache/i,
+                /message channel is closed/i,
+                /Receiving end does not exist/i,
+                /message port closed/i,
+                /utils\.js/i,
+                /extensionState\.js/i,
+                /heuristicsRedefinitions\.js/i,
+                /net::ERR_FILE_NOT_FOUND.*\.js/i,
+                /Failed to load resource.*\.js/i
+            ];
+            
+            function isExtensionRelated(str) {
+                if (!str) return false;
+                return extensionErrorPatterns.some(pattern => pattern.test(str));
+            }
+            
+            function isExtensionElement(element) {
+                if (!element || !element.tagName) return false;
+                
+                // Check attributes
+                if (element.hasAttribute && (
+                    element.hasAttribute('data-extension-id') ||
+                    element.hasAttribute('data-extension') ||
+                    element.hasAttribute('data-chrome-extension') ||
+                    element.hasAttribute('data-extension-context-menu') ||
+                    element.hasAttribute('data-extension-toolbar')
+                )) {
+                    return true;
+                }
+                
+                // Check class names
+                if (element.className && typeof element.className === 'string') {
+                    if (isExtensionRelated(element.className)) {
+                        return true;
+                    }
+                }
+                
+                // Check id
+                if (element.id && isExtensionRelated(element.id)) {
+                    return true;
+                }
+                
+                // Check src attribute for scripts, iframes, etc.
+                if (element.src && isExtensionRelated(element.src)) {
+                    return true;
+                }
+                
+                // Check href for links
+                if (element.href && isExtensionRelated(element.href)) {
+                    return true;
+                }
+                
+                // Check for specific extension characteristics
+                if (element.tagName === 'SCRIPT' && element.src && (
+                    element.src.includes('chrome-extension://') ||
+                    element.src.includes('moz-extension://') ||
+                    element.src.includes('webkit-extension://') ||
+                    element.src.includes('utils.js') ||
+                    element.src.includes('extensionState.js') ||
+                    element.src.includes('heuristicsRedefinitions.js') ||
+                    element.src.includes('background.js') ||
+                    element.src.includes('content.js') ||
+                    element.src.includes('inject.js')
+                )) {
+                    return true;
+                }
+                
+                // Check for high z-index elements (common extension pattern)
+                if (element.style && element.style.zIndex && parseInt(element.style.zIndex) > 2147483600) {
+                    return true;
+                }
+                
+                // Check for common extension element patterns
+                if (element.tagName === 'DIV' && element.style && (
+                    element.style.position === 'fixed' ||
+                    element.style.position === 'absolute'
+                ) && (
+                    element.style.top === '0px' ||
+                    element.style.right === '0px' ||
+                    element.style.bottom === '0px' ||
+                    element.style.left === '0px'
+                )) {
+                    // Check if it looks like an extension overlay
+                    if (element.style.pointerEvents === 'none' || 
+                        element.style.background === 'transparent' ||
+                        element.offsetWidth === 0 ||
+                        element.offsetHeight === 0) {
+                        return true;
+                    }
+                }
+                
+                return false;
+            }
+            
+            function removeExtensionElements() {
+                // Comprehensive list of selectors for extension elements
+                const selectors = [
+                    // Chrome extension selectors
+                    'script[src*="chrome-extension"]',
+                    'script[src*="moz-extension"]',
+                    'script[src*="webkit-extension"]',
+                    'iframe[src*="chrome-extension"]',
+                    'iframe[src*="moz-extension"]',
+                    'iframe[src*="webkit-extension"]',
+                    'link[href*="chrome-extension"]',
+                    'link[href*="moz-extension"]',
+                    'link[href*="webkit-extension"]',
+                    
+                    // Common extension script names
+                    'script[src*="utils.js"]',
+                    'script[src*="extensionState.js"]',
+                    'script[src*="heuristicsRedefinitions.js"]',
+                    'script[src*="background.js"]',
+                    'script[src*="content.js"]',
+                    'script[src*="inject.js"]',
+                    
+                    // Extension-specific attributes
+                    '[data-extension-id]',
+                    '[data-extension]',
+                    '[data-chrome-extension]',
+                    '[data-extension-context-menu]',
+                    '[data-extension-toolbar]',
+                    
+                    // Class and ID patterns
+                    '[class*="extension"]',
+                    '[id*="extension"]',
+                    '[class*="chrome"]',
+                    '[id*="chrome"]',
+                    '[class*="webkit"]',
+                    '[id*="webkit"]',
+                    
+                    // High z-index elements (common extension pattern)
+                    'div[style*="z-index: 2147483647"]',
+                    'div[style*="z-index: 2147483646"]',
+                    'div[style*="z-index: 2147483645"]',
+                    'div[style*="z-index: 2147483644"]',
+                    'div[style*="z-index: 2147483643"]',
+                    
+                    // Common extension overlay patterns
+                    'div[style*="position: fixed"][style*="top: 0"]',
+                    'div[style*="position: absolute"][style*="top: 0"]',
+                    'div[style*="pointer-events: none"]'
+                ];
+                
+                // Remove elements matching selectors
+                selectors.forEach(selector => {
+                    try {
+                        const elements = document.querySelectorAll(selector);
+                        elements.forEach(element => {
+                            if (isExtensionElement(element)) {
+                                try {
+                                    element.remove();
+                                } catch (e) {
+                                    // Fallback removal method
+                                    if (element.parentNode) {
+                                        element.parentNode.removeChild(element);
+                                    }
+                                }
+                            }
+                        });
+                    } catch (e) {
+                        // Silently ignore selector errors
+                    }
+                });
+                
+                // Additional cleanup for elements that might not match selectors
+                const allElements = document.querySelectorAll('*');
+                allElements.forEach(element => {
+                    if (isExtensionElement(element)) {
+                        try {
+                            element.remove();
+                        } catch (e) {
+                            try {
+                                if (element.parentNode) {
+                                    element.parentNode.removeChild(element);
+                                }
+                            } catch (e2) {
+                                // Silently ignore removal errors
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Initial cleanup
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', removeExtensionElements);
+            } else {
+                removeExtensionElements();
+            }
+            
+            // Comprehensive MutationObserver to catch all extension injections
+            if (typeof MutationObserver !== 'undefined') {
+                const observer = new MutationObserver(function(mutations) {
+                    let hasExtensionChanges = false;
+                    
+                    mutations.forEach(function(mutation) {
+                        // Check for added nodes
+                        if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                            for (let node of mutation.addedNodes) {
+                                if (node.nodeType === Node.ELEMENT_NODE) {
+                                    if (isExtensionElement(node)) {
+                                        hasExtensionChanges = true;
+                                        try {
+                                            node.remove();
+                                        } catch (e) {
+                                            try {
+                                                if (node.parentNode) {
+                                                    node.parentNode.removeChild(node);
+                                                }
+                                            } catch (e2) {
+                                                // Silently ignore removal errors
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Check child elements too
+                                    if (node.querySelectorAll) {
+                                        try {
+                                            const childExtensionElements = node.querySelectorAll('*');
+                                            childExtensionElements.forEach(child => {
+                                                if (isExtensionElement(child)) {
+                                                    hasExtensionChanges = true;
+                                                    try {
+                                                        child.remove();
+                                                    } catch (e) {
+                                                        // Silently ignore removal errors
+                                                    }
+                                                }
+                                            });
+                                        } catch (e) {
+                                            // Silently ignore query errors
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Check for attribute changes that might indicate extension activity
+                        if (mutation.type === 'attributes' && mutation.target) {
+                            const target = mutation.target;
+                            if (isExtensionElement(target)) {
+                                hasExtensionChanges = true;
+                                try {
+                                    target.remove();
+                                } catch (e) {
+                                    // Silently ignore removal errors
+                                }
+                            }
+                        }
+                    });
+                    
+                    // Run full cleanup if extension changes detected
+                    if (hasExtensionChanges) {
+                        setTimeout(removeExtensionElements, 100);
+                    }
+                });
+                
+                // Observe with comprehensive options
+                observer.observe(document.documentElement, {
+                    childList: true,
+                    subtree: true,
+                    attributes: true,
+                    attributeOldValue: true,
+                    characterData: true,
+                    characterDataOldValue: true
+                });
+            }
+            
+            // Aggressive periodic cleanup
+            setInterval(removeExtensionElements, 2000);
+            
+            // Additional cleanup on page visibility change
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden) {
+                    setTimeout(removeExtensionElements, 500);
+                }
+            });
+            
+            // Cleanup on focus/blur events
+            window.addEventListener('focus', function() {
+                setTimeout(removeExtensionElements, 500);
+            });
+            
+            window.addEventListener('blur', function() {
+                setTimeout(removeExtensionElements, 500);
+            });
+            
+        })();
+        
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if authManager is available
+            if (typeof AuthManager === 'undefined') {
+                console.error('AuthManager class not loaded. Please check the auth.js file.');
+                showAuthError('Authentication system not available. Please refresh the page.');
+                return;
+            }
+            
+            // Create authManager instance
+            let authManager;
+            try {
+                authManager = new AuthManager();
+                console.log('AuthManager initialized successfully');
+            } catch (error) {
+                console.error('Failed to initialize AuthManager:', error);
+                showAuthError('Failed to initialize authentication system.');
+                return;
+            }
+            
+            // UI Elements
+            const landingPage = document.getElementById('landing-page');
+            const dashboard = document.getElementById('dashboard');
+            const userMenu = document.getElementById('user-menu');
+            const authModal = document.getElementById('auth-modal');
+            const profileModal = document.getElementById('profile-modal');
+            
+            // Modal elements
+            const showLoginBtn = document.getElementById('show-login');
+            const showRegisterBtn = document.getElementById('show-register');
+            const closeModalBtn = document.getElementById('close-modal');
+            const toggleAuthBtn = document.getElementById('toggle-auth');
+            const profileBtn = document.getElementById('profile-btn');
+            const logoutBtn = document.getElementById('logout-btn');
+            const closeProfileModalBtn = document.getElementById('close-profile-modal');
+            
+            // User menu elements
+            const userMenuBtn = document.getElementById('user-menu-btn');
+            const userDropdown = document.getElementById('user-dropdown');
+            
+            // Forms
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            const profileForm = document.getElementById('profile-form');
+            
+            // Initial UI update
+            initializeUI();
+            
+            // Event listeners
+            showLoginBtn.addEventListener('click', () => showAuthModal('login'));
+            showRegisterBtn.addEventListener('click', () => showAuthModal('register'));
+            closeModalBtn.addEventListener('click', hideAuthModal);
+            toggleAuthBtn.addEventListener('click', toggleAuthMode);
+            profileBtn.addEventListener('click', showProfileModal);
+            logoutBtn.addEventListener('click', logout);
+            closeProfileModalBtn.addEventListener('click', hideProfileModal);
+            
+            // User menu dropdown
+            if (userMenuBtn) {
+                userMenuBtn.addEventListener('click', () => {
+                    if (userDropdown) {
+                        userDropdown.classList.toggle('hidden');
+                    }
+                });
+            }
+            
+            // Close user menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (userDropdown && userMenuBtn && !userDropdown.contains(e.target) && !userMenuBtn.contains(e.target)) {
+                    userDropdown.classList.add('hidden');
+                }
+            });
+            
+            // Form submissions
+            loginForm.addEventListener('submit', handleLogin);
+            registerForm.addEventListener('submit', handleRegister);
+            profileForm.addEventListener('submit', handleProfileUpdate);
+            
+            // Close modals on backdrop click
+            authModal.addEventListener('click', (e) => {
+                if (e.target === authModal) hideAuthModal();
+            });
+            profileModal.addEventListener('click', (e) => {
+                if (e.target === profileModal) hideProfileModal();
+            });
+            
+            // Auth state listener
+            authManager.addListener(updateUI);
+            
+            // Iframe communication for dashboard authentication
+            window.addEventListener('message', function(event) {
+                if (event.origin !== window.location.origin) return;
+                
+                if (event.data.type === 'REQUEST_AUTH' && event.data.source === 'dashboard') {
+                    console.log('Dashboard requesting authentication');
+                    const isAuthenticated = authManager.isAuthenticated();
+                    
+                    if (isAuthenticated) {
+                        const user = authManager.getCurrentUser();
+                        const accessToken = authManager.getToken();
+                        const refreshToken = authManager.refreshToken; // Get refresh token directly
+                        
+                        // Send authentication data to dashboard iframe
+                        const dashboardFrame = document.getElementById('dashboard-frame');
+                        if (dashboardFrame && dashboardFrame.contentWindow) {
+                            dashboardFrame.contentWindow.postMessage({
+                                type: 'AUTH_TOKEN',
+                                accessToken: accessToken,
+                                refreshToken: refreshToken,
+                                token: accessToken, // Keep for backward compatibility
+                                user: user
+                            }, window.location.origin);
+                            console.log('Sent auth token to dashboard');
+                        }
+                    } else {
+                        console.log('User not authenticated, cannot send token to dashboard');
+                    }
+                }
+            });
+            
+            function initializeUI() {
+                // Check URL parameters for direct navigation
+                const urlParams = new URLSearchParams(window.location.search);
+                const directMode = urlParams.get('direct');
+                
+                const isAuthenticated = authManager.isAuthenticated();
+                const loadingOverlay = document.getElementById('loading-overlay');
+                
+                if (directMode === 'dashboard' && isAuthenticated) {
+                    // User is coming from admin panel and is authenticated
+                    // Skip landing page and go directly to dashboard
+                    landingPage.classList.add('hidden');
+                    dashboard.classList.remove('hidden');
+                    userMenu.classList.remove('hidden');
+                    
+                    // Clean up URL
+                    const newUrl = window.location.origin + window.location.pathname;
+                    window.history.replaceState({}, document.title, newUrl);
+                    
+                    updateUI(); // Update user display
+                } else {
+                    // Normal initialization
+                    updateUI();
+                }
+                
+                // Hide loading overlay
+                if (loadingOverlay) {
+                    setTimeout(() => {
+                        loadingOverlay.classList.add('hidden');
+                    }, 100); // Small delay to ensure smooth transition
+                }
+            }
+            
+            function updateUI() {
+                const isAuthenticated = authManager.isAuthenticated();
+                const loadingOverlay = document.getElementById('loading-overlay');
+                
+                if (isAuthenticated) {
+                    landingPage.classList.add('hidden');
+                    dashboard.classList.remove('hidden');
+                    userMenu.classList.remove('hidden');
+                    
+                    const user = authManager.getCurrentUser();
+                    
+                    // Update user display
+                    const userName = document.getElementById('user-name');
+                    const userInitial = document.getElementById('user-initial');
+                    if (userName) userName.textContent = user.username;
+                    if (userInitial) userInitial.textContent = user.username.charAt(0).toUpperCase();
+                    
+                    // Send authentication to dashboard iframe if it exists
+                    setTimeout(() => {
+                        const dashboardFrame = document.getElementById('dashboard-frame');
+                        if (dashboardFrame && dashboardFrame.contentWindow) {
+                            const accessToken = authManager.getToken();
+                            const refreshToken = authManager.refreshToken; // Get refresh token directly
+                            dashboardFrame.contentWindow.postMessage({
+                                type: 'AUTH_TOKEN',
+                                accessToken: accessToken,
+                                refreshToken: refreshToken,
+                                token: accessToken, // Keep for backward compatibility
+                                user: user
+                            }, window.location.origin);
+                            console.log('Sent auth token to dashboard on UI update');
+                        }
+                    }, 500); // Small delay to ensure iframe is loaded
+                } else {
+                    landingPage.classList.remove('hidden');
+                    dashboard.classList.add('hidden');
+                    userMenu.classList.add('hidden');
+                }
+                
+                // Hide loading overlay after UI update
+                if (loadingOverlay) {
+                    loadingOverlay.classList.add('hidden');
+                }
+            }
+            
+            function showAuthModal(mode) {
+                const modalTitle = document.getElementById('modal-title');
+                const toggleText = document.getElementById('toggle-text');
+                
+                if (mode === 'login') {
+                    modalTitle.textContent = 'Sign In';
+                    loginForm.classList.remove('hidden');
+                    registerForm.classList.add('hidden');
+                    toggleText.textContent = "Don't have an account? Sign up";
+                } else {
+                    modalTitle.textContent = 'Create Account';
+                    loginForm.classList.add('hidden');
+                    registerForm.classList.remove('hidden');
+                    toggleText.textContent = "Already have an account? Sign in";
+                }
+                
+                authModal.classList.remove('hidden');
+                clearAuthError();
+            }
+            
+            function hideAuthModal() {
+                authModal.classList.add('hidden');
+                loginForm.reset();
+                registerForm.reset();
+                clearAuthError();
+            }
+            
+            function toggleAuthMode() {
+                const isLoginVisible = !loginForm.classList.contains('hidden');
+                showAuthModal(isLoginVisible ? 'register' : 'login');
+            }
+            
+            function showProfileModal() {
+                const user = authManager.getCurrentUser();
+                if (user) {
+                    document.getElementById('profile-username').value = user.username;
+                    document.getElementById('profile-email').value = user.email || '';
+                    document.getElementById('email-notifications').checked = user.email_notifications !== false;
+                    document.getElementById('daily-summaries').checked = user.daily_summaries === true;
+                    document.getElementById('scrape-interval').value = user.scrape_interval || '60';
+                    
+                    profileModal.classList.remove('hidden');
+                }
+            }
+            
+            function hideProfileModal() {
+                profileModal.classList.add('hidden');
+                profileForm.reset();
+            }
+            
+            async function handleLogin(e) {
+                e.preventDefault();
+                
+                const username = document.getElementById('login-username').value;
+                const password = document.getElementById('login-password').value;
+                
+                if (!username || !password) {
+                    showAuthError('Please fill in all fields');
+                    return;
+                }
+                
+                setLoginLoading(true);
+                clearAuthError();
+                
+                try {
+                    console.log('Attempting login with credentials:', { username, password: '***' });
+                    await authManager.login({
+                        username: username,
+                        password: password
+                    });
+                    console.log('Login successful');
+                    hideAuthModal();
+                } catch (error) {
+                    console.error('Login error:', error);
+                    let errorMessage = 'Login failed. Please try again.';
+                    
+                    if (error.message && error.message !== '[object Object]') {
+                        errorMessage = error.message;
+                    } else if (error.detail) {
+                        errorMessage = error.detail;
+                    }
+                    
+                    showAuthError(errorMessage);
+                } finally {
+                    setLoginLoading(false);
+                }
+            }
+            
+            async function handleRegister(e) {
+                e.preventDefault();
+                
+                const username = document.getElementById('register-username').value;
+                const email = document.getElementById('register-email').value;
+                const password = document.getElementById('register-password').value;
+                
+                if (!username || !email || !password) {
+                    showAuthError('Please fill in all fields');
+                    return;
+                }
+                
+                setRegisterLoading(true);
+                clearAuthError();
+                
+                try {
+                    await authManager.register({
+                        username: username,
+                        email: email,
+                        password: password
+                    });
+                    hideAuthModal();
+                } catch (error) {
+                    console.error('Registration error:', error);
+                    let errorMessage = 'Registration failed. Please try again.';
+                    
+                    if (error.message && error.message !== '[object Object]') {
+                        errorMessage = error.message;
+                    } else if (error.detail) {
+                        errorMessage = error.detail;
+                    }
+                    
+                    showAuthError(errorMessage);
+                } finally {
+                    setRegisterLoading(false);
+                }
+            }
+            
+            async function handleProfileUpdate(e) {
+                e.preventDefault();
+                
+                const email = document.getElementById('profile-email').value;
+                const emailNotifications = document.getElementById('email-notifications').checked;
+                const dailySummaries = document.getElementById('daily-summaries').checked;
+                const scrapeInterval = parseInt(document.getElementById('scrape-interval').value);
+                
+                setProfileLoading(true);
+                
+                try {
+                    const profileData = {
+                        email,
+                        email_notifications: emailNotifications,
+                        daily_summaries: dailySummaries,
+                        scrape_interval: scrapeInterval
+                    };
+                    
+                    console.log('Updating profile with data:', profileData);
+                    await authManager.updateProfile(profileData);
+                    console.log('Profile updated successfully');
+                    hideProfileModal();
+                } catch (error) {
+                    console.error('Profile update error:', error);
+                    let errorMessage = 'Failed to update profile. Please try again.';
+                    
+                    if (error.message && error.message !== '[object Object]') {
+                        errorMessage = error.message;
+                    } else if (error.detail) {
+                        errorMessage = error.detail;
+                    }
+                    
+                    showAuthError(errorMessage);
+                } finally {
+                    setProfileLoading(false);
+                }
+            }
+            
+            async function logout() {
+                await authManager.logout();
+                window.location.reload();
+            }
+            
+            function setLoginLoading(loading) {
+                document.getElementById('login-loading').classList.toggle('hidden', !loading);
+                document.getElementById('login-text').classList.toggle('hidden', loading);
+                document.querySelector('#login-form button').disabled = loading;
+            }
+            
+            function setRegisterLoading(loading) {
+                document.getElementById('register-loading').classList.toggle('hidden', !loading);
+                document.getElementById('register-text').classList.toggle('hidden', loading);
+                document.querySelector('#register-form button').disabled = loading;
+            }
+            
+            function setProfileLoading(loading) {
+                document.getElementById('profile-loading').classList.toggle('hidden', !loading);
+                document.getElementById('profile-text').classList.toggle('hidden', loading);
+                document.querySelector('#profile-form button[type="submit"]').disabled = loading;
+            }
+            
+            function showAuthError(message) {
+                const errorDiv = document.getElementById('auth-error');
+                const errorText = document.getElementById('error-text');
+                
+                if (errorDiv && errorText) {
+                    errorText.textContent = message;
+                    errorDiv.classList.remove('hidden');
+                } else {
+                    // Fallback: show in console and alert
+                    console.error('Auth error:', message);
+                    alert('Authentication Error: ' + message);
+                }
+            }
+            
+            function clearAuthError() {
+                const errorDiv = document.getElementById('auth-error');
+                if (errorDiv) {
+                    errorDiv.classList.add('hidden');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

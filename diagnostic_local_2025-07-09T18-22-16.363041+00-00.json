@@ -1,0 +1,74 @@
+{
+  "timestamp": "2025-07-09T20:22:15.622855",
+  "is_railway": false,
+  "environment": {
+    "python_version": "3.12.2 (v3.12.2:6abddd9f6a, Feb  6 2024, 17:02:06) [Clang 13.0.0 (clang-1300.0.29.30)]",
+    "is_railway": false,
+    "cwd": "/Users/Dion/Downloads/Documenten/Code projects/House_scraper",
+    "backend_dir_exists": true,
+    "env_vars": {
+      "RAILWAY_ENVIRONMENT": null,
+      "RAILWAY_PROJECT_ID": null,
+      "RAILWAY_SERVICE_ID": null,
+      "PORT": null
+    }
+  },
+  "timezone_utils": {
+    "import_direct": {
+      "success": true,
+      "timezone_type": "pytz",
+      "now": "2025-07-09 20:22:15.690736+02:00",
+      "now_iso": "2025-07-09T20:22:15.691090+02:00"
+    },
+    "comprehensive_tests": {
+      "now_cest": {
+        "success": true,
+        "value": "2025-07-09 20:22:15.691110+02:00",
+        "has_tzinfo": true
+      },
+      "now_cest_iso": {
+        "success": true,
+        "value": "2025-07-09T20:22:15.691123+02:00"
+      },
+      "parse_datetime_cest": {
+        "success": true,
+        "input": "2023-06-15T12:30:45+02:00",
+        "output": "2023-06-15 12:30:45+02:00"
+      },
+      "format_datetime_cest": {
+        "success": true,
+        "input": "2025-07-09 20:22:15.691158+02:00",
+        "output": "2025-07-09 20:22:15 CEST"
+      },
+      "timezone_info": {
+        "timezone": "Europe/Amsterdam",
+        "abbreviation": "CEST",
+        "offset": "+02:00",
+        "is_dst": true,
+        "timezone_type": "pytz",
+        "current_time": "2025-07-09T20:22:15.691216+02:00",
+        "environment": "local"
+      }
+    },
+    "import_from_backend": {
+      "success": true,
+      "timezone_type": "pytz",
+      "now": "2025-07-09 20:22:15.692944+02:00",
+      "now_iso": "2025-07-09T20:22:15.692977+02:00"
+    },
+    "pytz_in_requirements": true
+  },
+  "scraping_system": {
+    "import_scrape_funda": {
+      "success": true
+    },
+    "random_user_agent": {
+      "success": true,
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; ..."
+    },
+    "scrape_function_available": {
+      "success": true
+    }
+  },
+  "elapsed_seconds": 0.740088939666748
+}
