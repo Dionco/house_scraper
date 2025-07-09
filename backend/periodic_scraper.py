@@ -113,6 +113,18 @@ class PeriodicScraper:
             try:
                 # Clean filters to avoid unexpected parameters
                 clean_filters = {}
+                
+                # Handle special 'filters' key if it exists
+                if 'filters' in filters:
+                    # Extract nested filters to the top level
+                    nested_filters = filters.get('filters', {})
+                    for key, value in nested_filters.items():
+                        if value is not None and value != "":
+                            filters[key] = value
+                    # Remove the 'filters' key to avoid passing it to build_rental_url
+                    filters.pop('filters', None)
+                
+                # Process all filter parameters
                 for key, value in filters.items():
                     if value is not None and value != "":
                         # Handle price parameter conversion
@@ -131,8 +143,12 @@ class PeriodicScraper:
                                     clean_filters["max_price"] = int(value.strip())
                                 except ValueError:
                                     logger.warning(f"Invalid price value: {value}")
-                        else:
+                        # Skip 'filters' parameter as it's not supported by build_funda_url
+                        elif key != 'filters':
                             clean_filters[key] = value
+                
+                # Debug log to show what we're passing to build_rental_url
+                logger.info(f"Building URL with parameters: {clean_filters}")
                         
                 url = build_rental_url(**clean_filters)
                 logger.info(f"Scraping URL: {url}")

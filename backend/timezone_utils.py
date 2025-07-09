@@ -30,14 +30,6 @@ logger.info(f"timezone_utils module initialized with {TIMEZONE_TYPE} timezone")
 logger.info(f"Python version: {sys.version}")
 logger.info(f"Module path: {__file__}")
 logger.info(f"Current directory: {os.getcwd()}")
-logger.info(f"Running on Railway: {any([
-    os.getenv('RAILWAY_ENVIRONMENT'),
-    os.getenv('RAILWAY_PROJECT_ID'),
-    os.getenv('RAILWAY_SERVICE_ID'),
-    os.getenv('PORT')  # Railway sets this automatically
-])}")
-logger.info(f"Module path: {__file__}")
-logger.info(f"Current directory: {os.getcwd()}")
 logger.info(f"Running on Railway: {any([os.getenv('RAILWAY_ENVIRONMENT'), os.getenv('RAILWAY_PROJECT_ID')])}")
 
 def now_cest() -> datetime:

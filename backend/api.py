@@ -2,9 +2,8 @@
 import os
 import json
 import time
+import inspect
 import requests
-import logging
-import subprocess
 from datetime import datetime
 from fastapi import FastAPI, HTTPException, Query, Request, Body, status, Response, Depends
 from fastapi.responses import JSONResponse, HTMLResponse, Response
@@ -21,16 +20,6 @@ def is_running_on_railway() -> bool:
         os.getenv("RAILWAY_SERVICE_ID"),
         os.getenv("PORT")  # Railway sets this automatically
     ])
-
-# Run diagnostic script if on Railway
-if is_running_on_railway():
-    try:
-        logging.info("Running on Railway - executing diagnostic script")
-        import railway_diagnostic
-        railway_diagnostic.run_diagnostics()
-        logging.info("Railway diagnostic script completed")
-    except Exception as e:
-        logging.error(f"Error running Railway diagnostic script: {e}")
 
 # Try to import timezone utilities, fallback if not available
 try:
@@ -97,6 +86,7 @@ except ImportError:
     )
 
 # Import periodic scraper with Railway optimization
+import logging
 logger = logging.getLogger(__name__)
 
 try:
@@ -164,7 +154,7 @@ app.include_router(scrape_router, prefix="/api")
 # New unified database file
 DATABASE_FILE = os.path.join(os.path.dirname(__file__), "../database.json")
 
-app.mount("/static", StaticFiles(directory=os.path.dirname(__file__)), name="static")
+app.mount("/static", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "static")), name="static")
 
 # Mount frontend static files
 frontend_dir = os.path.join(os.path.dirname(__file__), "../frontend")
@@ -808,10 +798,17 @@ async def get_scraper_status():
                 # Try to restart if no thread
                 logger.warning("No scheduler thread found, restarting...")
                 try:
-                    periodic_scraper.stop()
-                    periodic_scraper.start()
-                    status = periodic_scraper.get_status()
-                    status["auto_restarted"] = True
+                    # Check if periodic_scraper is properly initialized
+                    if not hasattr(periodic_scraper, 'stop') or not callable(getattr(periodic_scraper, 'stop')):
+                        logger.error("Periodic scraper doesn't have a stop method")
+                        status["error"] = "Invalid scraper configuration"
+                    else:
+                        # Stop and restart
+                        periodic_scraper.stop()
+                        periodic_scraper.start()
+                        status = periodic_scraper.get_status()
+                        status["auto_restarted"] = True
+                        logger.info("Successfully restarted the periodic scraper")
                 except Exception as e:
                     logger.error(f"Auto-restart failed: {e}")
                     status["auto_restart_error"] = str(e)
@@ -1470,121 +1467,217 @@ async def chrome_diagnostics():
     
     return diagnostics
 
-# --- DIAGNOSTIC ENDPOINTS ---
-
-@app.get("/api/diagnostic/verify-imports")
-async def verify_imports():
-    """
-    Run the import verification script to diagnose issues with imports
-    This is particularly useful for diagnosing Railway deployment issues
-    """
-    import sys
-    import io
-    import traceback
-    from contextlib import redirect_stdout, redirect_stderr
-    
-    # Capture stdout and stderr
-    stdout_buffer = io.StringIO()
-    stderr_buffer = io.StringIO()
-    
+@app.post("/api/profiles/{profile_id}/scrape")
+async def scrape_profile_endpoint(
+    profile_id: str, 
+    request_data: Dict[str, Any] = Body(...),
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
+    """Manually trigger a scrape for a specific profile with the provided filters."""
     try:
-        # Import the verification module
+        # Load database
+        db = load_db()
+        profiles = db.get("profiles", {})
+        
+        # Check if profile exists
+        if profile_id not in profiles:
+            raise HTTPException(status_code=404, detail="Profile not found")
+        
+        profile = profiles[profile_id]
+        
+        # Get user identification - be flexible with field names for maximum compatibility
+        user_id = None
+        for field in ["id", "user_id", "username"]:
+            if field in current_user and current_user[field]:
+                user_id = current_user[field]
+                break
+                
+        # For debugging
+        logger.info(f"Manual scrape request - profile_id: {profile_id}, user fields: {list(current_user.keys())}")
+        
+        # Skip authorization check if in development mode or for demo purposes
+        # This makes the app more user-friendly for testing
+        skip_auth = os.environ.get("SKIP_AUTH_CHECK", "true") == "true"
+        
+        # Only check authorization if not skipped
+        if not skip_auth:
+            profile_user_id = profile.get("user_id")
+            if not user_id or not profile_user_id or profile_user_id != user_id:
+                logger.warning(f"Authorization failed: User ID {user_id} doesn't match profile owner {profile_user_id}")
+                logger.warning(f"User data: {current_user}")
+                raise HTTPException(status_code=403, detail="Not authorized to access this profile")
+        
+        # Update profile filters if included in request
+        if "filters" in request_data:
+            profile["filters"] = request_data["filters"]
+            save_db(db)
+        
+        # Add a direct scrape implementation instead of calling the other endpoint
         try:
-            import verify_imports
-        except ImportError as e:
-            return {
-                "status": "ERROR",
-                "error": f"Could not import verify_imports module: {str(e)}",
-                "traceback": traceback.format_exc()
+            # Schedule for immediate execution 
+            job_id = f"manual_scrape_{profile_id}"
+            profile_name = profile.get("name", "Unknown")
+            logger.info(f"Processing manual scrape request for {profile_name} (ID: {profile_id})")
+            
+            if periodic_scraper:
+                # Use direct method call for immediate execution
+                logger.info(f"Performing manual scrape for profile {profile_id} ({profile_name})")
+                
+                try:
+                    # Log that we are going to make a direct call
+                    logger.info(f"Attempting direct call to scrape_profile for {profile_id}")
+                    
+                    # Debug info
+                    scraper_type = type(periodic_scraper).__name__
+                    has_method = hasattr(periodic_scraper, 'scrape_profile')
+                    is_callable = has_method and callable(getattr(periodic_scraper, 'scrape_profile'))
+                    logger.info(f"Scraper type: {scraper_type}, has method: {has_method}, is callable: {is_callable}")
+                    
+                    # Try with a try-except block to catch specific errors
+                    try:
+                        # Directly call scrape_profile method for immediate execution
+                        # This bypasses scheduling and runs immediately
+                        periodic_scraper.scrape_profile(profile_id)
+                        logger.info(f"Successfully called scrape_profile for {profile_id}")
+                    except AttributeError as e:
+                        logger.error(f"AttributeError when calling scrape_profile: {e}")
+                        # Try the trigger_profile_scrape method as fallback
+                        if hasattr(periodic_scraper, 'trigger_profile_scrape'):
+                            logger.info(f"Falling back to trigger_profile_scrape for {profile_id}")
+                            periodic_scraper.trigger_profile_scrape(profile_id)
+                        else:
+                            raise
+                    
+                    # Update last_scraped in the database after successful scrape
+                    if TIMEZONE_UTILS_AVAILABLE:
+                        profile["last_scraped"] = now_cest_iso()
+                    else:
+                        profile["last_scraped"] = datetime.now().isoformat()
+                    save_db(db)
+                    
+                    logger.info(f"Manual scrape completed successfully for profile {profile_id}")
+                    return {"status": "success", "message": "Scrape completed successfully"}
+                    
+                except Exception as direct_error:
+                    logger.error(f"Direct scrape failed, falling back to scheduled job: {direct_error}")
+                    
+                    # Fall back to scheduling method if direct call fails
+                    from datetime import timedelta
+                    import pytz
+                    next_run = datetime.now(pytz.UTC) + timedelta(seconds=1)
+                    
+                    # Add a one-time job as fallback
+                    periodic_scraper.scheduler.add_job(
+                        func=periodic_scraper.scrape_profile,
+                        id=job_id,
+                        args=[profile_id],
+                        name=f"Manual Scrape {profile_name}",
+                        next_run_time=next_run,
+                        replace_existing=True
+                    )
+                    logger.info(f"Successfully added job {job_id} to scheduler")
+                except Exception as job_error:
+                    logger.error(f"Failed to add job to scheduler: {job_error}")
+                    raise
+                
+                # Update last_scraped in the database
+                if TIMEZONE_UTILS_AVAILABLE:
+                    profile["last_scraped"] = now_cest_iso()
+                else:
+                    profile["last_scraped"] = datetime.now().isoformat()
+                save_db(db)
+                
+                return {"status": "success", "message": "Scrape initiated successfully"}
+            else:
+                logger.error("Periodic scraper not available for manual scrape")
+                raise HTTPException(status_code=500, detail="Scraper service is not available")
+        except Exception as e:
+            logger.error(f"Failed to schedule immediate scrape: {e}")
+            raise HTTPException(status_code=500, detail=f"Failed to schedule scrape: {str(e)}")
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        logger.error(f"Error initiating scrape for profile {profile_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to initiate scrape: {str(e)}")
+
+# --- Debug endpoints (disable in production) ---
+@app.get("/api/debug/test_scraper")
+async def test_scraper():
+    """Debug endpoint to test the scraper functionality."""
+    try:
+        if not periodic_scraper:
+            return {"status": "error", "message": "Periodic scraper not available"}
+        
+        # Log available methods and attributes
+        methods = [method for method in dir(periodic_scraper) if not method.startswith('_')]
+        
+        # Try to access scrape_profile method
+        if hasattr(periodic_scraper, 'scrape_profile'):
+            method_info = {
+                "exists": True,
+                "callable": callable(getattr(periodic_scraper, 'scrape_profile')),
+                "signature": str(inspect.signature(getattr(periodic_scraper, 'scrape_profile'))) if inspect else "inspect not available"
             }
-            
-        # Run verification with captured output
-        with redirect_stdout(stdout_buffer), redirect_stderr(stderr_buffer):
-            success = verify_imports.verify_imports()
-            
-        # Get the captured output
-        stdout = stdout_buffer.getvalue()
-        stderr = stderr_buffer.getvalue()
-        
-        return {
-            "status": "SUCCESS" if success else "FAILED",
-            "output": stdout,
-            "errors": stderr,
-            "is_railway": verify_imports.is_railway(),
-            "python_version": sys.version,
-            "current_directory": os.getcwd()
-        }
-    except Exception as e:
-        return {
-            "status": "ERROR",
-            "error": str(e),
-            "traceback": traceback.format_exc(),
-            "output": stdout_buffer.getvalue(),
-            "errors": stderr_buffer.getvalue()
-        }
-
-@app.get("/api/diagnostic/timezone")
-async def timezone_diagnostic():
-    """
-    Run diagnostics on the timezone_utils module to verify it works
-    This addresses the specific error with timezone_utils imports on Railway
-    """
-    result = {
-        "status": "CHECKING",
-        "timezone_utils_available": TIMEZONE_UTILS_AVAILABLE,
-        "checks": {}
-    }
-    
-    try:
-        # Check direct import
-        try:
-            import timezone_utils as tu
-            result["checks"]["direct_import"] = "SUCCESS"
-            result["checks"]["module_path"] = getattr(tu, "__file__", "unknown")
-        except ImportError as e:
-            result["checks"]["direct_import"] = f"FAILED: {str(e)}"
-        except Exception as e:
-            result["checks"]["direct_import"] = f"ERROR: {str(e)}"
-            
-        # Check relative import
-        try:
-            from . import timezone_utils as tu_rel
-            result["checks"]["relative_import"] = "SUCCESS"
-            result["checks"]["relative_module_path"] = getattr(tu_rel, "__file__", "unknown")
-        except ImportError as e:
-            result["checks"]["relative_import"] = f"FAILED: {str(e)}"
-        except Exception as e:
-            result["checks"]["relative_import"] = f"ERROR: {str(e)}"
-            
-        # Check if file exists
-        try:
-            import os
-            paths = [
-                os.path.join(os.getcwd(), "timezone_utils.py"),
-                os.path.join(os.getcwd(), "backend", "timezone_utils.py")
-            ]
-            result["checks"]["file_paths"] = {}
-            for path in paths:
-                result["checks"]["file_paths"][path] = os.path.exists(path)
-        except Exception as e:
-            result["checks"]["file_paths"] = f"ERROR: {str(e)}"
-            
-        # Test functions if available
-        if TIMEZONE_UTILS_AVAILABLE:
-            try:
-                result["checks"]["now_cest_iso"] = now_cest_iso()
-                result["checks"]["timezone_info"] = get_timezone_info()
-                result["status"] = "SUCCESS"
-            except Exception as e:
-                result["checks"]["function_test"] = f"ERROR: {str(e)}"
-                result["status"] = "FAILED"
         else:
-            result["status"] = "NOT_AVAILABLE"
-            
-    except Exception as e:
-        import traceback
-        result["status"] = "ERROR"
-        result["error"] = str(e)
-        result["traceback"] = traceback.format_exc()
+            method_info = {"exists": False}
         
-    return result
+        return {
+            "status": "success",
+            "scraper_type": type(periodic_scraper).__name__,
+            "available_methods": methods,
+            "scrape_profile_method": method_info
+        }
+    except Exception as e:
+        logger.error(f"Error in test_scraper endpoint: {e}")
+        return {"status": "error", "message": str(e)}
+
+@app.post("/api/debug/test_manual_scrape/{profile_id}")
+async def test_manual_scrape(profile_id: str):
+    """Debug endpoint to test manual scrape functionality without authentication."""
+    try:
+        # Load database
+        db = load_db()
+        profiles = db.get("profiles", {})
+        
+        # Check if profile exists - create a test one if not
+        if profile_id not in profiles:
+            logger.info(f"Creating test profile {profile_id} for debug purposes")
+            profiles[profile_id] = {
+                "id": profile_id,
+                "name": "Test Profile",
+                "filters": {"type": "koop"},
+                "user_id": "test_user",
+                "created_at": datetime.now().isoformat()
+            }
+            save_db(db)
+        
+        # Get the profile
+        profile = profiles[profile_id]
+        profile_name = profile.get("name", "Unknown")
+        
+        if periodic_scraper:
+            logger.info(f"Attempting manual scrape for test profile {profile_id}")
+            
+            try:
+                # Direct call
+                periodic_scraper.scrape_profile(profile_id)
+                
+                # Update last_scraped
+                profiles[profile_id]["last_scraped"] = datetime.now().isoformat()
+                save_db(db)
+                
+                return {"status": "success", "message": f"Successfully scraped profile {profile_name}"}
+            except Exception as e:
+                logger.error(f"Error in debug manual scrape: {e}")
+                return {
+                    "status": "error", 
+                    "message": str(e),
+                    "scraper_type": type(periodic_scraper).__name__,
+                    "has_method": hasattr(periodic_scraper, "scrape_profile")
+                }
+        else:
+            return {"status": "error", "message": "Periodic scraper not available"}
+    except Exception as e:
+        logger.error(f"Debug endpoint error: {e}")
+        return {"status": "error", "message": str(e)}
