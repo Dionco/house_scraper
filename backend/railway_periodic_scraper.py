@@ -675,12 +675,13 @@ class RailwayPeriodicScraper:
         
         # Import timezone_utils again here to handle any edge cases
         global TIMEZONE_UTILS_IMPORTED
+        
+        # Import these at the method level to ensure they're available
+        import sys
+        import os
+        
         if not TIMEZONE_UTILS_IMPORTED:
             try:
-                # Try all possible import paths
-                import sys
-                import os
-                
                 # Add possible paths to sys.path
                 possible_paths = [
                     os.getcwd(),
