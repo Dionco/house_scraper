@@ -26,6 +26,15 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # JWT Bearer token scheme
 security = HTTPBearer(auto_error=False)
 
+def is_running_on_railway() -> bool:
+    """Check if the application is running on Railway."""
+    return any([
+        os.getenv("RAILWAY_ENVIRONMENT"),
+        os.getenv("RAILWAY_PROJECT_ID"),
+        os.getenv("RAILWAY_SERVICE_ID"),
+        os.getenv("PORT")  # Railway sets this automatically
+    ])
+
 class AuthenticationError(Exception):
     """Custom exception for authentication errors."""
     pass
@@ -160,10 +169,24 @@ async def get_current_user(
             )
         
         # Load user from database
-        if os.getenv("RAILWAY_ENVIRONMENT"):
-            from .api import load_db  # Railway (production/deployment)
-        else:
-            from api import load_db   # Local development
+        # Check if running on Railway (production) or locally
+        try:
+            if is_running_on_railway():
+                from .api import load_db  # Railway (production/deployment) - relative import
+            else:
+                from api import load_db   # Local development - absolute import
+        except ImportError:
+            # Fallback: try the other import method
+            try:
+                if is_running_on_railway():
+                    from api import load_db  # Fallback for Railway
+                else:
+                    from .api import load_db  # Fallback for local
+            except ImportError:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Could not import database module"
+                )
         db = load_db()
         users = db.get("users", {})
         user = users.get(user_id)

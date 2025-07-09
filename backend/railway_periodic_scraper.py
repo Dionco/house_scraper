@@ -18,6 +18,15 @@ import sys
 import threading
 import time
 
+def is_running_on_railway() -> bool:
+    """Check if the application is running on Railway."""
+    return any([
+        os.getenv("RAILWAY_ENVIRONMENT"),
+        os.getenv("RAILWAY_PROJECT_ID"),
+        os.getenv("RAILWAY_SERVICE_ID"),
+        os.getenv("PORT")  # Railway sets this automatically
+    ])
+
 try:
     from .timezone_utils import now_cest_iso, now_cest, CEST
 except ImportError:
@@ -68,7 +77,7 @@ class RailwayPeriodicScraper:
         self._shutdown_event = threading.Event()
         
         # Railway-specific configuration
-        self.railway_mode = os.getenv('RAILWAY_ENVIRONMENT') is not None
+        self.railway_mode = is_running_on_railway()
         self.heartbeat_interval = 30  # seconds
         self.max_concurrent_scrapes = 3
         self.scrape_semaphore = threading.Semaphore(self.max_concurrent_scrapes)
@@ -371,6 +380,6 @@ def ensure_scraper_running():
         periodic_scraper.start()
 
 # Auto-start on import in Railway environment
-if os.getenv('RAILWAY_ENVIRONMENT'):
+if is_running_on_railway():
     logger.info("Railway environment detected, auto-starting scraper")
     ensure_scraper_running()

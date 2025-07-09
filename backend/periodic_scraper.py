@@ -278,10 +278,20 @@ class PeriodicScraper:
             gc.collect()
             logger.info(f"Completed scrape for profile: {profile_id}")
     
-    def add_profile_job(self, profile_id: str, interval_hours: int = None):
+    def add_profile_job(self, profile_id: str, interval_hours: int = None, interval_minutes: int = None, combined_hours: int = None, combined_minutes: int = None):
         """Add a periodic job for a profile"""
-        if interval_hours is None:
-            interval_hours = self.default_interval_hours
+        
+        # Handle combined hours and minutes format
+        if combined_hours is not None or combined_minutes is not None:
+            total_minutes = (combined_hours or 0) * 60 + (combined_minutes or 0)
+            if total_minutes < 1:
+                total_minutes = 240  # Default to 4 hours
+        elif interval_hours is not None:
+            total_minutes = interval_hours * 60
+        elif interval_minutes is not None:
+            total_minutes = interval_minutes
+        else:
+            total_minutes = self.default_interval_hours * 60
             
         job_id = f"scrape_profile_{profile_id}"
         
@@ -291,10 +301,24 @@ class PeriodicScraper:
         except:
             pass
         
+        # Create trigger with total minutes
+        trigger = IntervalTrigger(minutes=total_minutes)
+        
+        # Create human-readable description
+        if total_minutes >= 60:
+            hours = total_minutes // 60
+            minutes = total_minutes % 60
+            if minutes > 0:
+                interval_desc = f"every {hours} hours and {minutes} minutes"
+            else:
+                interval_desc = f"every {hours} hours"
+        else:
+            interval_desc = f"every {total_minutes} minutes"
+        
         # Add new job
         self.scheduler.add_job(
             func=self.scrape_profile,
-            trigger=IntervalTrigger(hours=interval_hours),
+            trigger=trigger,
             args=[profile_id],
             id=job_id,
             name=f"Scrape Profile {profile_id}",
@@ -302,7 +326,7 @@ class PeriodicScraper:
             replace_existing=True
         )
         
-        logger.info(f"Added periodic job for profile {profile_id} (every {interval_hours} hours)")
+        logger.info(f"Added periodic job for profile {profile_id} ({interval_desc})")
     
     def remove_profile_job(self, profile_id: str):
         """Remove a periodic job for a profile"""
@@ -334,8 +358,27 @@ class PeriodicScraper:
                 if profile_id not in existing_job_ids:
                     # Get profile-specific interval or use default
                     profile = profiles[profile_id]
-                    interval = profile.get("scrape_interval_hours", self.default_interval_hours)
-                    self.add_profile_job(profile_id, interval)
+                    interval_hours = profile.get("scrape_interval_hours")
+                    interval_minutes = profile.get("scrape_interval_minutes")
+                    
+                    # Handle new combined format
+                    if interval_hours is not None and interval_minutes is not None:
+                        self.add_profile_job(profile_id, combined_hours=interval_hours, combined_minutes=interval_minutes)
+                    # Handle legacy format - hours only
+                    elif interval_hours is not None and interval_minutes is None:
+                        self.add_profile_job(profile_id, combined_hours=interval_hours, combined_minutes=0)
+                    # Handle legacy format - minutes only
+                    elif interval_minutes is not None and interval_hours is None:
+                        # If interval_minutes is greater than 60, it's likely the old total minutes format
+                        if interval_minutes >= 60:
+                            hours = interval_minutes // 60
+                            minutes = interval_minutes % 60
+                            self.add_profile_job(profile_id, combined_hours=hours, combined_minutes=minutes)
+                        else:
+                            self.add_profile_job(profile_id, combined_hours=0, combined_minutes=interval_minutes)
+                    else:
+                        # Default to 4 hours
+                        self.add_profile_job(profile_id, combined_hours=4, combined_minutes=0)
             
             # Remove jobs for deleted profiles
             for profile_id in existing_job_ids:

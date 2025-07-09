@@ -98,14 +98,56 @@ class ProfileCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     filters: dict
     emails: List[EmailStr] = []
-    scrape_interval_hours: int = Field(default=4, ge=1, le=168)  # 1 hour to 1 week
+    scrape_interval_hours: Optional[int] = Field(default=4, ge=0, le=168)
+    scrape_interval_minutes: Optional[int] = Field(default=0, ge=0, le=59)  # Minutes component (0-59)
+    
+    @validator('scrape_interval_minutes')
+    def validate_interval(cls, v, values):
+        hours = values.get('scrape_interval_hours', 4)
+        if hours is None:
+            hours = 4
+        if v is None:
+            v = 0
+            
+        # Must have at least 1 minute total
+        total_minutes = (hours * 60) + v
+        if total_minutes < 1:
+            raise ValueError('Interval must be at least 1 minute total')
+        if total_minutes > 10080:  # 1 week in minutes
+            raise ValueError('Interval cannot exceed 1 week')
+            
+        return v
 
 class ProfileUpdate(BaseModel):
     """Profile update request model."""
     name: Optional[str] = Field(None, min_length=1, max_length=100)
     filters: Optional[dict] = None
     emails: Optional[List[EmailStr]] = None
-    scrape_interval_hours: Optional[int] = Field(None, ge=1, le=168)
+    scrape_interval_hours: Optional[int] = Field(None, ge=0, le=168)
+    scrape_interval_minutes: Optional[int] = Field(None, ge=0, le=59)  # Minutes component (0-59)
+    
+    @validator('scrape_interval_minutes')
+    def validate_interval(cls, v, values):
+        hours = values.get('scrape_interval_hours')
+        
+        # If both are None, that's fine for partial updates
+        if v is None and hours is None:
+            return v
+        
+        # If only one is provided, use default for the other
+        if hours is None:
+            hours = 0
+        if v is None:
+            v = 0
+            
+        # Must have at least 1 minute total
+        total_minutes = (hours * 60) + v
+        if total_minutes < 1:
+            raise ValueError('Interval must be at least 1 minute total')
+        if total_minutes > 10080:  # 1 week in minutes
+            raise ValueError('Interval cannot exceed 1 week')
+            
+        return v
 
 class ProfileResponse(BaseModel):
     """Profile response model."""
@@ -114,7 +156,8 @@ class ProfileResponse(BaseModel):
     name: str
     filters: dict
     emails: List[str]
-    scrape_interval_hours: int
+    scrape_interval_hours: Optional[int] = None
+    scrape_interval_minutes: Optional[int] = None
     created_at: float
     last_scraped: Optional[float] = None
     last_new_listings_count: int = 0
@@ -127,7 +170,25 @@ class EmailUpdate(BaseModel):
 
 class ScrapeIntervalUpdate(BaseModel):
     """Scrape interval update request model."""
-    scrape_interval_hours: int = Field(..., ge=1, le=168)
+    scrape_interval_hours: Optional[int] = Field(None, ge=0, le=168)
+    scrape_interval_minutes: Optional[int] = Field(None, ge=0, le=59)  # 0-59 minutes component
+    
+    @validator('scrape_interval_minutes')
+    def validate_interval(cls, v, values):
+        hours = values.get('scrape_interval_hours', 0)
+        if hours is None:
+            hours = 0
+        if v is None:
+            v = 0
+            
+        # Must have at least 1 minute total (either from hours or minutes)
+        total_minutes = (hours * 60) + v
+        if total_minutes < 1:
+            raise ValueError('Interval must be at least 1 minute total')
+        if total_minutes > 10080:  # 1 week in minutes
+            raise ValueError('Interval cannot exceed 1 week')
+            
+        return v
 
 class UserProfileUpdate(BaseModel):
     """User profile settings update model."""

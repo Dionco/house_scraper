@@ -573,9 +573,14 @@
             const editUpdateEmailsBtn = document.getElementById('edit-update-emails-btn');
             const editScraperStatus = document.getElementById('edit-scraper-status');
             const scraperStatus = document.getElementById('scraper-status'); // Add this for compatibility
-            const editScrapeInterval = document.getElementById('edit-scrape-interval');
+            const editScrapeIntervalHours = document.getElementById('edit-scrape-interval-hours');
+            const editScrapeIntervalMinutes = document.getElementById('edit-scrape-interval-minutes');
             const editUpdateIntervalBtn = document.getElementById('edit-update-interval-btn');
             const editLastScraped = document.getElementById('edit-last-scraped');
+            
+            // Add wizard interval field event listeners
+            const wizardIntervalHours = document.getElementById('wizard-scrape-interval-hours');
+            const wizardIntervalMinutes = document.getElementById('wizard-scrape-interval-minutes');
             
             // --- UTILITY FUNCTIONS (moved inside DOMContentLoaded) ---
             function renderListings(listings, emptyMessage) {
@@ -684,6 +689,8 @@
                         profiles = {}; // Clear existing profiles
                         data.forEach(profile => {
                             profiles[profile.id] = profile; // Store by ID for easy lookup
+                            // Log interval values for debugging
+                            console.log(`  Profile ${profile.name}: ${profile.scrape_interval_hours}h ${profile.scrape_interval_minutes}m`);
                         });
                     } else {
                         console.log('User not authenticated or authManager not available, clearing profiles');
@@ -952,14 +959,52 @@
 
                 const profile = profiles[currentProfileId];
                 if (!profile) {
-                    showNotification('Profile not found.', 'error');
+                    console.error('Profile not found for ID:', currentProfileId);
+                    showNotification('Profile not found. Please try refreshing the page.', 'error');
                     return;
                 }
+
+                console.log('Opening edit modal for profile:', profile.name, 'Data:', profile);
 
                 // Populate profile settings
                 editProfileName.value = profile.name;
                 editProfileEmails.value = profile.emails ? profile.emails.join(', ') : '';
-                editScrapeInterval.value = profile.scrape_interval_hours || 4;
+                
+                // Handle interval values with proper validation and logging
+                const storedHours = profile.scrape_interval_hours;
+                const storedMinutes = profile.scrape_interval_minutes;
+                
+                // Convert and validate stored values
+                let displayHours = 4; // Default
+                let displayMinutes = 0; // Default
+                
+                // Handle hours value
+                if (storedHours !== undefined && storedHours !== null) {
+                    const hoursNum = parseInt(storedHours);
+                    if (!isNaN(hoursNum) && hoursNum >= 0 && hoursNum <= 168) {
+                        displayHours = hoursNum;
+                    }
+                }
+                
+                // Handle minutes value  
+                if (storedMinutes !== undefined && storedMinutes !== null) {
+                    const minutesNum = parseInt(storedMinutes);
+                    if (!isNaN(minutesNum) && minutesNum >= 0 && minutesNum <= 59) {
+                        displayMinutes = minutesNum;
+                    }
+                }
+                
+                // Set the input values
+                editScrapeIntervalHours.value = displayHours;
+                editScrapeIntervalMinutes.value = displayMinutes;
+                
+                // Log for debugging
+                console.log(`Profile ${profile.name} interval: stored(${storedHours}h, ${storedMinutes}m) -> display(${displayHours}h, ${displayMinutes}m)`);
+                
+                // Update the button state
+                if (editUpdateIntervalBtn) {
+                    editUpdateIntervalBtn.disabled = true; // Start disabled since no changes made yet
+                }
 
                 // Populate search filters
                 populateModalFilters(profile.filters || {});
@@ -1174,24 +1219,50 @@
                     return;
                 }
                 
-                const intervalHours = parseInt(editScrapeInterval.value);
-                if (!intervalHours || intervalHours < 1 || intervalHours > 168) {
-                    showNotification('Please enter a valid interval between 1 and 168 hours.', 'warning');
+                const intervalHours = parseInt(editScrapeIntervalHours.value) || 0;
+                const intervalMinutes = parseInt(editScrapeIntervalMinutes.value) || 0;
+                
+                // Validate total interval (must be at least 1 minute)
+                const totalMinutes = (intervalHours * 60) + intervalMinutes;
+                if (totalMinutes < 1) {
+                    showNotification('Please enter a valid interval of at least 1 minute total.', 'warning');
+                    return;
+                }
+                if (totalMinutes > 10080) { // 1 week in minutes
+                    showNotification('Interval cannot exceed 1 week.', 'warning');
                     return;
                 }
 
                 try {
-                    const response = await window.authManager.apiRequest(`/api/profiles/${currentProfileId}/scrape-interval`, {
+                    const response = await window.authManager.apiRequest(`/api/profiles/${currentProfileId}`, {
                         method: 'PUT',
-                        body: JSON.stringify({ scrape_interval_hours: intervalHours })
+                        body: JSON.stringify({ 
+                            scrape_interval_hours: intervalHours,
+                            scrape_interval_minutes: intervalMinutes
+                        })
                     });
                     if (!response.ok) throw new Error(`Failed to update interval: ${response.statusText}`);
+                    
                     // Update local profile data
                     if (profiles[currentProfileId]) {
                         profiles[currentProfileId].scrape_interval_hours = intervalHours;
+                        profiles[currentProfileId].scrape_interval_minutes = intervalMinutes;
                         updateProfileViewState(currentProfileId); // Refresh UI
+                        
+                        // If the modal is still open, refresh the displayed values
+                        if (!editSearchProfileModal.classList.contains('hidden')) {
+                            editScrapeIntervalHours.value = intervalHours;
+                            editScrapeIntervalMinutes.value = intervalMinutes;
+                            editUpdateIntervalBtn.disabled = true; // Reset button state
+                        }
                     }
-                    showNotification(`Scraping interval updated to ${intervalHours} hours.`, 'success');
+                    
+                    const intervalDesc = intervalHours > 0 && intervalMinutes > 0 
+                        ? `${intervalHours} hours and ${intervalMinutes} minutes`
+                        : intervalHours > 0 
+                            ? `${intervalHours} hours`
+                            : `${intervalMinutes} minutes`;
+                    showNotification(`Scraping interval updated to ${intervalDesc}.`, 'success');
                 } catch (error) {
                     console.error('Error updating scraping interval:', error);
                     showNotification('Could not update scraping interval. Please try again.', 'error');
@@ -1319,11 +1390,22 @@
                 }
             });
 
-            editScrapeInterval.addEventListener('input', () => {
-                if (currentProfileId && editUpdateIntervalBtn) {
-                    const currentInterval = profiles[currentProfileId]?.scrape_interval_hours || 4;
-                    const newInterval = parseInt(editScrapeInterval.value);
-                    editUpdateIntervalBtn.disabled = !newInterval || newInterval === currentInterval;
+            // Add event listeners for both hour and minute inputs
+            [editScrapeIntervalHours, editScrapeIntervalMinutes].forEach(input => {
+                if (input) {
+                    input.addEventListener('input', () => {
+                        if (currentProfileId && editUpdateIntervalBtn) {
+                            const currentHours = profiles[currentProfileId]?.scrape_interval_hours || 4;
+                            const currentMinutes = profiles[currentProfileId]?.scrape_interval_minutes || 0;
+                            const newHours = parseInt(editScrapeIntervalHours.value) || 0;
+                            const newMinutes = parseInt(editScrapeIntervalMinutes.value) || 0;
+                            
+                            // Enable button if values changed and total is at least 1 minute
+                            const totalMinutes = (newHours * 60) + newMinutes;
+                            const hasChanged = newHours !== currentHours || newMinutes !== currentMinutes;
+                            editUpdateIntervalBtn.disabled = !hasChanged || totalMinutes < 1;
+                        }
+                    });
                 }
             });
 
@@ -1512,6 +1594,23 @@
                 option.setAttribute('tabindex', '0');
             });
             
+            // Preset button handlers for wizard interval
+            document.querySelectorAll('.preset-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    const hours = parseInt(button.dataset.hours) || 0;
+                    const minutes = parseInt(button.dataset.minutes) || 0;
+                    
+                    if (wizardIntervalHours) wizardIntervalHours.value = hours;
+                    if (wizardIntervalMinutes) wizardIntervalMinutes.value = minutes;
+                    
+                    // Visual feedback
+                    button.classList.add('bg-primary', 'text-white');
+                    setTimeout(() => {
+                        button.classList.remove('bg-primary', 'text-white');
+                    }, 200);
+                });
+            });
+            
             // Add keyboard navigation for wizard
             profileWizardModal.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
@@ -1637,6 +1736,17 @@
                             }
                         }
                     }
+                    
+                    // Validate interval (must be at least 1 minute total)
+                    const intervalHours = parseInt(document.getElementById('wizard-scrape-interval-hours').value) || 0;
+                    const intervalMinutes = parseInt(document.getElementById('wizard-scrape-interval-minutes').value) || 0;
+                    const totalMinutes = (intervalHours * 60) + intervalMinutes;
+                    
+                    if (totalMinutes < 1) {
+                        showNotification('Please enter a valid interval of at least 1 minute total.', 'warning');
+                        document.getElementById('wizard-scrape-interval-hours').focus();
+                        return false;
+                    }
                 }
                 return true;
             }
@@ -1675,7 +1785,8 @@
                     // Profile setup
                     wizardData.profileName = document.getElementById('wizard-profile-name').value.trim();
                     wizardData.emails = document.getElementById('wizard-emails').value.trim();
-                    wizardData.scrapeInterval = document.getElementById('wizard-scrape-interval').value;
+                    wizardData.scrapeIntervalHours = parseInt(document.getElementById('wizard-scrape-interval-hours').value) || 4;
+                    wizardData.scrapeIntervalMinutes = parseInt(document.getElementById('wizard-scrape-interval-minutes').value) || 0;
                 }
             }
             
@@ -1691,7 +1802,8 @@
                 document.getElementById('wizard-energy-label').value = '';
                 document.getElementById('wizard-profile-name').value = '';
                 document.getElementById('wizard-emails').value = '';
-                document.getElementById('wizard-scrape-interval').value = '4';
+                document.getElementById('wizard-scrape-interval-hours').value = '4';
+                document.getElementById('wizard-scrape-interval-minutes').value = '0';
                 
                 // Reset checkboxes
                 document.querySelectorAll('input[name="wizard-property-type"]').forEach(cb => cb.checked = false);
@@ -1783,7 +1895,8 @@
                 const profile = {
                     name: data.profileName,
                     emails: data.emails ? data.emails.split(',').map(e => e.trim()).filter(e => e) : [],
-                    scrape_interval_hours: parseInt(data.scrapeInterval) || 4,
+                    scrape_interval_hours: data.scrapeIntervalHours || 4,
+                    scrape_interval_minutes: data.scrapeIntervalMinutes || 0,
                     filters: {}
                 };
                 
@@ -1892,10 +2005,20 @@
                                 <span id="edit-scraper-status" class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800">Active</span>
                             </div>
                             <div class="space-y-3">
-                                <div class="flex items-center gap-2">
-                                    <label class="text-sm text-gray-600">Interval (hours):</label>
-                                    <input type="number" id="edit-scrape-interval" class="w-20 px-2 py-1 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" value="4" min="1" max="168">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <label class="text-sm text-gray-600">Interval:</label>
+                                    <div class="flex items-center gap-1">
+                                        <input type="number" id="edit-scrape-interval-hours" class="w-16 px-2 py-1 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" value="" min="0" max="168">
+                                        <span class="text-sm text-gray-500">h</span>
+                                    </div>
+                                    <div class="flex items-center gap-1">
+                                        <input type="number" id="edit-scrape-interval-minutes" class="w-16 px-2 py-1 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" value="0" min="0" max="59">
+                                        <span class="text-sm text-gray-500">m</span>
+                                    </div>
                                     <button id="edit-update-interval-btn" class="px-3 py-1 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-200" disabled>Update</button>
+                                </div>
+                                <div class="text-xs text-gray-500">
+                                    <span>Minimum: 1 minute total. Example: 1h 30m = every 1.5 hours</span>
                                 </div>
                                 <div class="text-xs text-gray-500">
                                     <span id="edit-last-scraped">Last scraped: Never</span>
@@ -2451,15 +2574,27 @@
                                     </svg>
                                     Search Frequency
                                 </h4>
-                                <select id="wizard-scrape-interval" class="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                                    <option value="1">Every hour</option>
-                                    <option value="2">Every 2 hours</option>
-                                    <option value="4" selected>Every 4 hours (recommended)</option>
-                                    <option value="6">Every 6 hours</option>
-                                    <option value="12">Twice daily</option>
-                                    <option value="24">Daily</option>
-                                </select>
-                                <p class="text-sm text-gray-600 mt-2">How often should we check for new properties?</p>
+                                <div class="space-y-4">
+                                    <div class="flex items-center gap-4">
+                                        <div class="flex items-center gap-1">
+                                            <input type="number" id="wizard-scrape-interval-hours" class="w-20 px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" value="4" min="0" max="168">
+                                            <span class="text-sm text-gray-600">hours</span>
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            <input type="number" id="wizard-scrape-interval-minutes" class="w-20 px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" value="0" min="0" max="59">
+                                            <span class="text-sm text-gray-600">minutes</span>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <button type="button" class="preset-button px-3 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors" data-hours="0" data-minutes="30">30 min</button>
+                                        <button type="button" class="preset-button px-3 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors" data-hours="1" data-minutes="0">1 hour</button>
+                                        <button type="button" class="preset-button px-3 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors" data-hours="2" data-minutes="0">2 hours</button>
+                                        <button type="button" class="preset-button px-3 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors" data-hours="4" data-minutes="0">4 hours</button>
+                                        <button type="button" class="preset-button px-3 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors" data-hours="6" data-minutes="0">6 hours</button>
+                                        <button type="button" class="preset-button px-3 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors" data-hours="12" data-minutes="0">12 hours</button>
+                                    </div>
+                                </div>
+                                <p class="text-sm text-gray-600 mt-3">How often should we check for new properties? Minimum: 1 minute total.</p>
                             </div>
                         </div>
                     </div>

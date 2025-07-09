@@ -11,6 +11,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from typing import Optional, List, Dict, Any
 
+def is_running_on_railway() -> bool:
+    """Check if the application is running on Railway."""
+    return any([
+        os.getenv("RAILWAY_ENVIRONMENT"),
+        os.getenv("RAILWAY_PROJECT_ID"),
+        os.getenv("RAILWAY_SERVICE_ID"),
+        os.getenv("PORT")  # Railway sets this automatically
+    ])
+
 # Try to import timezone utilities, fallback if not available
 try:
     from .timezone_utils import now_cest_iso, get_timezone_info
@@ -81,7 +90,7 @@ logger = logging.getLogger(__name__)
 
 try:
     # Try Railway-optimized scraper first
-    if os.getenv('RAILWAY_ENVIRONMENT'):
+    if is_running_on_railway():
         from .railway_periodic_scraper import periodic_scraper
         logger.info("Using Railway-optimized periodic scraper")
     else:
@@ -89,7 +98,7 @@ try:
         logger.info("Using standard periodic scraper")
 except ImportError:
     try:
-        if os.getenv('RAILWAY_ENVIRONMENT'):
+        if is_running_on_railway():
             from railway_periodic_scraper import periodic_scraper
             logger.info("Using Railway-optimized periodic scraper")
         else:
@@ -421,7 +430,8 @@ async def get_user_profiles(current_user: Dict[str, Any] = Depends(get_current_u
                 name=profile["name"],
                 filters=profile.get("filters", {}),
                 emails=profile.get("emails", []),
-                scrape_interval_hours=profile.get("scrape_interval_hours", 4),
+                scrape_interval_hours=profile.get("scrape_interval_hours"),
+                scrape_interval_minutes=profile.get("scrape_interval_minutes"),
                 created_at=profile.get("created_at", 0),
                 last_scraped=last_scraped,
                 last_new_listings_count=profile.get("last_new_listings_count", 0),
@@ -462,12 +472,15 @@ async def create_user_profile(
         "name": profile_data.name,
         "filters": profile_data.filters,
         "emails": profile_data.emails,
-        "scrape_interval_hours": profile_data.scrape_interval_hours,
         "listings": [],
         "created_at": time.time(),
         "last_scraped": None,
         "last_new_listings_count": 0
     }
+    
+    # Set scrape interval (combined hours and minutes)
+    profile["scrape_interval_hours"] = profile_data.scrape_interval_hours or 4
+    profile["scrape_interval_minutes"] = profile_data.scrape_interval_minutes or 0
     
     profiles[profile_id] = profile
     
@@ -484,7 +497,12 @@ async def create_user_profile(
         from .periodic_scraper import periodic_scraper
     except ImportError:
         from periodic_scraper import periodic_scraper
-    periodic_scraper.add_profile_job(profile_id, profile_data.scrape_interval_hours)
+    
+    periodic_scraper.add_profile_job(
+        profile_id, 
+        combined_hours=profile["scrape_interval_hours"], 
+        combined_minutes=profile["scrape_interval_minutes"]
+    )
     
     # Convert last_scraped from ISO string to timestamp if needed
     last_scraped = profile.get("last_scraped")
@@ -505,7 +523,8 @@ async def create_user_profile(
         name=profile["name"],
         filters=profile["filters"],
         emails=profile["emails"],
-        scrape_interval_hours=profile["scrape_interval_hours"],
+        scrape_interval_hours=profile.get("scrape_interval_hours"),
+        scrape_interval_minutes=profile.get("scrape_interval_minutes"),
         created_at=profile["created_at"],
         last_scraped=last_scraped,
         last_new_listings_count=profile["last_new_listings_count"],
@@ -645,7 +664,8 @@ async def update_profile_email(
         name=profile["name"],
         filters=profile["filters"],
         emails=profile["emails"],
-        scrape_interval_hours=profile["scrape_interval_hours"],
+        scrape_interval_hours=profile.get("scrape_interval_hours"),
+        scrape_interval_minutes=profile.get("scrape_interval_minutes"),
         created_at=profile["created_at"],
         last_scraped=last_scraped,
         last_new_listings_count=profile.get("last_new_listings_count", 0),
@@ -681,14 +701,31 @@ async def update_profile(
         profile["filters"] = profile_update.filters
     if profile_update.emails is not None:
         profile["emails"] = profile_update.emails
-    if profile_update.scrape_interval_hours is not None:
-        profile["scrape_interval_hours"] = profile_update.scrape_interval_hours
+    
+    # Handle scrape interval updates
+    interval_updated = False
+    if profile_update.scrape_interval_hours is not None or profile_update.scrape_interval_minutes is not None:
+        # For legacy profiles, ensure both fields exist with defaults
+        current_hours = profile.get("scrape_interval_hours", 4)
+        current_minutes = profile.get("scrape_interval_minutes", 0)
+        
+        # Update both hours and minutes components
+        profile["scrape_interval_hours"] = profile_update.scrape_interval_hours if profile_update.scrape_interval_hours is not None else current_hours
+        profile["scrape_interval_minutes"] = profile_update.scrape_interval_minutes if profile_update.scrape_interval_minutes is not None else current_minutes
+        interval_updated = True
+    
+    if interval_updated:
         # Update the periodic job with new interval
         try:
             from .periodic_scraper import periodic_scraper
         except ImportError:
             from periodic_scraper import periodic_scraper
-        periodic_scraper.add_profile_job(profile_id, profile_update.scrape_interval_hours)
+        
+        periodic_scraper.add_profile_job(
+            profile_id,
+            combined_hours=profile["scrape_interval_hours"],
+            combined_minutes=profile["scrape_interval_minutes"]
+        )
     
     save_db(db)
     
@@ -715,7 +752,8 @@ async def update_profile(
         name=profile["name"],
         filters=profile["filters"],
         emails=profile["emails"],
-        scrape_interval_hours=profile["scrape_interval_hours"],
+        scrape_interval_hours=profile.get("scrape_interval_hours"),
+        scrape_interval_minutes=profile.get("scrape_interval_minutes"),
         created_at=profile["created_at"],
         last_scraped=last_scraped,
         last_new_listings_count=profile.get("last_new_listings_count", 0),
@@ -731,9 +769,45 @@ def get_all_data():
 # --- PERIODIC SCRAPING ENDPOINTS ---
 
 @app.get("/api/scraper/status")
-def get_scraper_status():
-    """Get the current status of the periodic scraper"""
-    return periodic_scraper.get_status()
+async def get_scraper_status():
+    """Get the current status of the periodic scraper with auto-healing"""
+    if periodic_scraper:
+        # Check if scheduler thread is actually alive
+        status = periodic_scraper.get_status()
+        
+        # Enhanced status check
+        if periodic_scraper.is_running:
+            if hasattr(periodic_scraper.scheduler, '_thread') and periodic_scraper.scheduler._thread:
+                thread_alive = periodic_scraper.scheduler._thread.is_alive()
+                status["thread_alive"] = thread_alive
+                
+                # If thread is dead but marked as running, fix it
+                if not thread_alive:
+                    logger.warning("Scheduler thread died, restarting...")
+                    try:
+                        periodic_scraper.stop()
+                        periodic_scraper.start()
+                        status = periodic_scraper.get_status()
+                        status["auto_restarted"] = True
+                    except Exception as e:
+                        logger.error(f"Auto-restart failed: {e}")
+                        status["auto_restart_error"] = str(e)
+            else:
+                status["thread_alive"] = False
+                # Try to restart if no thread
+                logger.warning("No scheduler thread found, restarting...")
+                try:
+                    periodic_scraper.stop()
+                    periodic_scraper.start()
+                    status = periodic_scraper.get_status()
+                    status["auto_restarted"] = True
+                except Exception as e:
+                    logger.error(f"Auto-restart failed: {e}")
+                    status["auto_restart_error"] = str(e)
+        
+        return status
+    else:
+        return {"is_running": False, "error": "Periodic scraper not available"}
 
 @app.post("/api/scraper/start")
 def start_scraper():
@@ -757,71 +831,69 @@ def sync_scraper():
     periodic_scraper.sync_jobs_with_profiles()
     return {"message": "Scraper jobs synchronized", "status": "success"}
 
-# --- SCRAPING ENDPOINTS (UPDATED FOR USER AUTHENTICATION) ---
-
-@app.post("/api/profiles/{profile_id}/scrape")
-async def trigger_profile_scrape(
-    profile_id: str,
-    current_user: Dict[str, Any] = Depends(get_current_user)
-):
-    """Trigger a manual scrape for a specific user profile."""
-    db = load_db()
-    profiles = db.get("profiles", {})
-    user_id = current_user["id"]
+@app.get("/api/scraper/debug")
+def debug_scraper():
+    """Debug endpoint to check scheduler thread state"""
+    import threading
     
-    if profile_id not in profiles:
-        raise HTTPException(status_code=404, detail="Profile not found")
+    debug_info = {
+        "scraper_instance_id": id(periodic_scraper),
+        "scraper_is_running": periodic_scraper.is_running if periodic_scraper else None,
+        "scheduler_instance_id": id(periodic_scraper.scheduler) if periodic_scraper else None,
+        "scheduler_state": periodic_scraper.scheduler.state if periodic_scraper else None,
+        "scheduler_running": periodic_scraper.scheduler.running if periodic_scraper else None,
+        "scheduler_timezone": str(periodic_scraper.scheduler.timezone) if periodic_scraper else None,
+        "active_threads": [],
+        "apscheduler_threads": []
+    }
     
-    profile = profiles[profile_id]
+    # Check all active threads
+    for thread in threading.enumerate():
+        thread_info = {
+            "name": thread.name,
+            "alive": thread.is_alive(),
+            "daemon": thread.daemon,
+            "ident": thread.ident
+        }
+        debug_info["active_threads"].append(thread_info)
+        
+        if "APScheduler" in thread.name:
+            debug_info["apscheduler_threads"].append(thread_info)
     
-    # Check if user owns this profile
-    if profile.get("user_id") != user_id:
-        raise HTTPException(status_code=403, detail="Not authorized to scrape this profile")
-    
-    # Trigger scrape
-    try:
-        from .periodic_scraper import periodic_scraper
-    except ImportError:
-        from periodic_scraper import periodic_scraper
-    result = periodic_scraper.trigger_profile_scrape(profile_id)
-    
-    if result:
-        return {"message": "Scrape triggered successfully", "profile_id": profile_id}
+    # Check scheduler thread specifically
+    if periodic_scraper and hasattr(periodic_scraper.scheduler, '_thread'):
+        thread = periodic_scraper.scheduler._thread
+        if thread:
+            debug_info["scheduler_thread"] = {
+                "name": thread.name,
+                "alive": thread.is_alive(),
+                "daemon": thread.daemon,
+                "ident": thread.ident
+            }
+        else:
+            debug_info["scheduler_thread"] = None
     else:
-        return {"message": "Scrape already in progress", "profile_id": profile_id}
+        debug_info["scheduler_thread"] = "No _thread attribute"
+    
+    # Check jobs
+    if periodic_scraper:
+        try:
+            jobs = periodic_scraper.scheduler.get_jobs()
+            debug_info["jobs_count"] = len(jobs)
+            debug_info["job_details"] = []
+            for job in jobs:
+                debug_info["job_details"].append({
+                    "id": job.id,
+                    "name": job.name,
+                    "next_run": job.next_run_time.isoformat() if job.next_run_time else None,
+                    "trigger": str(job.trigger)
+                })
+        except Exception as e:
+            debug_info["jobs_error"] = str(e)
+    
+    return debug_info
 
-@app.put("/api/profiles/{profile_id}/scrape-interval")
-async def update_scrape_interval(
-    profile_id: str,
-    interval_update: ScrapeIntervalUpdate,
-    current_user: Dict[str, Any] = Depends(get_current_user)
-):
-    """Update the scrape interval for a user's profile."""
-    db = load_db()
-    profiles = db.get("profiles", {})
-    user_id = current_user["id"]
-    
-    if profile_id not in profiles:
-        raise HTTPException(status_code=404, detail="Profile not found")
-    
-    profile = profiles[profile_id]
-    
-    # Check if user owns this profile
-    if profile.get("user_id") != user_id:
-        raise HTTPException(status_code=403, detail="Not authorized to update this profile")
-    
-    # Update scrape interval
-    profile["scrape_interval_hours"] = interval_update.scrape_interval_hours
-    save_db(db)
-    
-    # Update periodic job
-    try:
-        from .periodic_scraper import periodic_scraper
-    except ImportError:
-        from periodic_scraper import periodic_scraper
-    periodic_scraper.add_profile_job(profile_id, interval_update.scrape_interval_hours)
-    
-    return {"message": "Scrape interval updated successfully", "profile_id": profile_id, "interval_hours": interval_update.scrape_interval_hours}
+# (Duplicate endpoints removed - using enhanced version above)
 
 # --- AUTHENTICATION ENDPOINTS ---
 
@@ -1125,25 +1197,4 @@ def update_listing_timestamps(listings: List[dict]) -> None:
         time_diff = current_time.timestamp() - listing.get("added_timestamp", 0)
         listing["is_new"] = time_diff < 86400  # 24 hours = 86400 seconds
 
-# --- SCRAPER MONITORING ENDPOINTS ---
-
-@app.get("/api/scraper/status")
-async def get_scraper_status():
-    """Get periodic scraper status for monitoring."""
-    if periodic_scraper:
-        return periodic_scraper.get_status()
-    else:
-        return {"is_running": False, "error": "Periodic scraper not available"}
-
-@app.post("/api/scraper/restart")
-async def restart_scraper():
-    """Restart the periodic scraper (admin only)."""
-    if periodic_scraper:
-        try:
-            periodic_scraper.stop()
-            periodic_scraper.start()
-            return {"message": "Scraper restarted successfully"}
-        except Exception as e:
-            return {"error": f"Failed to restart scraper: {e}"}
-    else:
-        return {"error": "Periodic scraper not available"}
+# (Final duplicate endpoints removed - using enhanced version at top)

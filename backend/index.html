@@ -1193,14 +1193,17 @@
                     
                     if (isAuthenticated) {
                         const user = authManager.getCurrentUser();
-                        const token = authManager.getToken();
+                        const accessToken = authManager.getToken();
+                        const refreshToken = authManager.refreshToken; // Get refresh token directly
                         
                         // Send authentication data to dashboard iframe
                         const dashboardFrame = document.getElementById('dashboard-frame');
                         if (dashboardFrame && dashboardFrame.contentWindow) {
                             dashboardFrame.contentWindow.postMessage({
                                 type: 'AUTH_TOKEN',
-                                token: token,
+                                accessToken: accessToken,
+                                refreshToken: refreshToken,
+                                token: accessToken, // Keep for backward compatibility
                                 user: user
                             }, window.location.origin);
                             console.log('Sent auth token to dashboard');
@@ -1265,10 +1268,13 @@
                     setTimeout(() => {
                         const dashboardFrame = document.getElementById('dashboard-frame');
                         if (dashboardFrame && dashboardFrame.contentWindow) {
-                            const token = authManager.getToken();
+                            const accessToken = authManager.getToken();
+                            const refreshToken = authManager.refreshToken; // Get refresh token directly
                             dashboardFrame.contentWindow.postMessage({
                                 type: 'AUTH_TOKEN',
-                                token: token,
+                                accessToken: accessToken,
+                                refreshToken: refreshToken,
+                                token: accessToken, // Keep for backward compatibility
                                 user: user
                             }, window.location.origin);
                             console.log('Sent auth token to dashboard on UI update');
