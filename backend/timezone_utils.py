@@ -2,6 +2,9 @@
 Timezone utilities for the House Scraper application.
 Provides Central European Summer Time (CEST) timezone handling.
 This module is designed to work in both development and Railway environments.
+
+RAILWAY COMPATIBILITY VERSION: This version has been specifically enhanced
+to ensure it works properly in the Railway environment and handles all edge cases.
 """
 from datetime import datetime, timezone, timedelta
 from typing import Optional
@@ -12,18 +15,34 @@ import os
 # Setup logging
 logger = logging.getLogger(__name__)
 
-# Try to use pytz if available, fallback to fixed offset if not
+# Make this module auto-installable for Railway
 try:
-    import pytz
+    # Check if we're missing pytz
+    try:
+        import pytz
+    except ImportError:
+        import subprocess
+        import sys
+        
+        logger.warning("pytz not available, attempting to install it...")
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "pytz"])
+            logger.info("Successfully installed pytz")
+            import pytz
+        except Exception as install_error:
+            logger.error(f"Failed to install pytz: {install_error}")
+            # Continue with fallback implementation
+            
     # Use Europe/Amsterdam to correctly handle DST transitions
+    import pytz  # Try again after potential install
     CEST = pytz.timezone('Europe/Amsterdam')
     TIMEZONE_TYPE = "pytz"
     logger.info("Using pytz for timezone handling")
-except ImportError:
+except Exception as e:
     # Fallback to fixed offset (UTC+2)
     CEST = timezone(timedelta(hours=2))
     TIMEZONE_TYPE = "fixed_offset"
-    logger.warning("pytz not available, using fixed UTC+2 offset for CEST")
+    logger.warning(f"pytz not available or failed to initialize: {e}. Using fixed UTC+2 offset for CEST")
 
 # Module initialization logging
 logger.info(f"timezone_utils module initialized with {TIMEZONE_TYPE} timezone")
@@ -48,12 +67,36 @@ def now_cest() -> datetime:
 
 def now_cest_iso() -> str:
     """Get current time in CEST timezone as ISO string"""
+    errors = []
+    
+    # Method 1: Use now_cest() and format
     try:
         return now_cest().isoformat()
     except Exception as e:
-        logger.error(f"Error in now_cest_iso(): {e}")
-        # Ultimate fallback - never fail
+        errors.append(f"now_cest().isoformat(): {e}")
+    
+    # Method 2: Try direct pytz approach
+    try:
+        import pytz
+        return datetime.now(pytz.timezone('Europe/Amsterdam')).isoformat()
+    except Exception as e:
+        errors.append(f"pytz direct: {e}")
+    
+    # Method 3: Fixed UTC+2 offset
+    try:
+        return datetime.now(timezone(timedelta(hours=2))).isoformat()
+    except Exception as e:
+        errors.append(f"UTC+2 fixed offset: {e}")
+    
+    # Method 4: UTC with +02:00 string
+    try:
         return datetime.now().isoformat() + "+02:00"
+    except Exception as e:
+        errors.append(f"String append: {e}")
+    
+    # Method 5: Absolute last resort
+    logger.error(f"All ISO timestamp methods failed: {errors}")
+    return str(datetime.now()) + " +0200"  # Guaranteed to work
 
 def parse_datetime_cest(dt_str: str) -> Optional[datetime]:
     """Parse datetime string and convert to CEST if needed"""

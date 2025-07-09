@@ -60,7 +60,7 @@ def fallback_now_cest():
 # Use Amsterdam timezone as fallback for CEST
 FALLBACK_CEST = pytz.timezone('Europe/Amsterdam')
 
-# Try to import timezone_utils with comprehensive error handling
+# Try to import timezone_utils with more robust error handling for Railway
 try:
     # First try relative import
     from .timezone_utils import now_cest_iso, now_cest, CEST
@@ -74,32 +74,100 @@ except ImportError as e:
         TIMEZONE_UTILS_IMPORTED = True
         logger.info("Successfully imported timezone_utils from direct import")
     except ImportError as e:
-        # Use our fallback implementations with detailed logging
-        logger.warning(f"timezone_utils module not found: {e}. Using fallback timezone handling.")
-        # In case the function was defined previously in a failed import attempt
-        if 'now_cest' in globals():
-            del globals()['now_cest']
-        if 'now_cest_iso' in globals():
-            del globals()['now_cest_iso']
-            
-        now_cest_iso = fallback_now_cest_iso
-        now_cest = fallback_now_cest
-        CEST = FALLBACK_CEST
-        TIMEZONE_UTILS_IMPORTED = False
+        # Try to dynamically locate and import the timezone_utils module
+        logger.warning(f"Standard imports failed: {e}. Trying dynamic import...")
         
         # Print debug info about the Python path
         logger.warning(f"Python path: {sys.path}")
         logger.warning(f"Current directory: {os.getcwd()}")
         
-        # Check if the file exists
+        # Find all possible timezone_utils.py paths
         timezone_paths = [
             os.path.join(os.getcwd(), "timezone_utils.py"),
-            os.path.join(os.getcwd(), "backend", "timezone_utils.py")
+            os.path.join(os.getcwd(), "backend", "timezone_utils.py"),
+            # Add more potential paths
+            os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "timezone_utils.py"),
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), "timezone_utils.py")
         ]
+        
+        found_module = False
         for path in timezone_paths:
-            logger.info(f"Checking for timezone_utils at: {path} - Exists: {os.path.exists(path)}")
+            exists = os.path.exists(path)
+            logger.info(f"Checking for timezone_utils at: {path} - Exists: {exists}")
             
-        # No return statement here, we're not in a function!
+            if exists:
+                try:
+                    # Add the directory to sys.path
+                    module_dir = os.path.dirname(path)
+                    if module_dir not in sys.path:
+                        sys.path.append(module_dir)
+                        logger.info(f"Added {module_dir} to sys.path")
+                    
+                    # Try importing again
+                    logger.info("Attempting import after path adjustment...")
+                    from timezone_utils import now_cest_iso, now_cest, CEST
+                    TIMEZONE_UTILS_IMPORTED = True
+                    logger.info(f"Successfully imported timezone_utils from {path}")
+                    found_module = True
+                    break
+                except ImportError as e2:
+                    logger.warning(f"Import still failed after adding {module_dir} to path: {e2}")
+        
+        # If all import attempts failed, create a local copy of timezone_utils.py
+        if not found_module:
+            logger.warning("All import attempts failed. Creating local timezone_utils implementation...")
+            try:
+                # Define a minimal version of timezone_utils functionality directly in this file
+                if 'now_cest' in globals():
+                    del globals()['now_cest']
+                if 'now_cest_iso' in globals():
+                    del globals()['now_cest_iso']
+                
+                # Use our fallbacks
+                now_cest_iso = fallback_now_cest_iso
+                now_cest = fallback_now_cest
+                CEST = FALLBACK_CEST
+                TIMEZONE_UTILS_IMPORTED = False
+                
+                logger.info("Created local timezone_utils implementation successfully")
+                
+                # Try to create a local copy of timezone_utils.py for future imports
+                try:
+                    local_path = os.path.join(os.getcwd(), "timezone_utils.py")
+                    with open(local_path, "w") as f:
+                        f.write("""
+import logging
+from datetime import datetime, timedelta, timezone
+import pytz
+
+logger = logging.getLogger(__name__)
+
+# Define CEST timezone
+CEST = pytz.timezone('Europe/Amsterdam')
+
+def now_cest():
+    \"\"\"Get current time in CEST timezone\"\"\"
+    try:
+        return datetime.now(CEST)
+    except Exception as e:
+        logger.error(f"Error in now_cest(): {e}")
+        # Fallback to manual UTC+2
+        return datetime.now().replace(tzinfo=timezone(timedelta(hours=2)))
+
+def now_cest_iso():
+    \"\"\"Get current time in CEST timezone as ISO string\"\"\"
+    try:
+        return now_cest().isoformat()
+    except Exception as e:
+        logger.error(f"Error in now_cest_iso(): {e}")
+        # Ultimate fallback - never fail
+        return datetime.now().isoformat() + "+02:00"
+""")
+                    logger.info(f"Created local timezone_utils.py at {local_path}")
+                except Exception as write_err:
+                    logger.error(f"Failed to create local timezone_utils.py: {write_err}")
+            except Exception as fallback_err:
+                logger.error(f"Failed to create fallback timezone functions: {fallback_err}")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -145,21 +213,51 @@ except ImportError as e:
 
 # Add helper function that's guaranteed to work for timestamps
 def safe_iso_timestamp():
-    """Return current time in UTC as ISO format string - guaranteed to work"""
-    try:
-        return now_cest_iso()  # Try to use timezone_utils first
-    except Exception as e:
-        logger.debug(f"Could not use now_cest_iso(): {e}")
+    """Return current time as ISO format string - guaranteed to work"""
+    # Track all attempted methods for better error reporting
+    errors = []
+    
+    # Method 1: Try timezone_utils first (CEST time)
+    if TIMEZONE_UTILS_IMPORTED:
         try:
-            return datetime.now(pytz.UTC).isoformat()  # Fallback to UTC
+            return now_cest_iso()
         except Exception as e:
-            logger.debug(f"Could not use pytz.UTC: {e}")
-            try:
-                from datetime import timezone
-                return datetime.now(timezone.utc).isoformat()  # Try with Python's built-in timezone
-            except Exception as e:
-                logger.debug(f"Could not use timezone.utc: {e}")
-                return datetime.now().isoformat()  # Last resort with no timezone
+            errors.append(f"now_cest_iso(): {str(e)}")
+    
+    # Method 2: Try fallback CEST implementation 
+    try:
+        return fallback_now_cest_iso()
+    except Exception as e:
+        errors.append(f"fallback_now_cest_iso(): {str(e)}")
+    
+    # Method 3: Try pytz with Amsterdam timezone
+    try:
+        return datetime.now(pytz.timezone('Europe/Amsterdam')).isoformat()
+    except Exception as e:
+        errors.append(f"pytz Amsterdam: {str(e)}")
+    
+    # Method 4: Use UTC time from pytz
+    try:
+        return datetime.now(pytz.UTC).isoformat()
+    except Exception as e:
+        errors.append(f"pytz.UTC: {str(e)}")
+    
+    # Method 5: Use Python's built-in timezone for UTC
+    try:
+        from datetime import timezone
+        return datetime.now(timezone.utc).isoformat()
+    except Exception as e:
+        errors.append(f"timezone.utc: {str(e)}")
+    
+    # Method 6: Last resort - raw timestamp with no timezone (will still work)
+    try:
+        ts = datetime.now().isoformat()
+        logger.warning(f"Using raw ISO timestamp with no timezone. Previous errors: {', '.join(errors)}")
+        return ts
+    except Exception as e:
+        # Method 7: Absolute last resort - string representation of current time
+        logger.error(f"All timestamp methods failed! Using string representation of datetime. Errors: {', '.join(errors + [str(e)])}")
+        return str(datetime.now())
 
 class RailwayPeriodicScraper:
     """
@@ -575,6 +673,37 @@ class RailwayPeriodicScraper:
         start_time = time.time()
         logger.info(f"Starting scrape for profile {profile_id}")
         
+        # Import timezone_utils again here to handle any edge cases
+        global TIMEZONE_UTILS_IMPORTED
+        if not TIMEZONE_UTILS_IMPORTED:
+            try:
+                # Try all possible import paths
+                import sys
+                import os
+                
+                # Add possible paths to sys.path
+                possible_paths = [
+                    os.getcwd(),
+                    os.path.join(os.getcwd(), "backend"),
+                    os.path.dirname(os.path.abspath(__file__)),
+                    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                ]
+                
+                for path in possible_paths:
+                    if path not in sys.path:
+                        sys.path.append(path)
+                        logger.info(f"Added {path} to sys.path")
+                
+                # Try imports again
+                try:
+                    from timezone_utils import now_cest_iso
+                    TIMEZONE_UTILS_IMPORTED = True
+                    logger.info("Successfully imported timezone_utils in _scrape_profile")
+                except ImportError as e:
+                    logger.warning(f"Still unable to import timezone_utils in _scrape_profile: {e}")
+            except Exception as path_error:
+                logger.error(f"Error adjusting Python path: {path_error}")
+        
         try:
             # Load current database
             db_path = os.getenv('DB_PATH', 'database.json')
@@ -624,9 +753,16 @@ class RailwayPeriodicScraper:
                             existing['is_new'] = False
                             break
             
-            # Update profile with better error handling
+            # Update profile with better error handling and guaranteed safe timestamp
             profile['listings'] = existing_listings + new_listings
-            profile['last_scraped'] = safe_iso_timestamp()
+            try:
+                # First try to use the safe_iso_timestamp which tries multiple methods
+                profile['last_scraped'] = safe_iso_timestamp()
+                logger.debug(f"Using safe_iso_timestamp for profile {profile_id}")
+            except Exception as ts_error:
+                # Ultimate fallback - guaranteed to work
+                profile['last_scraped'] = datetime.now().isoformat()
+                logger.warning(f"Had to use basic ISO timestamp due to error: {ts_error}")
             profile['last_new_listings_count'] = len(new_listings)
             
             # Save updated profile back to the database
