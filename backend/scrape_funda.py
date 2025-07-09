@@ -131,12 +131,56 @@ def scrape_funda_html(url, max_retries=2, timeout=30):
                 logger.info("Running in Railway/Container environment, using container-specific settings")
                 options.add_argument('--disable-setuid-sandbox')
                 options.add_argument('--disable-dev-shm-usage')
-                options.add_argument('--single-process')
-                options.add_argument('--remote-debugging-port=9222')
+                options.add_argument('--disable-gpu')
+                options.add_argument('--no-sandbox')
+                options.add_argument('--headless=new')
                 
-            # Initialize driver with shorter timeout
+                # Use shared memory for Railway
+                options.add_argument('--disable-dev-shm-usage')
+                
+                # Memory optimization for containerized environment
+                options.add_argument('--disable-extensions')
+                options.add_argument('--disable-audio-output')
+                options.add_argument('--mute-audio')
+                options.add_argument('--ignore-certificate-errors')
+                options.add_argument('--disable-3d-apis')
+                options.add_argument('--disable-accelerated-2d-canvas')
+                options.add_argument('--disable-accelerated-jpeg-decoding')
+                options.add_argument('--disable-accelerated-mjpeg-decode')
+                options.add_argument('--disable-accelerated-video-decode')
+                options.add_argument('--disable-accelerated-video-encode')
+                options.add_argument('--disable-app-list-dismiss-on-blur')
+                options.add_argument('--disable-breakpad')
+                options.add_argument('--disable-component-extensions-with-background-pages')
+                
+                # Increase timeout for Railway environment
+                timeout = max(timeout, 45)
+                
+            # Initialize driver with more robust error handling
             logger.info("Initializing Chrome driver...")
-            driver = uc.Chrome(options=options, version_main=None, driver_executable_path=None)
+            
+            # Set Chrome version for better compatibility
+            chrome_version = None
+            if is_running_on_railway() or is_running_in_container():
+                try:
+                    import subprocess
+                    chrome_version_output = subprocess.check_output(['google-chrome', '--version']).decode('utf-8').strip()
+                    # Extract version number (e.g., "Google Chrome 93.0.4577.63" -> 93)
+                    version_parts = chrome_version_output.split()
+                    if len(version_parts) >= 3:
+                        chrome_version = int(version_parts[2].split('.')[0])
+                        logger.info(f"Detected Chrome version: {chrome_version}")
+                except Exception as e:
+                    logger.warning(f"Could not detect Chrome version: {e}")
+            
+            # Initialize with error handling
+            driver = uc.Chrome(
+                options=options,
+                version_main=chrome_version,
+                driver_executable_path=None,
+                headless=True,  # Ensure headless is set explicitly
+                use_subprocess=True  # Use subprocess for better isolation
+            )
             
             # Set shorter timeouts for speed
             driver.set_page_load_timeout(timeout)
@@ -239,12 +283,17 @@ def scrape_funda_html(url, max_retries=2, timeout=30):
                 time.sleep(wait_time)
             
         finally:
-            # Always close the driver
+            # Always close the driver and free resources
             if driver:
                 try:
                     driver.quit()
-                except:
-                    pass
+                except Exception as e:
+                    logger.debug(f"Error closing driver: {e}")
+                
+                # Force garbage collection
+                import gc
+                driver = None
+                gc.collect()
                     
     logger.error(f"All {max_retries} scraping attempts failed for URL: {url}")
     return None

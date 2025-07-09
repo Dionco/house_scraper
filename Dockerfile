@@ -31,12 +31,16 @@ RUN apt-get update && apt-get install -y \
     libxrandr2 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Chrome
-RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list \
+# Install Chrome with proper setup for containerized environment
+RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --dearmor > /usr/share/keyrings/google-chrome-keyring.gpg \
+    && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
     && apt-get update \
     && apt-get install -y google-chrome-stable \
     && rm -rf /var/lib/apt/lists/*
+
+# Create Chrome directories for non-root user
+RUN mkdir -p /tmp/chrome-user-data \
+    && chmod 777 /tmp/chrome-user-data
 
 # Copy requirements first for better caching
 COPY backend/requirements.txt .
@@ -46,14 +50,26 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/ ./backend/
 COPY database.json search_profiles.json ./
 
-# Create non-root user and give Chrome access
+# Create non-root user with proper Chrome setup
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
-# Ensure Chrome can be run as non-root
+# Ensure Chrome can be run as non-root with all necessary directories
 RUN mkdir -p /home/appuser/.cache/undetected_chromedriver \
-    && chown -R appuser:appuser /home/appuser/.cache
+    && mkdir -p /home/appuser/.config/google-chrome \
+    && mkdir -p /tmp/chrome_tmp \
+    && chown -R appuser:appuser /home/appuser/.cache \
+    && chown -R appuser:appuser /home/appuser/.config \
+    && chown -R appuser:appuser /tmp/chrome-user-data \
+    && chown -R appuser:appuser /tmp/chrome_tmp \
+    && chmod -R 777 /tmp/chrome_tmp
+
+# Set environment variables for Chrome
+ENV CHROME_USER_DATA_DIR=/tmp/chrome-user-data
+ENV CHROME_CACHE_DIR=/tmp/chrome_tmp
+ENV PYTHONUNBUFFERED=1
+
 USER appuser
 # Verify Chrome installation and path
-RUN google-chrome --version || echo "Chrome not found in PATH"
+RUN google-chrome --version
 
 # Expose port (Railway will set PORT environment variable)
 EXPOSE $PORT
