@@ -56,8 +56,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/ ./backend/
 COPY database.json search_profiles.json ./
 
+# Copy startup script and fix_timezone_utils script
+COPY railway_startup.sh /app/railway_startup.sh
+COPY fix_timezone_utils.py /app/fix_timezone_utils.py
+COPY timezone_utils.py /app/timezone_utils.py
+
 # Create non-root user with proper Chrome setup
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app \
+    && chmod +x /app/railway_startup.sh
 # Ensure Chrome can be run as non-root with all necessary directories
 RUN mkdir -p /home/appuser/.cache/undetected_chromedriver \
     && mkdir -p /home/appuser/.config/google-chrome \
@@ -88,12 +94,7 @@ RUN google-chrome --version
 # Expose port (Railway will set PORT environment variable)
 EXPOSE $PORT
 
-# Copy startup script and fix_timezone_utils script
-COPY railway_startup.sh /app/railway_startup.sh
-COPY fix_timezone_utils.py /app/fix_timezone_utils.py
-
-# Ensure the scripts are executable
-RUN chmod +x /app/railway_startup.sh
+# Scripts already copied above and made executable
 
 # Set proper environment for timezone handling
 ENV PYTHONPATH="${PYTHONPATH}:/app:/app/backend"
