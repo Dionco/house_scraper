@@ -893,7 +893,102 @@ def debug_scraper():
     
     return debug_info
 
-# (Duplicate endpoints removed - using enhanced version above)
+@app.get("/api/scraper/deep_debug")
+async def deep_debug_scheduler():
+    """Provide in-depth debug information about the scheduler"""
+    import threading
+    import gc
+    import os
+    import sys
+    import pytz
+    
+    if not periodic_scraper:
+        return {"error": "Periodic scraper not available"}
+    
+    try:
+        # Process basic information
+        # Create very detailed diagnostic information
+        debug_info = {
+            "process": {
+                "pid": os.getpid(),
+            },
+            "scheduler": {
+                "is_running": periodic_scraper.is_running,
+                "scheduler_running": periodic_scraper.scheduler.running if hasattr(periodic_scraper.scheduler, 'running') else None,
+                "timezone": str(periodic_scraper.scheduler.timezone),
+                "jobs_executed_ever": periodic_scraper.jobs_running
+            },
+            "environment": {
+                "on_railway": is_running_on_railway(),
+                "python_version": sys.version,
+                "current_time_utc": datetime.now(pytz.UTC).isoformat()
+            }
+        }
+        
+        # Thread information
+        all_threads = []
+        for t in threading.enumerate():
+            all_threads.append({
+                "name": t.name,
+                "daemon": t.daemon,
+                "alive": t.is_alive(),
+                "id": t.ident
+            })
+        debug_info["threads"] = all_threads
+        
+        # List all jobs with very detailed information
+        jobs_info = []
+        try:
+            for job in periodic_scraper.scheduler.get_jobs():
+                job_info = {
+                    "id": job.id,
+                    "name": job.name,
+                    "function": str(job.func),
+                    "args": str(job.args),
+                    "kwargs": str(job.kwargs),
+                    "trigger": str(job.trigger),
+                    "next_run_time": job.next_run_time.isoformat() if job.next_run_time else None,
+                    "pending": job.pending
+                }
+                
+                # Check if the job is late
+                if job.next_run_time and job.next_run_time < datetime.now(pytz.UTC):
+                    job_info["late_by_seconds"] = (datetime.now(pytz.UTC) - job.next_run_time).total_seconds()
+                
+                jobs_info.append(job_info)
+        except Exception as e:
+            jobs_info = [{"error": f"Failed to get jobs: {str(e)}"}]
+        
+        debug_info["jobs"] = jobs_info
+        
+        # Add scheduler internals
+        try:
+            debug_info["scheduler_internals"] = {
+                "thread": {
+                    "alive": periodic_scraper.scheduler._thread.is_alive() if hasattr(periodic_scraper.scheduler, '_thread') and periodic_scraper.scheduler._thread else None,
+                    "daemon": periodic_scraper.scheduler._thread.daemon if hasattr(periodic_scraper.scheduler, '_thread') and periodic_scraper.scheduler._thread else None,
+                },
+                "executors": str(periodic_scraper.scheduler._executors),
+                "jobstores": str(periodic_scraper.scheduler._jobstores),
+                "job_defaults": str(periodic_scraper.scheduler._job_defaults),
+            }
+        except Exception as e:
+            debug_info["scheduler_internals_error"] = str(e)
+        
+        # Try to trigger GC and report
+        gc_count_before = gc.get_count()
+        collected = gc.collect()
+        gc_count_after = gc.get_count()
+        
+        debug_info["garbage_collection"] = {
+            "collected_objects": collected,
+            "count_before": gc_count_before,
+            "count_after": gc_count_after
+        }
+        
+        return debug_info
+    except Exception as e:
+        return {"error": f"Error generating debug info: {str(e)}"}
 
 # --- AUTHENTICATION ENDPOINTS ---
 
@@ -1198,3 +1293,54 @@ def update_listing_timestamps(listings: List[dict]) -> None:
         listing["is_new"] = time_diff < 86400  # 24 hours = 86400 seconds
 
 # (Final duplicate endpoints removed - using enhanced version at top)
+
+# --- FORCE SCRAPE ENDPOINT ---
+
+@app.post("/api/scraper/force_run/{profile_id}")
+async def force_scrape_profile(profile_id: str):
+    """Force a profile to scrape immediately - useful for testing"""
+    try:
+        db = load_db()
+        profiles = db.get("profiles", {})
+        
+        if profile_id not in profiles:
+            raise HTTPException(status_code=404, detail="Profile not found")
+        
+        # Get the profile
+        profile = profiles[profile_id]
+        profile_name = profile.get("name", "Unknown")
+        
+        # Run the scrape job in the scheduler
+        job_id = f"force_scrape_{profile_id}"
+        
+        # Direct access to the scraper's methods for immediate execution
+        if periodic_scraper:
+            try:
+                # Schedule for immediate execution (1 second from now)
+                from datetime import datetime, timedelta
+                import pytz
+                next_run = datetime.now(pytz.UTC) + timedelta(seconds=1)
+                
+                # Add a one-time job
+                periodic_scraper.scheduler.add_job(
+                    func=periodic_scraper._scrape_profile,
+                    id=job_id,
+                    args=[profile_id],
+                    name=f"Force Scrape {profile_name}",
+                    next_run_time=next_run,
+                    replace_existing=True
+                )
+                
+                return {
+                    "status": "success", 
+                    "message": f"Scheduled immediate scrape for profile: {profile_name}",
+                    "scheduled_at": next_run.isoformat()
+                }
+            except Exception as e:
+                logger.error(f"Failed to schedule immediate scrape: {e}")
+                return {"status": "error", "message": f"Failed to schedule: {str(e)}"}
+        else:
+            return {"status": "error", "message": "Periodic scraper not available"}
+    except Exception as e:
+        logger.error(f"Error in force scrape: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

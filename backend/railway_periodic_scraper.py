@@ -9,7 +9,37 @@ import gc
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.triggers.interval import IntervalTrigger
+from apscheduler.trigge            # Add staggered start delay to prevent all jobs starting at once
+            import random
+            start_delay_minutes = 2 + random.randint(0, 5)  # 2-7 minutes staggered delay
+            next_run_time = datetime.now(pytz.UTC) + timedelta(minutes=start_delay_minutes)
+            
+            # Schedule new job with appropriate trigger
+            try:
+                # First remove job if it exists to avoid conflicts
+                try:
+                    if self.scheduler.get_job(job_id):
+                        self.scheduler.remove_job(job_id)
+                        logger.info(f"Removed existing job {job_id} before rescheduling")
+                except Exception as e:
+                    logger.debug(f"No existing job to remove: {e}")
+                
+                # Schedule new job with appropriate trigger
+                self.scheduler.add_job(
+                    func=self._scrape_profile_wrapper,
+                    trigger=IntervalTrigger(hours=combined_hours, minutes=combined_minutes),
+                    id=job_id,
+                    args=[profile_id],
+                    name=f"Scrape {profile.get('name', 'Unknown')} ({profile_id})",
+                    max_instances=1,
+                    coalesce=True,
+                    next_run_time=next_run_time,
+                    misfire_grace_time=3600,  # Allow jobs to run up to 1 hour late
+                    replace_existing=True     # Ensure only one job exists
+                )
+                logger.info(f"Successfully scheduled job {job_id} with trigger interval[{combined_hours}:{combined_minutes:02d}:00]")
+            except Exception as e:
+                logger.error(f"Failed to schedule job {job_id}: {e}")t IntervalTrigger
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_EXECUTED
 from apscheduler.jobstores.memory import MemoryJobStore
@@ -27,6 +57,8 @@ def is_running_on_railway() -> bool:
         os.getenv("PORT")  # Railway sets this automatically
     ])
 
+import pytz
+
 try:
     from .timezone_utils import now_cest_iso, now_cest, CEST
 except ImportError:
@@ -34,7 +66,6 @@ except ImportError:
         from timezone_utils import now_cest_iso, now_cest, CEST
     except ImportError:
         from datetime import datetime
-        import pytz
         
         def now_cest_iso():
             return datetime.now(pytz.timezone('Europe/Amsterdam')).isoformat()
@@ -68,9 +99,17 @@ class RailwayPeriodicScraper:
     """
     
     def __init__(self):
+        # Use UTC for consistency in Railway environment
         self.scheduler = BackgroundScheduler(
             jobstores={'default': MemoryJobStore()},
-            timezone=CEST
+            timezone=pytz.UTC,  # Force UTC timezone for consistency
+            job_defaults={
+                'coalesce': True,
+                'misfire_grace_time': 3600  # Allow jobs to be run up to 1 hour late
+            },
+            executors={
+                'default': {'type': 'threadpool', 'max_workers': 5}
+            }
         )
         self.scheduler.add_listener(self._job_listener, EVENT_JOB_EXECUTED | EVENT_JOB_ERROR)
         self.is_running = False
@@ -81,13 +120,14 @@ class RailwayPeriodicScraper:
         self.heartbeat_interval = 30  # seconds
         self.max_concurrent_scrapes = 3
         self.scrape_semaphore = threading.Semaphore(self.max_concurrent_scrapes)
+        self.jobs_running = False  # Flag to track if jobs are running
         
         # Register shutdown handlers
         signal.signal(signal.SIGTERM, self._shutdown_handler)
         signal.signal(signal.SIGINT, self._shutdown_handler)
         
         logger.info(f"Railway mode: {self.railway_mode}")
-        logger.info(f"Initializing scraper with timezone: {CEST}")
+        logger.info(f"Initializing scraper with timezone: UTC (for consistency)")
     
     def _shutdown_handler(self, signum, frame):
         """Handle graceful shutdown on Railway restart."""
@@ -97,9 +137,19 @@ class RailwayPeriodicScraper:
         sys.exit(0)
     
     def _job_listener(self, event):
-        """Log job events for monitoring."""
+        """Log job events for monitoring and track job execution."""
+        if not self.jobs_running:
+            self.jobs_running = True
+            logger.info("First job executed - scheduler is now confirmed to be running jobs")
+            
         if event.exception:
             logger.error(f"Job {event.job_id} failed: {event.exception}")
+            # Log traceback for debugging
+            import traceback
+            if hasattr(event, 'traceback'):
+                logger.error(f"Traceback: {event.traceback}")
+            else:
+                logger.error(f"Traceback: {traceback.format_exc()}")
         else:
             logger.info(f"Job {event.job_id} completed successfully")
     
@@ -107,15 +157,59 @@ class RailwayPeriodicScraper:
         """Start the periodic scraper with Railway optimizations."""
         if self.is_running:
             logger.warning("Scraper is already running")
-            return
+            
+            # Force a job check if we think it's running but no jobs are executing
+            if self.railway_mode and not self.jobs_running:
+                logger.warning("Scraper thinks it's running but no jobs have executed. Checking jobs...")
+                try:
+                    # Check if scheduler is actually running
+                    if not self.scheduler.running:
+                        logger.warning("Scheduler not actually running! Attempting restart.")
+                        self.stop()  # Force stop
+                        self.is_running = False  # Reset flag
+                    else:
+                        # Scheduler is running but jobs aren't executing, try rescheduling
+                        logger.info("Rescheduling all jobs...")
+                        self.sync_jobs_with_profiles()
+                        return
+                except Exception as e:
+                    logger.error(f"Error checking scheduler state: {e}")
+            else:
+                return  # Normal case, scraper is running correctly
         
         try:
+            # Create a fresh scheduler if the previous one is in a bad state
+            if hasattr(self, 'scheduler') and self.scheduler:
+                try:
+                    if self.scheduler.running:
+                        logger.info("Shutting down existing scheduler...")
+                        self.scheduler.shutdown(wait=False)
+                except Exception as e:
+                    logger.error(f"Error shutting down existing scheduler: {e}")
+            
+            # Initialize a new scheduler
+            self.scheduler = BackgroundScheduler(
+                jobstores={'default': MemoryJobStore()},
+                timezone=pytz.UTC,  # Force UTC timezone for consistency
+                job_defaults={
+                    'coalesce': True,
+                    'misfire_grace_time': 3600  # Allow jobs to be run up to 1 hour late
+                },
+                executors={
+                    'default': {'type': 'threadpool', 'max_workers': 5}
+                }
+            )
+            self.scheduler.add_listener(self._job_listener, EVENT_JOB_EXECUTED | EVENT_JOB_ERROR)
+            
             # First, sanitize any invalid intervals in the database
             logger.info("Sanitizing database intervals...")
             self.sanitize_db_intervals()
             
             # Load existing profiles and schedule them
             self._load_and_schedule_profiles()
+            
+            # Reset flags
+            self.jobs_running = False
             
             # Start the scheduler
             self.scheduler.start()
@@ -126,6 +220,9 @@ class RailwayPeriodicScraper:
             # Start heartbeat for Railway monitoring
             if self.railway_mode:
                 self._start_heartbeat()
+                
+            # Force a job to run immediately to verify everything is working
+            self._schedule_immediate_test_job()
                 
         except Exception as e:
             logger.error(f"Failed to start periodic scraper: {e}")
@@ -304,8 +401,16 @@ class RailwayPeriodicScraper:
             # Add staggered start delay to prevent all jobs starting at once
             import random
             start_delay_minutes = 2 + random.randint(0, 5)  # 2-7 minutes staggered delay
-            next_run_time = datetime.now() + timedelta(minutes=start_delay_minutes)
+            next_run_time = datetime.now(pytz.UTC) + timedelta(minutes=start_delay_minutes)
             
+            # Remove existing job if it exists
+            try:
+                self.scheduler.remove_job(job_id)
+                logger.debug(f"Removed existing job {job_id} before rescheduling")
+            except Exception as e:
+                # Job may not exist, which is fine
+                pass
+                
             # Schedule new job with appropriate trigger
             self.scheduler.add_job(
                 func=self._scrape_profile_wrapper,
@@ -316,7 +421,8 @@ class RailwayPeriodicScraper:
                 max_instances=1,
                 coalesce=True,
                 next_run_time=next_run_time,
-                misfire_grace_time=300  # Allow jobs to run up to 5 minutes late if needed
+                misfire_grace_time=3600,  # Allow jobs to run up to 1 hour late
+                replace_existing=True     # Ensure we don't create duplicates
             )
             
             logger.info(f"Scheduled scraping for profile '{profile.get('name')}' every {total_minutes} minutes (h={combined_hours}, m={combined_minutes}) starting at {next_run_time.isoformat()}")
@@ -500,15 +606,35 @@ class RailwayPeriodicScraper:
     def get_status(self):
         """Get scraper status for monitoring."""
         jobs = self.scheduler.get_jobs()
+        
+        # Calculate expected next run times in UTC
+        now = datetime.now(pytz.UTC)
+        
+        # Check if any jobs are running late
+        late_jobs = []
+        for job in jobs:
+            if job.next_run_time and job.next_run_time < now:
+                late_jobs.append({
+                    'id': job.id,
+                    'name': job.name,
+                    'next_run_time': job.next_run_time.isoformat(),
+                    'minutes_late': (now - job.next_run_time).total_seconds() / 60
+                })
+        
         return {
             'is_running': self.is_running,
             'railway_mode': self.railway_mode,
+            'jobs_executed': self.jobs_running,  # Flag if any jobs have executed
+            'scheduler_running': self.scheduler.running if hasattr(self.scheduler, 'running') else None,
+            'utc_now': now.isoformat(),
             'scheduled_jobs': len(jobs),
+            'late_jobs': late_jobs,
             'jobs': [
                 {
                     'id': job.id,
                     'name': job.name,
-                    'next_run_time': job.next_run_time.isoformat() if job.next_run_time else None
+                    'next_run_time': job.next_run_time.isoformat() if job.next_run_time else None,
+                    'trigger': str(job.trigger)
                 }
                 for job in jobs
             ]
@@ -588,6 +714,25 @@ class RailwayPeriodicScraper:
             
         except Exception as e:
             logger.error(f"Error synchronizing jobs with profiles: {e}")
+    
+    def _schedule_immediate_test_job(self):
+        """Schedule an immediate test job to verify the scheduler is working."""
+        try:
+            def test_job():
+                logger.info("🔔 TEST JOB EXECUTED - Scheduler is working correctly!")
+                
+            # Add a simple test job to run after 10 seconds
+            self.scheduler.add_job(
+                func=test_job,
+                trigger=IntervalTrigger(seconds=10),
+                id="scheduler_test_job",
+                name="Scheduler Test Job",
+                replace_existing=True,
+                next_run_time=datetime.now(pytz.UTC) + timedelta(seconds=10)
+            )
+            logger.info("Test job scheduled to verify scheduler operation")
+        except Exception as e:
+            logger.error(f"Failed to schedule test job: {e}")
 
 # Global instance
 periodic_scraper = RailwayPeriodicScraper()
